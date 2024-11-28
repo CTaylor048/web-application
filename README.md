@@ -1,4 +1,4 @@
-This repository houses a collection of Javascript functions used to designed
+This repository houses a collection of JavaScript functions used to designed
 and enhance web application development.
 The code within is intended to streamline common web development tasks and
 provide reusable solutions for various web development challenges.
