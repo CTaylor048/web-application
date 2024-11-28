@@ -1,5 +1,5 @@
 /**
- * @author Corey Taylor <coreyjtaylor048@gmail.com>
+ * @author Corey Taylor
  * @typedef {string} address
  * @typedef {[]} array
  * @typedef {"0"|"1"} bit
@@ -23,7 +23,6 @@
  * 
  * console.error(``)
  * 
- * Ctrl+Shift+P > Generate JSDoc
  */
 Array.prototype.append = function (...values) {
     this.push(...values)
