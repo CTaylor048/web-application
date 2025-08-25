@@ -2,18 +2,20 @@
  * @author Corey Taylor
  * @typedef {string} address
  * @typedef {[]} array
+ * @typedef {number} decimal
  * @typedef {"0"|"1"} bit
  * @typedef {string} binary
  * @typedef {Int8Array|Uint8Array} bytes
  * @typedef {string} hexadecimal
+ * @typedef {string} octal
  * @typedef {{}} object
  * @typedef {number} port
  * @typedef {Date|number|string} timestamp
  * 
  * 
- * Error
- * 
+ * *************************************ERRORS*************************************
  * ArrayLengthError: variable-name= variable-length=${.length} length=<eq|ge|gt|le|lt>${}
+ * DepreciationError: name=${} value=${}
  * KeyError: variable-name= key=${}
  * IndexError: variable-name= variable-length=${.length} index=${}
  * StringLengthError: variable-name= variable-length=${.length} length=<eq|ge|gt|le|lt>${}
@@ -21,7 +23,9 @@
  * UnsetError: variable-name=
  * ValueError: variable-name= variable-value=${}
  * 
- * console.error(``)
+ * ********************************************************************************
+ * Ctrl+Shift+P > Generate JSDoc
+ * 
  * 
  */
 Array.prototype.append = function (...values) {
@@ -467,18 +471,12 @@ String.prototype.zfill = function (len) {
     }
     return nString
 }
-//_________________________________________________________________________________________________________________________________________________//
+//__________________________________________________________________________________________________________________________________________________//
 class util {
     constructor() {
     }
 
-    // DATE-TIME
-    /** @readonly @type {string[]} */
-    static DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    /** @readonly @type {string[]} */
-    static MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    /** @readonly @type {string[]} */
-    static QUARTERS = ['First', 'Second', 'Third', 'Fourth']
+    
 
     // MATHEMATICS
     /** @readonly @type {number} */
@@ -488,11 +486,158 @@ class util {
     /** @readonly @type {number} kilometers to mean sea level elevation */
     static SPHERE_RADIUS = 6371000
 
+    // 
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_DEGREES_LATITUDE = "(?<decimal_degrees>(-|\+)?([0-9]|[0-8][0-9])(\.\d+)?)"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_DEGREES_LONGITUDE = "(?<decimal_degrees>(-|\+)?([0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(\.\d+)?)"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_MINUTES = "(?<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE = "(?<degrees>[0-8][0-9])"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE = "(?<degrees>0[0-9][0-9]|1[0-7][0-9])"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE = "(?<direction>N|S)"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE = "(?<direction>E|W)"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES = "(?<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_SECONDS = "(?<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)"
+    // 
+    /** @readonly @type {string} */
+    static HASH_MD5 = 'md5'
+    /** @readonly @type {string} */
+    static HASH_SHA1 = 'sha1'
+    /** @readonly @type {string} */
+    static HASH_SHA224 = 'sha224'
+    /** @readonly @type {string} */
+    static HASH_SHA256 = 'sha256'
+    /** @readonly @type {string} */
+    static HASH_SHA384 = 'sha384'
+    /** @readonly @type {string} */
+    static HASH_SHA512 = 'sha512'
+
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_ABBREVIATIONS = 'ABBREVIATIONS'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_ACRONYMS = 'ACRONYMS'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_DEFINITIONS = 'DEFINITIONS'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_LIST = 'LIST'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_NAME = 'NAME'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_OBJECT = 'OBJECT'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_QUESTIONS = 'QUESTIONS'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_SOURCE = 'SOURCE'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_SUBTITLE = 'SUBTITLE'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_TABLE = 'TABLE'
+    /** @readonly @type {string} */
+    static REFERENCE_TAG_TITLE = 'TITLE'
+
     // TABLE
     /** @readonly @type {string} */
     static TABLE_ORIENTATION_VERTICAL = 'vertical'
     /** @readonly @type {string} */
     static TABLE_ORIENTATION_HORIZONTAL = 'horizontal'
+
+    // DATE-TIME
+    /** @readonly @type {string[]} */
+    static TIME_DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    /** @readonly @type {string[]} */
+    static TIME_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    /** @readonly @type {string[]} */
+    static TIME_QUARTERS = ['First', 'Second', 'Third', 'Fourth']
+
+    /** @readonly @type {string} */
+    static TIMESTAMP_PATTERN_YEAR = "(?<year>19[7-9][0-9]|[2-9][0-9][0-9][0-9])"
+    /** @readonly @type {string} */
+    static TIMESTAMP_PATTERN_MONTH = "(?<month>0[1-9]|1[0-2])"
+    /** @readonly @type {string} */
+    static TIMESTAMP_PATTERN_DAY = "(?<day>0[1-9]|1[0-9]|2[0-9]|3[0-2])"
+    /** @readonly @type {string} */
+    static TIMESTAMP_PATTERN_HOUR = "(?<hour>0[0-9]|1[0-9]|2[0-3])"
+    /** @readonly @type {string} */
+    static TIMESTAMP_PATTERN_MINUTE = "(?<minute>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
+    /** @readonly @type {string} */
+    static TIMESTAMP_PATTERN_SECOND = "(?<second>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
+    /** @readonly @type {string} */
+    static TIMESTAMP_PATTERN_MILLISECOND = "(?P<millisecond>\d\d\d)?"
+    /** @readonly @type {string} */
+    static TIMESTAMP_PATTERN_ZONE = "(?<zone>[A-I]|[K-Z])?"
+
+    /** @readonly @type {string} */
+    static TIMESTAMP_OPTION_MILLISECONDS = 'milliseconds'
+    /** @readonly @type {string} */
+    static TIMESTAMP_OPTION_OBJECT = 'object'
+    /** @readonly @type {string} */
+    static TIMESTAMP_OPTION_SECONDS = 'seconds'
+    /** @readonly @type {string} */
+    static TIMESTAMP_OPTION_STRING = 'string'
+
+    /** @readonly @type {{string:string}} */
+    static TIMEZONE_DESIGNATIONS = {
+        'A': 'Etc/GMT-1',
+        'B': 'Etc/GMT-2',
+        'C': 'Etc/GMT-3',
+        'D': 'Etc/GMT-4',
+        'E': 'Etc/GMT-5',
+        'F': 'Etc/GMT-6',
+        'G': 'Etc/GMT-7',
+        'H': 'Etc/GMT-8',
+        'I': 'Etc/GMT-9',
+        'K': 'Etc/GMT-10',
+        'L': 'Etc/GMT-11',
+        'M': 'Etc/GMT-12',
+        'N': 'Etc/GMT+1',
+        'O': 'Etc/GMT+2',
+        'P': 'Etc/GMT+3',
+        'Q': 'Etc/GMT+4',
+        'R': 'Etc/GMT+5',
+        'S': 'Etc/GMT+6',
+        'T': 'Etc/GMT+7',
+        'U': 'Etc/GMT+8',
+        'V': 'Etc/GMT+9',
+        'W': 'Etc/GMT+10',
+        'X': 'Etc/GMT+11',
+        'Y': 'Etc/GMT+12',
+        'Z': 'GMT',
+    }
+    /** @readonly @type {{string:number}} */
+    static TIMEZONE_DESIGNATION_OFFSETS = {
+        'A': +1,
+        'B': +2,
+        'C': +3,
+        'D': +4,
+        'E': +5,
+        'F': +6,
+        'G': +7,
+        'H': +8,
+        'I': +9,
+        'K': +10,
+        'L': +11,
+        'M': +12,
+        'N': -1,
+        'O': -2,
+        'P': -3,
+        'Q': -4,
+        'R': -5,
+        'S': -6,
+        'T': -7,
+        'U': -8,
+        'V': -9,
+        'W': -10,
+        'X': -11,
+        'Y': -12,
+        'Z': +0,
+    }
 
     // HTML
     /** @readonly @type {string[][]} */
@@ -658,6 +803,11 @@ class util {
                     } else {
                         return value == '11111111111111111111111111111111'
                     }
+                }
+            }
+            if (type == 'address-ipv4-prefix-length' || type == 'address-internet_protocol_v4-prefix-length') {
+                if (istype(value, 'number') || istype(value, 'string-number')) {
+                    return new RegExp(/^(0?[0-9]|1[0-9]|2[0-9]|3[1-2])$/).test(value)
                 }
             }
             if (type == 'address-ipv4-subnetmask' || type == 'address-internet_protocol_v4-subnetmask') {
@@ -1075,6 +1225,16 @@ class util {
             if (type == 'number') {
                 return typeof value === 'number'
             }
+            if (type == 'number-float') {
+                if (istype(value, 'number')) {
+                    return istype(`${value}`, 'string-number-float')
+                }
+            }
+            if (type == 'number-integer') {
+                if (istype(value, 'number')) {
+                    return istype(`${value}`, 'string-number-integer')
+                }
+            }
             if (type == 'object') {
                 if (typeof value === 'object') {
                     return value instanceof Object && !(value instanceof Array)
@@ -1129,14 +1289,20 @@ class util {
             }
             if (type == 'string-boolean') {
                 if (istype(value, 'string')) {
-                    return value.toLowerCase() == 'true' || value.toLowerCase() == 'false'
+                    return value.lower() == 'true' || value.lower() == 'false'
                 }
             }
             if (type == 'string-number') {
+                return istype(value, 'string-number-float') || istype(value, 'string-number-integer')
+            }
+            if (type == 'string-number-float') {
                 if (istype(value, 'string')) {
-                    if (value.length >= 1) {
-                        return !isNaN(value)
-                    }
+                    return new RegExp(/^(-|\+)?\d+\.\d+$/).test(value)
+                }
+            }
+            if (type == 'string-number-integer') {
+                if (istype(value, 'string')) {
+                    return new RegExp(/^(-|\+)?\d+$/).test(value)
                 }
             }
             if (type == 'string-object') {
@@ -1158,11 +1324,54 @@ class util {
             }
             if (type == 'timestamp') {
                 if (istype(value, 'string')) {
-                    if (value.includes('T')) {
-                        return new RegExp("^(19[7-9][0-9]|[2-9][0-9][0-9][0-9])-(0[0-9]|1[0-2])-(0[0-9]|1[0-9]|2[0-9]|3[0-2])T(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.[0-9][0-9][0-9]|)$").test(value)
-                    } else {
-                        return new RegExp("^(19[7-9][0-9]|[2-9][0-9][0-9][0-9])-(0[0-9]|1[0-2])-(0[0-9]|1[0-9]|2[0-9]|3[0-2])$").test(value)
+                    let pattern = ""
+                    if (value.includes('-')) {
+                        print(`"DepreciationError: name=timestamp (legacy) value=YYYY-MM-DDTHH:MM:SS`)
+                        if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
+                        if (len(value) == 7 || len(value) == 8)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}`
+                        if (len(value) == 10 || len(value) == 11) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}`
+                        if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
+                        if (len(value) == 16 || len(value) == 17) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}`
+                        if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}`
+                        if (len(value) == 23 || len(value) == 24) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
                     }
+                    else {
+                        if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
+                        if (len(value) == 6 || len(value) == 7)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}`
+                        if (len(value) == 8 || len(value) == 9)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}`
+                        if (len(value) == 11 || len(value) == 12) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
+                        if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}`
+                        if (len(value) == 15 || len(value) == 16) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}`
+                        if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
+                    }
+                    return new RegExp(`^${pattern}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                }
+            }
+            if (type == 'timestamp-date') {
+                if (istype(value, 'string')) {
+                    if (value.includes('-')) {
+                        console.warn(`"DepreciationError: name=timestamp (legacy) value=YYYY-MM-DD`)
+                        return new RegExp(`^${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                    }
+                    else {
+                        return new RegExp(`^${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                    }
+                }
+            }
+            if (type == 'timestamp-time') {
+                if (istype(value, 'string')) {
+                    if (value.includes('-')) {
+                        console.warn(`"DepreciationError: name=timestamp (legacy) value=HH:MM:SS`)
+                        return new RegExp(`^${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                    }
+                    else {
+                        return new RegExp(`^${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                    }
+                }
+            }
+            if (type == 'timestamp-zone') {
+                if (istype(value, 'string')) {
+                    return new RegExp(util.TIMESTAMP_PATTERN_ZONE).test(value)
                 }
             }
             if (type.slice(-2, type.length) == '[]') {
@@ -1594,23 +1803,6 @@ class util {
         value = util.address_binary(value)
         return value.count('0')
     }
-    /** @param {number} number @returns {number} */
-    static algebra_number_round(number, placement) {
-        let [number_whole, number_rational] = `${Number(number)}`.split('.')
-        if (placement > 0) {
-            let v = number / 10**placement
-            number = util.round(util.round(v, 1) * 10**placement, 1)
-        }
-        else if (placement < 0 && number_rational.length > -placement) {
-            number = util.round(number, -placement)
-            number = util.algebra_number_simplify(number)
-        }
-        return number
-    }
-    /** @param {number} number  @returns {number} */
-    static algebra_number_simplify(number) {
-        return `${number}`.slice(-2) == '.0' ? Math.trunc(number) : number
-    }
     /** @param {number} n @param {{ index:number, result:number }} results  @returns {number} */
     static algorithm_fibonacci(n, results = {}) {
         if (n == 0 || n == 1) {
@@ -1700,6 +1892,17 @@ class util {
         }
         return inside
     }
+    /** @param {number[]} point @param {number[][]} rectangle @returns {boolean} */
+    static cartesian_point_in_rectangle(point, rectangle) {
+        let [x, y] = point
+        let xs = rectangle.map((corner) => corner[0])
+        let ys = rectangle.map((corner) => corner[1])
+        let xMin = Math.min(...xs)
+        let xMax = Math.max(...xs)
+        let yMin = Math.min(...ys)
+        let yMax = Math.max(...ys)
+        return (xMin <= x && x <= xMax) && (yMin <= y && y <= yMax)
+    }
     /** @param {number[]} point1 @param {number[]} point2 @returns {number} */
     static cartesian_polygon_centroid(points) {
         // let xSum = 0;
@@ -1765,7 +1968,8 @@ class util {
         let dy = y2 - y1
         let theta = Math.atan2(dy, dx)
         let degrees = theta * util.RADIANS_TO_DEGREES
-        let azimuth = (90 - degrees) % 360
+        let azimuth = (90 - degrees)
+        azimuth = util.mathematics_constrain(azimuth, 0, 360)
         return azimuth
     }
     /** @param {number[]} point1 @param {number[]} point2 @returns {number[]} */
@@ -1878,18 +2082,6 @@ class util {
     /** @param {any} value @returns {any} */
     static clone(value) {
         return JSON.parse(JSON.stringify(value))
-    }
-    /** @param {number} number @param {number} minimum @param {number} maximum @returns {number} */
-    static constrain(number, minimum, maximum) {
-        if (minimum <= number && number <= maximum) {
-            return number
-        }
-        if (number > maximum) {
-            return minimum + (number % maximum)
-        }
-        if (number < minimum) {
-            return (number % maximum) + maximum
-        }
     }
     /** @param {string} value @returns {number} */
     static coordinate_conversions(value) {
@@ -2061,17 +2253,6 @@ class util {
         let filtered = util.entries_filter_and(entries, ...values)
         return util.remove(entries, ...filtered)
     }
-    /** @param {number|string} value @returns {string} */
-    static expand_exponential(value) {
-        if (!util.istype(value, 'number|string')) return console.error(`TypeError: `, value)
-        value = value.toString()
-        return value.replace(/^([+-])?(\d+).?(\d*)[eE]([-+]?\d+)$/, (x, s, n, f, c) => {
-            var l = +c < 0, i = n.length + +c, x = (l ? n : f).length,
-                c = ((c = Math.abs(c)) >= x ? c - x + l : 0),
-                z = (new Array(c + 1)).join("0"), r = n + f
-            return (s || "") + (l ? r = z + r : r += z).slice(0, i += l ? z.length : 0) + (i < r.length ? "." + r.slice(i) : "")
-        })
-    }
     // f
     /** @param {string} filename @param {bytes|string} data @param {string} type @returns {void} */
     static file_create(filename, data, type = 'text/plain') {
@@ -2090,6 +2271,22 @@ class util {
         document.body.appendChild(element)
         element.click()
         document.body.removeChild(element)
+    }
+    /** @param {string} path @param {string} option @returns {Object|string} */
+    static file_path(path = null, option = null) {
+        if (!path && window) {
+            path = window.location.pathname
+        }
+        if (!util.istype(path, 'string')) return console.error(`TypeError: `, path)
+        let delimiter = path.includes('/') ? '/' : '\\'
+        let value = {
+            'dirname': path.includes(delimiter) ? path.slice(0, path.lastIndexOf(delimiter)) : null,
+            'basename': path.includes(delimiter) ? path.slice(path.lastIndexOf(delimiter) + 1) : null,
+            'extension': path.includes('.') ? path.slice(path.lastIndexOf('.') + 1) : null,
+            'filename': path.includes(delimiter) && path.includes('.') ? path.slice(path.lastIndexOf(delimiter) + 1, path.lastIndexOf('.')) : null
+        }
+        if (!option) return value
+        return value[option]
     }
     /** @param {string|string[]} file_extensions @param {(FileSystemFileHandle[]) => void} callback @returns {FileSystemFileHandle[]} */
     static file_picker(file_extensions, callback) {
@@ -2153,7 +2350,7 @@ class util {
             callback(data)
         }).catch((error) => {
             console.warn(error)
-            callback(ArrayBuffer())
+            callback(new ArrayBuffer())
         })
     }
     /** @param {string} path @param {(Object) => void} callback @returns {void} */
@@ -2461,7 +2658,7 @@ class util {
         let y = Math.sin(differenceLongitude) * Math.cos(latitude2)
         let x = Math.cos(latitude1) * Math.sin(latitude2) - Math.sin(latitude1) * Math.cos(latitude2) * Math.cos(differenceLongitude)
         let theta = Math.atan2(y, x)
-        theta = util.constrain(theta, 0, Math.PI * 2)
+        theta = util.mathematics_constrain(theta, 0, Math.PI * 2)
         let azimuth = theta * util.RADIANS_TO_DEGREES
         return azimuth
     }
@@ -2478,7 +2675,7 @@ class util {
         }
         let aa = Math.log(Math.tan(latitude2 / 2 + Math.PI / 4) / Math.tan(latitude1 / 2 + Math.PI / 4))
         let theta = Math.atan2(differenceLongitude, aa)
-        theta = util.constrain(theta, 0, Math.PI * 2)
+        theta = util.mathematics_constrain(theta, 0, Math.PI * 2)
         let azimuth = theta * util.RADIANS_TO_DEGREES
         return azimuth
     }
@@ -2766,6 +2963,85 @@ class util {
         return Number(value.length / base)
     }
     // m
+    /** @param {number} number @param {number} minimum @param {number} maximum @returns {number} */
+    static mathematics_constrain(number, minimum, maximum) {
+        if (minimum <= number && number <= maximum) {
+            return number
+        }
+        if (number > maximum) {
+            return minimum + (number % maximum)
+        }
+        if (number < minimum) {
+            return (number % maximum) + maximum
+        }
+    }
+    /** @param {number|string} value @returns {string} */
+    static mathematics_expand_exponential(value) {
+        if (!util.istype(value, 'number|string')) return console.error(`TypeError: `, value)
+        value = value.toString()
+        return value.replace(/^([+-])?(\d+).?(\d*)[eE]([-+]?\d+)$/, (x, s, n, f, c) => {
+            var l = +c < 0, i = n.length + +c, x = (l ? n : f).length,
+                c = ((c = Math.abs(c)) >= x ? c - x + l : 0),
+                z = (new Array(c + 1)).join("0"), r = n + f
+            return (s || "") + (l ? r = z + r : r += z).slice(0, i += l ? z.length : 0) + (i < r.length ? "." + r.slice(i) : "")
+        })
+    }
+    /** @param {number} value @returns {string} */
+    static mathematics_integer_to_float(value) {
+        if (util.istype(value, 'number-float')) {
+            return `${value}`
+        }
+        else if (util.istype(value, 'number-integer')) {
+            return value.toFixed(1)
+        }
+    }
+    /** @param {string} value @param {number} base @returns {number} */
+    static mathematics_length(value, base = 1) {
+        return Number(value.length / base)
+    }
+    /** @param {...number} values @returns {number} */
+    static mathematics_random(...values) {
+        // 1 .list item
+        if (util.istype(values[0], 'array')) {
+            return values[0][Math.floor(Math.random() * values[0].length)]
+        }
+        // 2. number range
+        let range = values.length == 1 ? [0, values[0] + 1] : [values[0], values[1] + 1]
+        if (values.length == 1 || values.length == 2) {
+            return Math.floor(Math.random() * (range[1] - range[0])) + range[0]
+        }
+        // 3. number range + round to nth place
+        if (values.length == 3) {
+            let placement = values[2]
+            if (placement > 0) {
+                random_number = Math.floor(Math.random() * (range[1] - range[0])) + range[0]
+                return util.mathematics_round(random_number, placement)
+            }
+            if (placement < 0) {
+                let multiple = 10**-placement
+                range = [parseInt(range[0]*multiple), parseInt(range[1]*multiple)]
+                random_number = Math.floor(Math.random() * (range[1] - range[0])) + range[0]
+                return util.mathematics_round(random_number, placement) / multiple
+            }
+        }
+    }
+    /** @param {number} number @returns {number} */
+    static mathematics_round(number, placement = 1) {
+        let [number_whole, number_rational] = `${Number(number)}`.split('.')
+        if (placement > 0) {
+            let v = number / 10**placement
+            number = util.round(util.round(v, 1) * 10**placement, 1)
+        }
+        else if (placement < 0 && number_rational.length > -placement) {
+            number = util.round(number, -placement)
+            number = util.mathematics_simplify(number)
+        }
+        return number
+    }
+    /** @param {number} number  @returns {number} */
+    static mathematics_simplify(number) {
+        return `${number}`.slice(-2) == '.0' ? Math.trunc(number) : number
+    }
     /** @param {number[][]} matrix1 @param {number[][]} matrix2 @returns {number[][]} */
     static matrix_addition(matrix1, matrix2) {
         if (!util.istype(matrix1, 'array')) return console.error('TypeError: ', matrix1)
@@ -2872,6 +3148,7 @@ class util {
         }
         return random_number
     }
+    /** @param {array|number} aValue @param {array|number} bValue @param {number} interval @returns {number} */
     static range(aValue, bValue, interval = 1) {
         let array = []
         let start = 0
@@ -3039,6 +3316,11 @@ class util {
         if (!util.istype(string, 'string')) return console.error(`TypeError: `, string)
         return string.replaceAll('\'', "\\'").replaceAll('\"', '\\"').replaceAll('null', '\\null')
     }
+    /** @param {string} string @returns {string} */
+    static slashes_remove(string) {
+        if (!util.istype(string, 'string')) return console.error(`TypeError: `, string)
+        return string.replaceAll("\\'", '\'').replaceAll('\\"', '\"').replaceAll('\\null', 'null')
+    }
     /** @param {number[]} point1 @param {number[]} point2 @returns {number} */
     static spherical_to_azimuth(point1, point2 = null) {
         
@@ -3057,11 +3339,6 @@ class util {
         longitude = longitude > 180 ? longitude - 360 : longitude
         let altitude = r - util.SPHERE_RADIUS
         return [latitude, longitude, altitude]
-    }
-    /** @param {string} string @returns {string} */
-    static slashes_remove(string) {
-        if (!util.istype(string, 'string')) return console.error(`TypeError: `, string)
-        return string.replaceAll("\\'", '\'').replaceAll('\\"', '\"').replaceAll('\\null', 'null')
     }
     /** @param {number[]} numbers @returns {number} */
     static statistics_aggregate(numbers, operation) {
@@ -3126,7 +3403,6 @@ class util {
     static statistics_maximum(numbers) {
         return Math.max(...numbers)
     }
-    
     /** @param {number[]} numbers @returns {number} */
     static statistics_mean(numbers) {
         return util.statistics_sum(numbers) / numbers.length
@@ -3186,6 +3462,48 @@ class util {
         let n = numbers.length
         let mean = util.statistics_mean(numbers)
         return util.statistics_sum(numbers.map((value) => (value - mean) ** 2)) / (n - 1)
+    }
+    /** @param {array|boolean|number|object|string} value @returns {string} */
+    static string_conversion_encode(value) {
+        if (value == null) {
+            return value
+        }
+        else if (util.istype(value, 'array')) {
+            return util.json_encode(value)
+        }
+        else if (util.istype(value, 'boolean')) {
+            return `${value}`
+        }
+        else if (util.istype(value, 'number')) {
+            return `${value}`
+        }
+        else if (util.istype(value, 'object')) {
+            return util.json_encode(value)
+        }
+        else {
+            return value
+        }
+    }
+    /** @param {string} value @returns {array|boolean|number|object|string} */
+    static string_conversion_decode(value) {
+        if (value == null) {
+            return value
+        }
+        else if (util.istype(value, 'string-array')) {
+            return util.json_decode(value)
+        }
+        else if (util.istype(value, 'string-boolean')) {
+            return value.lower() == 'true'
+        }
+        else if (util.istype(value, 'string-number')) {
+            return Number(value)
+        }
+        else if (util.istype(value, 'string-object')) {
+            return util.json_decode(value)
+        }
+        else {
+            return value
+        }
     }
     // t
     /** @param {object[]} entries @param {string} orientation @param {string} delimiter @returns {string} */
@@ -3302,7 +3620,7 @@ class util {
         return rows
     } 
     /** @param {Date|number|string} value @param {} option @returns {Date|number|string} */
-    static timestamp(value = null, option = '') {
+    static timestamp_legacy(value = null, option = '') {
         function toString(date) {
             let year = date.getFullYear().toString()
             let month = (date.getMonth() + 1).toString().rjust(2, '0')
@@ -3349,8 +3667,13 @@ class util {
             return Math.round((value.getTime() + offset) / 1000)
         }
         if (typeof value === 'string') { // return date by default
+            let timezone_ = 'Z'
             let date_ = [0, 1, 0]
             let time_ = [0, 0, 0, 0]
+            if (includes(value.slice(-1), util.TIMEZONE_DESIGNATIONS)) {
+                timezone_ = value.slice(-1)
+                value = value.slice(0, -1)
+            }
             let values = value.split('T')
             if (value.includes('T')) {
                 for (let [index, value] of enumerate(values[0].split('-'))) {
@@ -3383,32 +3706,125 @@ class util {
             return date
         }
     }
+    /** @param {Date|number|string} value @param {} convert_to @returns {Date|number|string} */
+    static timestamp(value = null, convert_to = null) {
+        /** @param {Date} date @param {string|null} option @returns {Date|number|string} */
+        function convert(date, option) {
+            if (option == null) {
+                return date
+            }
+            if (option.lower() == util.TIMESTAMP_OPTION_MILLISECONDS) {
+                return date.getTime() + offset
+            }
+            if (option.lower() == util.TIMESTAMP_OPTION_OBJECT) {
+                return date
+            }
+            if (option.lower() == util.TIMESTAMP_OPTION_SECONDS) {
+                return Math.round((date.getTime() + offset) / 1000)
+            }
+            if (option.lower() == util.TIMESTAMP_OPTION_STRING) {
+                let year = date.getFullYear().toString()
+                let month = (date.getMonth() + 1).toString().rjust(2, '0')
+                let dayOfMonth = date.getDate().toString().rjust(2, '0')
+                let hours = date.getHours().toString().rjust(2, '0')
+                let minutes = date.getMinutes().toString().rjust(2, '0')
+                let seconds = date.getSeconds().toString().rjust(2, '0')
+                let milliseconds = date.getMilliseconds().toString().ljust(3, '0')
+                return `${year}${month}${dayOfMonth}T${hours}${minutes}${seconds}Z`
+            }
+        }
+        /** @param {string} value @returns {{string:string}} */
+        function getString(value) {
+            let pattern = ""
+            if (value.includes('-')) {
+                print(`"DepreciationError: name=timestamp (legacy) value=YYYY-MM-DDTHH:MM:SS`)
+                if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
+                if (len(value) == 7 || len(value) == 8)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}`
+                if (len(value) == 10 || len(value) == 11) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}`
+                if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
+                if (len(value) == 16 || len(value) == 17) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}`
+                if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}`
+                if (len(value) == 23 || len(value) == 24) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
+            }
+            else {
+                if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
+                if (len(value) == 6 || len(value) == 7)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}`
+                if (len(value) == 8 || len(value) == 9)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}`
+                if (len(value) == 11 || len(value) == 12) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
+                if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}`
+                if (len(value) == 15 || len(value) == 16) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}`
+                if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
+            }
+            let match = value.match(`^${pattern}${util.TIMESTAMP_PATTERN_ZONE}$`)
+            return match.groups
+        }
+        let date = new Date()
+        let offset = (new Date().getTimezoneOffset() * 60)
+        if (value == null) {
+            return convert(date, util.TIMESTAMP_OPTION_SECONDS)
+        }
+        else if (util.istype(value, 'date')) {
+            return convert(value, convert_to)
+        }
+        else if (util.istype(value, 'number')) {
+            if (len(`${value}`) == 10) {
+                date.setTime((value * 1000) + (offset * 1000))
+            }
+            if (len(`${value}`) == 13) {
+                date.setTime(value + (offset * 1000))
+            }
+            return convert(date, convert_to)
+        }
+        else if (util.istype(value, 'string')) {
+            if (value.lower() == util.TIMESTAMP_OPTION_MILLISECONDS || value.lower() == util.TIMESTAMP_OPTION_OBJECT || value.lower() == util.TIMESTAMP_OPTION_SECONDS || value.lower() == util.TIMESTAMP_OPTION_STRING) {
+                return convert(date, value)
+            }
+            else if (getString(value)) {
+                let groups = getString(value)
+                let year = Number(groups["year"])
+                let month = "month" in groups ? Number(groups["month"]) : 1
+                let day = "day" in groups ? Number(groups["day"]) : 1
+                let hour = "hour" in groups ? Number(groups["hour"]) : 0
+                let minute = "minute" in groups ? Number(groups["minute"]) : 0
+                let second = "second" in groups ? Number(groups["second"]) : 0
+                let zone = "zone" in groups ? groups["zone"] : 'Z'
+                let zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[zone]
+                date.setFullYear(year)
+                date.setMonth(month - 1)
+                date.setDate(day)
+                date.setHours(hour)
+                date.setMinutes(minute)
+                date.setSeconds(second)
+                date.setMilliseconds(0)
+                date.setHours(date.getHours() + (zone_utc_offset*-1))
+                return convert(date, convert_to)
+            }
+            else {
+                console.error(`ValueError: variable-name=value variable-value=${value}`)
+            }
+        }
+    }
     /** @param {Date|number|string} timestamp @returns {string} */
     static timestamp_date(timestamp) {
-        timestamp = util.timestamp(timestamp, 'object')
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         let year = timestamp.getFullYear().toString()
         let month = (timestamp.getMonth() + 1).toString().rjust(2, '0')
         let dayOfMonth = timestamp.getDate().toString().rjust(2, '0')
         return `${year}-${month}-${dayOfMonth}`
     }
     /** @param {Date|number|string} timestamp @param {boolean} short @returns {string} */
-    static timestamp_datetime(timestamp = util.timestamp('object'), short = false) {
+    static timestamp_datetime(timestamp = util.timestamp(util.TIMESTAMP_OPTION_OBJECT), short = false) {
         return `${util.timestamp_date(timestamp)} ${util.timestamp_time(timestamp, short)}`
     }
-    /** @param {Date|number|string} timestamp @param {boolean} short @returns {string} */
-    static timestamp_dayofweek(timestamp, short = false) {
-        timestamp = util.timestamp(timestamp, 'object')
-        let dayOfWeek = util.DAYS_OF_WEEK[timestamp.getDay()]
-        if (short) {
-            return dayOfWeek.slice(0, 3)
-        } else {
-            return dayOfWeek
-        }
+    /** @param {Date|number|string} timestamp @returns {string} */
+    static timestamp_day(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        return timestamp.getDate().toString().rjust(2, '0')
     }
     /** @param {Date|number|string} timestamp1 @param {Date|number|string} timestamp2 @param {boolean} short @returns {string} */
-    static timestamp_difference(timestamp1, timestamp2 = util.timestamp('seconds'), short = true) {
-        timestamp1 = util.timestamp(timestamp1, 'seconds')
-        timestamp2 = util.timestamp(timestamp2, 'seconds')
+    static timestamp_difference(timestamp1, timestamp2 = util.timestamp(util.TIMESTAMP_OPTION_SECONDS), short = true) {
+        timestamp1 = util.timestamp(timestamp1, util.TIMESTAMP_OPTION_SECONDS)
+        timestamp2 = util.timestamp(timestamp2, util.TIMESTAMP_OPTION_SECONDS)
         let difference = Math.abs(timestamp2 - timestamp1)
         if (difference == 0) return 'Now'
         if (difference <= 1) return short ? '1sec': '1 second'
@@ -3455,52 +3871,64 @@ class util {
         if (difference <= 315360000) return short ? '10yr' : '10 years'
     }
     /** @param {Date|number|string} timestamp @returns {string} */
-    static timestamp_hours(timestamp) {
-        timestamp = util.timestamp(timestamp, 'object')
+    static timestamp_hour(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getHours().toString().rjust(2, '0')
     }
     /** @param {Date|number|string} timestamp @returns {string} */
-    static timestamp_minutes(timestamp) {
-        timestamp = util.timestamp(timestamp, 'object')
+    static timestamp_minute(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getMinutes().toString().rjust(2, '0')
     }
     /** @param {Date|number|string} timestamp @param {boolean} short @returns {string} */
     static timestamp_month(timestamp, short = false) {
-        timestamp = util.timestamp(timestamp, 'object')
-        let month = util.MONTHS[timestamp.getMonth()]
-        if (short) {
-            return month.slice(0, 3)
-        } else {
-            return month
-        }
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        let month = util.TIME_MONTHS[timestamp.getMonth()]
+        return short ? month.slice(0, 3) : month
+    }
+    /** @param {Date|number|string} timestamp @returns {string} */
+    static timestamp_month_number(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        let month = timestamp.getMonth() + 1
+        return month.toString().rjust(2, '0')
     }
     /** @param {Date|number|string} timestamp @param {boolean} short @returns {string} */
     static timestamp_quarter(timestamp, short = false) {
-        timestamp = util.timestamp(timestamp, 'object')
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         let quarter = Math.ceil((timestamp.getMonth() + 1) / 3)
-        return short ? `Q${quarter}` : util.QUARTERS[quarter-1]
+        return short ? `Q${quarter}` : util.TIME_QUARTERS[quarter-1]
     }
     /** @param {Date|number|string} timestamp @returns {string} */
-    static timestamp_seconds(timestamp) {
-        timestamp = util.timestamp(timestamp, 'object')
+    static timestamp_second(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getSeconds().toString().rjust(2, '0')
     }
     /** @param {Date|number|string} timestamp @param {boolean} short @returns {string} */
     static timestamp_time(timestamp, short = false) {
-        timestamp = util.timestamp(timestamp, 'object')
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         let hours = timestamp.getHours().toString().rjust(2, '0')
         let minutes = timestamp.getMinutes().toString().rjust(2, '0')
         let seconds = timestamp.getSeconds().toString().rjust(2, '0')
         let milliseconds = timestamp.getMilliseconds().toString().ljust(3, '0')
-        if (short) {
-            return `${hours}:${minutes}:${seconds}`
-        } else {
-            return `${hours}:${minutes}:${seconds}.${milliseconds}`
-        }
+        return short ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}:${seconds}.${milliseconds}`
+    }
+    /** @param {timestamp} timestamp @param {string} zone @returns {Date} */
+    static timestamp_to_zone(timestamp, zone) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        let zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[zone]
+        timestamp.setHours(timestamp.getHours()+zone_utc_offset)
+        // TODO: UTC offset property not indicated in Date object
+        return timestamp
+    }
+    /** @param {Date|number|string} timestamp @param {boolean} short @returns {string} */
+    static timestamp_weekday(timestamp, short = false) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        let weekday = util.TIME_DAYS_OF_WEEK[timestamp.getDay()]
+        return short ? weekday.slice(0, 3) : weekday
     }
     /** @param {Date|number|string} timestamp @returns {string} */
     static timestamp_year(timestamp) {
-        timestamp = util.timestamp(timestamp, 'object')
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getFullYear().toString()
     }
     /** @param {string} string @returns {string} */
@@ -3720,7 +4148,8 @@ class util {
         request.send(body)
         // NOTE: send(...) body(Document | XMLHttpRequestBodyInit | null) XMLHttpRequestBodyInit(Blob | BufferSource | FormData | URLSearchParams | string)
     }
-    static xhr_headers_encode(object) {
+    /** @param {XMLHttpRequest} request @param {string|{string:string}} value @returns {XMLHttpRequest} */
+    static xhr_headers_encode(request, value) {
 
     }
     /** @param {string|XMLHttpRequest} value @returns {Object} */
@@ -4098,7 +4527,6 @@ class util {
         return decs
     }
 }
-//_________________________________________________________________________________________________________________________________________________//
 class array extends Array {
     /** @constructor */
     constructor(...values) {
@@ -4282,9 +4710,14 @@ class array extends Array {
         return this.get(-1)
     }
     /** @returns {string} */
-    hash() {
-        let string = util.json_encode(this)
-        return util.hash_md5(string)
+    hash(mode = util.HASH_MD5) {
+        let data = util.json_encode(this)
+        if (mode == util.HASH_MD5) {
+            return util.hash_md5(data)
+        }
+        else {
+            console.error(`ValueError: variable-name=mode variable-value=${mode}`)
+        }
     }
     /** @param {...any} values @returns {boolean} */
     includes(...values) {
@@ -4416,29 +4849,6 @@ class binary extends String {
             throw new Error('TypeError: binary must be characters of the following 0, 1')
         }
     }
-
-    /*
-    def __cast(data):
-        if isinstance(data, binary):
-            data_ = str(data)
-        elif isinstance(data, decimal):
-            data_ = util.dec2bin(int(data))
-        elif isinstance(data, hexadecimal):
-            data_ = util.hex2bin(str(data))
-        elif isinstance(data, octal):
-            data_ = util.oct2bin(str(data))
-        elif util.istype(data, 'binary'):
-            data_ = data
-        elif util.istype(data, 'decimal'):
-            data_ = util.dec2bin(data)
-        elif util.istype(data, 'hexadecimal'):
-            data_ = util.hex2bin(data)
-        elif util.istype(data, 'octal'):
-            data_ = util.oct2bin(data)
-        else:
-            raise Exception(f"TypeError: unsupported type: '{type(data)}'")
-        return data_
-    */
 
     cast(data) {
 
@@ -4860,10 +5270,15 @@ class object extends Object {
     get(key, defaultvalue = null) {
         return key in this ? this[key] : defaultvalue
     }
-    /** @returns {string} */
-    hash() {
-        let string = util.json_encode(this)
-        return util.hash_md5(string)
+    /** @param {string} mode @returns {string} */
+    hash(mode = util.HASH_MD5) {
+        let data = util.json_encode(this)
+        if (mode == util.HASH_MD5) {
+            return util.hash_md5(data)
+        }
+        else {
+            console.error(`ValueError: variable-name=mode variable-value=${mode}`)
+        }
     }
     /** @param {...number|string} values @returns {boolean} */
     includes(...values) {
@@ -5084,7 +5499,7 @@ class string extends String {
 
     }
 }
-//_________________________________________________________________________________________________________________________________________________//
+//__________________________________________________________________________________________________________________________________________________//
 class app {
     constructor() {
 
@@ -5096,7 +5511,6 @@ class app {
         'color-caution': '#c8c800',
         'color-default': '#191919',
         'color-header': '#323232',
-        'color-highlight': '#646464',
         'color-select': '#4b4b4b',
         'color-text': '#ffffff',
         'font-family': 'American Typewriter, serif',
@@ -5121,6 +5535,12 @@ class app {
     static name = ''
     /** @type {object} */
     static options = new object()
+    /** @readonly @type {Dialog} */
+    static progressDialog
+    /** @readonly @type {string[]} */
+    static progressesRunning = []
+    /** @readonly @type {number} */
+    static progressTimeout = 3000
     /** @type {boolean} */
     static touchable = true
 
@@ -5141,12 +5561,9 @@ class app {
     /** @readonly @type {number} */
     static MOUSE_BUTTON_RIGHT = 2
 
-    /** @readonly @type {string[]} */
-    static PROGRESS_ACTIVE = []
-    /** @readonly @type {number} */
-    static PROGRESS_TIMEOUT = 3000
-    /** @readonly @type {Dialog} */
-    static PROGRESS_DIALOG
+    
+    
+    
 
     /** @readonly @type {{string:string}} */
     static EVENT_INTERFACES = { "afterprint": "onAfterPrint", "afterscriptexecute": "onAfterScriptExecute", "appinstalled": "onAppInstalled", "beforeinstallprompt": "onBeforeInstallPrompt", "beforeprint": "onBeforePrint", "beforescriptexecute": "onBeforeScriptExecute", "beforeunload": "onBeforeUnload", "blur": "onBlur", "click": "onClick", "copy": "onCopy", "cut": "onCut", "devicemotion": "onDeviceMotion", "deviceorientation": "onDeviceOrientation", "error": "onError", "focus": "onFocus", "fullscreenchange": "onFullScreenChange", "fullscreenerror": "onFullScreenError", "gamepadconnected": "onGamePadConnected", "gamepaddisonnected": "onGamePadDisonnected", "hashchange": "onHashChange", "input": "onInput", "keydown": "onKeyDown", "keyup": "onKeyUp", "languagechange": "onLanguageChange", "message": "onMessage", "messageerror": "onMessageError", "mousedown": "onMouseDown", "mouseenter": "onMouseEnter", "mouseleave": "onMouseLeave", "mousemove": "onMouseMove", "mouseout": "onMouseOut", "mouseover": "onMouseOver", "mouseup": "onMouseUp", "offline": "onOffline", "online": "onOnline", "pagehide": "onPageHide", "pagereveal": "onPageReveal", "pageshow": "onPageShow", "pageswap": "onPageSwap", "paste": "onPaste", "pointercancel": "onPointerCancel", "pointerdown": "onPointerDown", "pointerlockchange": "onPointerLockChange", "pointerlockerror": "onPointerLockError", "popstate": "onPopState", "prerenderingchange": "onPrerenderingChange", "readystatechange": "onReadyStateChange", "rejectionhandled": "onRejectionHandled", "resize": "onResize", "scroll": "onScroll", "scrollend": "onScrollEnd", "securitypolicyviolation": "onSecurityPolicyViolation", "selectionchange": "onSelectionChange", "storage": "onStorage", "touchend": "onTouchEnd", "touchmove": "onTouchMove", "touchstart": "onTouchStart", "unhandledrejection": "onUnhandledRejection", "visibilitychange": "onVisibilityChange", "wheel": "onWheel" }
@@ -5160,9 +5577,8 @@ class app {
         app.options = object.fromdata(options)
         app.identifier = app.options.get('identifier', util.identifier())
         app.name = app.options.get('name', util.path_info(window.location.pathname, 'filename'))
-        let dialog = app.createProgressDialog()
-        dialog.setStyle(DialogProgress.STYLE_SPINNER)
-        app.PROGRESS_DIALOG = dialog
+        app.progressDialog = app.createProgressDialog()
+        app.progressDialog.setStyle(DialogProgress.STYLE_SPINNER)
         // 
         app.listeners1()
         if (window.document.readyState === 'complete') {
@@ -5437,6 +5853,21 @@ class app {
             app.onEventListenerInterface(event.type, event)
             if (window.onClick) {
                 window.onClick(event, app.element(event.target))
+            }
+        }
+        /** @param {PointerEvent} event @returns {void} */
+        window.document.oncontextmenu = (event) => {
+            app.onEventListenerInterface(event.type, event)
+            if (window.onContextMenu) {
+                window.onContextMenu(event, app.element(event.target))
+            }
+        }
+        /** @param {PointerEvent} event @returns {void} */
+        window.document.ondblclick = (event) => {
+            if (app.isTouchDisabled()) return
+            app.onEventListenerInterface(event.type, event)
+            if (window.onDoubleClick) {
+                window.onDoubleClick(event, app.element(event.target))
             }
         }
         /** @param {Event} event @returns {void} */
@@ -5861,6 +6292,14 @@ class app {
         return navigator.onLine
     }
     /** @returns {boolean} */
+    static isRunningLocal() {
+        return window.location.protocol == 'file:'
+    }
+    /** @returns {boolean} */
+    static isRunningRemote() {
+        return window.location.protocol == 'http:' || window.location.protocol == 'https:'
+    }
+    /** @returns {boolean} */
     static isTouchEnabled() {
         return app.touchable
     }
@@ -5904,25 +6343,33 @@ class app {
     }
     /** @param {string} identifier @returns {void} */
     static progressStart(identifier) {
-        app.PROGRESS_ACTIVE.append(identifier)
+        app.progressesRunning.append(identifier)
         setTimeout(() => {
-            if (app.PROGRESS_ACTIVE.includes(identifier)) {
+            if (app.progressesRunning.includes(identifier)) {
                 app.setTouchable(false)
-                app.PROGRESS_DIALOG.setIdentifier(identifier)
-                app.PROGRESS_DIALOG.show()
+                app.progressDialog.setIdentifier(identifier)
+                app.progressDialog.show()
             }
-        }, app.PROGRESS_TIMEOUT)
+        }, app.progressTimeout)
     }
     /** @param {string} identifier @returns {void} */
-    static progressStop(identifier) {
-        let index = app.PROGRESS_ACTIVE.index(identifier)
-        if (index != -1) {
-            app.PROGRESS_ACTIVE.pop(index)
+    static progressStop(identifier = null) {
+        if (identifier) {
+            let index = app.progressesRunning.index(identifier)
+            if (index != -1) {
+                app.progressesRunning.pop(index)
+            }
+            else {
+                console.warn(`KeyError: variable-name=app.progressesRunning key=${identifier}: running progress identifier not found.`)
+            }
         }
-        if (app.PROGRESS_ACTIVE.empty()) {
-            if (app.PROGRESS_DIALOG.isVisible()) {
+        else {
+            app.progressesRunning.pop(-1)
+        }
+        if (app.progressesRunning.empty()) {
+            if (app.progressDialog.isVisible()) {
                 app.setTouchable(true)
-                app.PROGRESS_DIALOG.dismiss()
+                app.progressDialog.dismiss()
             }
         }
     }
@@ -6251,6 +6698,11 @@ class app {
         return view
     }
     /** @param {{string:string}|string} attributes @returns {View} */
+    static createItem(attributes) {
+        let view = new Item(attributes)
+        return view
+    }
+    /** @param {{string:string}|string} attributes @returns {View} */
     static createList(attributes) {
         let view = new List(attributes)
         return view
@@ -6422,436 +6874,6 @@ class app {
             window.localStorage.removeItem(use ? app.storage.key + '.' + key : key)
             return util.storage
         },
-    }
-}
-//_________________________________________________________________________________________________________________________________________________//
-class ApplicationProgrammingInterface {
-    constructor() {
-        // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
-        /** @type {function(ProgressEvent): void} */
-        this.onAbortListener = ApplicationProgrammingInterface.onAbortListener
-        /** @type {function(ProgressEvent): void} */
-        this.onErrorListener = ApplicationProgrammingInterface.onErrorListener
-        /** @type {function(ProgressEvent): void} */
-        this.onLoadListener = ApplicationProgrammingInterface.onLoadListener
-        /** @type {function(ProgressEvent): void} */
-        this.onLoadEndListener = ApplicationProgrammingInterface.onLoadEndListener
-        /** @type {function(ProgressEvent): void} */
-        this.onLoadStartListener = ApplicationProgrammingInterface.onLoadStartListener
-        /** @type {function(ProgressEvent): void} */
-        this.onProgressListener = ApplicationProgrammingInterface.onProgressListener
-        /** @type {function(Event): void} */
-        this.onReadyStateChangeListener = ApplicationProgrammingInterface.onReadyStateChangeListener
-        /** @type {function(any): void} */
-        this.onResponseListener = ApplicationProgrammingInterface.onResponseListener
-        /** @type {XMLHttpRequest} */
-        this.request = null
-        /** @type {boolean} */
-        this.requestAsynchronous = false
-        /** @type {any} */
-        this.requestBody = null
-        /** @type {string} */
-        this.requestController = ''
-        /** @type {object} */
-        this.requestHeaders = new object()
-        /** @type {string} */
-        this.requestIdentifier = null
-        /** @type {string} */
-        this.requestMimeType = 'text/xml'
-        /** @type {string} */
-        this.requestPassword = null
-        /** @type {string} */
-        this.requestQuery = ''
-        /** @type {string} */
-        this.requestResponseValueDefault = null
-        /** @type {string} */
-        this.requestResponseType = null
-        /** @type {string} */
-        this.requestRoute = ''
-        /** @type {string} */
-        this.requestUsername = null
-        /** @type {number} */
-        this.requestTimeout = 0
-        /** @type {string} */
-        this.requestURL = null
-        /** @type {boolean} */
-        this.requestWithCredentials = false
-    }
-
-    /** @readonly @type {string} */
-    static METHOD_DELETE = "DELETE"
-    /** @readonly @type {string} */
-    static METHOD_GET = "GET"
-    /** @readonly @type {string} */
-    static METHOD_HEAD = "HEAD"
-    /** @readonly @type {string} */
-    static METHOD_OPTIONS = "OPTIONS"
-    /** @readonly @type {string} */
-    static METHOD_PUT = "PUT"
-    /** @readonly @type {string} */
-    static METHOD_POST = "POST"
-    /** @readonly @type {string} */
-    static METHOD_TRACE = "TRACE"
-
-    /** @readonly @type {number} */
-    static READY_STATE_UNSET = 0
-    /** @readonly @type {number} */
-    static READY_STATE_OPENED = 1
-    /** @readonly @type {number} */
-    static READY_STATE_HEADERS_RECEIVED = 2
-    /** @readonly @type {number} */
-    static READY_STATE_LOADING = 3
-    /** @readonly @type {number} */
-    static READY_STATE_DONE = 4
-
-    /** @readonly @type {string} */
-    static RESPONSE_TYPE_DEFAULT = ""
-    /** @readonly @type {string} */
-    static RESPONSE_TYPE_ARRAYBUFFER = "arraybuffer"
-    /** @readonly @type {string} */
-    static RESPONSE_TYPE_BLOB = "blob"
-    /** @readonly @type {string} */
-    static RESPONSE_TYPE_DOCUMENT = "document"
-    /** @readonly @type {string} */
-    static RESPONSE_TYPE_JSON = "json"
-    /** @readonly @type {string} */
-    static RESPONSE_TYPE_TEXT = "text"
-
-    /** @type {function(ProgressEvent): void} */
-    static onAbortListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
-    static onErrorListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
-    static onLoadListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
-    static onLoadEndListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
-    static onLoadStartListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
-    static onProgressListener = (event) => { }
-    /** @type {function(Event): void} */
-    static onReadyStateChangeListener = (event) => { }
-    /** @type {function(any): void} */
-    static onResponseListener = (data) => { }
-
-    /** @returns {void} */
-    abort() {
-        this.request.abort()
-        return this
-    }
-    /** @param {boolean} value @returns {ApplicationProgrammingInterface} */
-    asynchronous(value) {
-        this.requestAsynchronous = value
-        return this
-    }
-    /** @param {any} value @returns {ApplicationProgrammingInterface} */
-    body(body) {
-        if (util.istype(body, 'array|object')) {
-            body = util.json_encode(body)
-        }
-        this.requestBody = body
-        return this
-    }
-    /** @param {string} controller @returns {ApplicationProgrammingInterface} */
-    controller(controller) {
-        if (controller == '' || controller == null) {
-            this.requestController = ''
-        } else {
-            this.requestController = controller[0] == '/' ? controller : `/${controller}`
-        }
-        return this
-    }
-    /** @param {string} route @returns {any} */
-    delete(route = null) {
-        this.#setRequest(ApplicationProgrammingInterface.METHOD_DELETE, route)
-        this.request.send()
-        return this.#getResponse()
-    }
-    /** @param {string} route @returns {any} */
-    get(route = null) {
-        this.#setRequest(ApplicationProgrammingInterface.METHOD_GET, route)
-        this.request.send()
-        return this.#getResponse()
-    }
-    /** @param {string} headerKey @param {string} headerValue @returns {ApplicationProgrammingInterface|string} */
-    header(headerKey, headerValue) {
-        this.requestHeaders.set(headerKey, headerValue)
-        return this
-    }
-    /** @param {string|{string:string}} value @returns {ApplicationProgrammingInterface|string} */
-    headers(value) {
-        let headers = object.fromdata(value)
-        this.requestHeaders.update(headers)
-        return this
-    }
-    /** @param {string} value @returns {ApplicationProgrammingInterface} */
-    mimeType(value) {
-        this.requestMimeType = value
-        return this
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
-    onabort(listener) {
-        this.onAbortListener = listener
-        return this
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
-    onerror(listener) {
-        this.onErrorListener = listener
-        return this
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
-    onload(listener) {
-        this.onLoadListener = listener
-        return this
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
-    onloadend(listener) {
-        this.onLoadEndListener = listener
-        return this
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
-    onloadstart(listener) {
-        this.onLoadStartListener = listener
-        return this
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
-    onprogress(listener) {
-        this.onProgressListener = listener
-        return this
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
-    onreadystatechange(listener) {
-        this.onReadyStateChangeListener = listener
-        return this
-    }
-    /** @param {function(any): void} listener @returns {ApplicationProgrammingInterface} */
-    onresponse(listener) {
-        this.onResponseListener = listener
-        return this
-    }
-    /** @param {string} value @returns {ApplicationProgrammingInterface} */
-    password(value) {
-        this.requestPassword = value
-        return this
-    }
-    /** @param {string} route @returns {any} */
-    post(route = null) {
-        this.#setRequest(ApplicationProgrammingInterface.METHOD_POST, route)
-        this.request.send(this.requestBody)
-        return this.#getResponse()
-    }
-    /** @param {string} route @returns {any} */
-    put(route = null) {
-        this.#setRequest(ApplicationProgrammingInterface.METHOD_PUT, route)
-        this.request.send(this.requestBody)
-        return this.#getResponse()
-    }
-    /** @param {string|{string:string}} value @returns {ApplicationProgrammingInterface} */
-    query(value) {
-        this.requestQuery = '?'
-        let query = object.fromdata(value)
-        for (let [queryKey, queryValue] of enumerate(query)) {
-            this.requestQuery += `${this.requestQuery.length == 1 ? '' : '&'}${queryKey}=${queryValue}`
-        }
-        return this
-    }
-    /** @returns {any} */
-    response() {
-        let response = this.request.response
-        if (this.responseCodeError() && response == '') {
-            return this.requestResponseValueDefault ? this.requestResponseValueDefault : response
-        }
-        if (this.responseHeader('content-type') == 'application/json') {
-            return util.json_decode(response)
-        }
-        if (this.responseHeader('content-type') == 'text/plain') {
-            if (util.istype(response, 'string-array|string-object')) {
-                return util.json_decode(response)
-            }
-            else if (util.istype(response, 'string-boolean')) {
-                return response == 'true'
-            }
-            else if (util.istype(response, 'string-number')) {
-                return Number(response)
-            }
-            else {
-                return response
-            }
-        }
-        if (this.responseHeader('content-type') == 'image/png') {
-
-        }
-        return response
-    }
-    /** @returns {number} */
-    responseCode() {
-        return this.request.status
-    }
-    /** @returns {boolean} */
-    responseCodeError() {
-        return this.responseCodeErrorClient() || this.responseCodeErrorServer()
-    }
-    /** @returns {boolean} */
-    responseCodeErrorClient() {
-        return 400 <= this.request.status && this.request.status <= 499
-    }
-    /** @returns {boolean} */
-    responseCodeErrorServer() {
-        return 500 <= this.request.status && this.request.status <= 599
-    }
-    /** @returns {boolean} */
-    responseCodeInformational() {
-        return 100 <= this.request.status && this.request.status <= 199
-    }
-    /** @returns {boolean} */
-    responseCodeRedirection() {
-        return 300 <= this.request.status && this.request.status <= 399
-    }
-    /** @returns {boolean} */
-    responseCodeSuccessful() {
-        return 200 <= this.request.status && this.request.status <= 299
-    }
-    /** @param {any} responseValueDefault @returns {ApplicationProgrammingInterface} */
-    responseDefault(responseValueDefault) {
-        this.requestResponseValueDefault = responseValueDefault
-        return this
-    }
-    /** @param {string} header @returns {string|null} */
-    responseHeader(header) {
-        let headers = this.responseHeaders()
-        return headers.get(header)
-    }
-    /** @returns {{string:string}} */
-    responseHeaders() {
-        let headers = new object()
-        for (let header of this.request.getAllResponseHeaders().split('\r\n')) {
-            headers.set(...header.split(': '))
-        }
-        return headers
-    }
-    /** @returns {number} */
-    responseStatus() {
-        return this.request.status
-    }
-    /** @returns {string} */
-    responseStatusText() {
-        return this.request.statusText
-    }
-    /** @returns {string} */
-    responseText() {
-        return this.request.responseText
-    }
-    /** @param {string} responseType @returns {ApplicationProgrammingInterface} */
-    responseType(responseType) {
-        this.requestResponseType = responseType
-        return this
-    }
-    /** @returns {string} */
-    responseURL() {
-        return this.request.responseURL
-    }
-    /** @returns {Document} */
-    responseXML() {
-        return this.request.responseXML
-    }
-    /** @param {string} route @returns {ApplicationProgrammingInterface} */
-    route(route) {
-        this.requestRoute = route[0] == '/' ? route : `/${route}`
-        return this
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
-    setOnAbortListener(listener) {
-        this.onAbortListener = listener
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
-    setOnErrorListener(listener) {
-        this.onErrorListener = listener
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
-    setOnLoadListener(listener) {
-        this.onLoadListener = listener
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
-    setOnLoadEndListener(listener) {
-        this.onLoadEndListener = listener
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
-    setOnLoadStartListener(listener) {
-        this.onLoadStartListener = listener
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
-    setOnProgressListener(listener) {
-        this.onProgressListener = listener
-    }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
-    setOnReadyStateChangeListener(listener) {
-        this.onReadyStateChangeListener = listener
-    }
-    /** @param {function(any): void} listener @returns {void} */
-    setOnResponseListener(listener) {
-        this.onResponseListener = listener
-    }
-    /** @param {number} timeout @returns {ApplicationProgrammingInterface} */
-    timeout(timeout) {
-        this.requestTimeout = timeout
-    }
-    /** @param {string} url @returns {ApplicationProgrammingInterface} */
-    url(url) {
-        this.requestController = ''
-        this.requestRoute = ''
-        this.requestQuery = ''
-        this.requestURL = url
-        return this
-    }
-    /** @param {string} value @returns {ApplicationProgrammingInterface} */
-    username(value) {
-        this.requestUsername = value
-        return this
-    }
-    /** @param {boolean} value @returns {ApplicationProgrammingInterface} */
-    withCredentials(value) {
-        this.request.withCredentials = value
-        return this
-    }
-    /** @returns {any} */
-    #getResponse() {
-        app.progressStop(this.requestIdentifier)
-        return this.response()
-    }
-    /** @param {string} method @param {string} route @returns {void} */
-    #setRequest(method, route) {
-        if (route) {
-            this.route(route)
-        }
-        let url = this.requestURL ? this.requestURL : `${this.requestController}${this.requestRoute}${this.requestQuery}`
-        this.request = new XMLHttpRequest()
-        if (this.requestAsynchronous && this.requestResponseType) {
-            this.request.responseType = this.requestResponseType
-        }
-        this.request.timeout = this.requestTimeout
-        this.request.onabort = this.onAbortListener
-        this.request.onerror = this.onErrorListener
-        this.request.onload = this.onLoadListener
-        this.request.onloadend = this.onLoadEndListener
-        this.request.onloadstart = this.onLoadStartListener
-        this.request.onprogress = this.onProgressListener
-        this.request.onreadystatechange = this.onReadyStateChangeListener
-        this.request.addEventListener('loadend', (event) => {
-            this.onResponseListener(this.response())
-        })
-        this.request.overrideMimeType(this.requestMimeType)
-        this.request.open(method, url, this.requestAsynchronous, this.requestUsername, this.requestPassword)
-        for (let [headerKey, headerValue] of enumerate(this.requestHeaders)) {
-            this.request.setRequestHeader(headerKey, headerValue)
-        }
-        this.requestIdentifier = util.identifier()
-        this.requestHeaders.clear()
-        this.requestQuery = ''
-        this.requestRoute = ''
-        this.requestURL = null
-        if (!this.requestAsynchronous) {
-            app.progressStart(this.requestIdentifier)
-        }
     }
 }
 class AppElement {
@@ -7414,8 +7436,24 @@ class AppElement {
         return this
     }
     /** @returns {AppElement} */
+    clear() {
+        if (this.isTagName('div')) {
+            this.innerHTML('')
+        }
+        if (this.isTagName('input,select')) {
+            this.value('')
+        }
+        return this
+    }
+    /** @returns {AppElement} */
     copy() {
         return new AppElement(this.element)
+    }
+    /** @returns {void} */
+    disableContextMenu() {
+        this.element.addEventListener('contextmenu', (event) => {
+            event.preventDefault()
+        })
     }
     /** @param {boolean} value @returns {AppElement|boolean} */
     display(value = null) {
@@ -7508,7 +7546,7 @@ class AppElement {
         return height
     }
     /** @param {number} index @returns {string} */
-    getIdentifier(index) {
+    getIdentifier(index = null) {
         if (index == null) {
             return this.element.id
         } else {
@@ -7618,15 +7656,6 @@ class AppElement {
         this.element.style.display = 'none'
         return this
     }
-    highlight(oncomplete = (element) => { }, milliseconds = 500) {
-        let original = this.style('background-color')
-        this.style('background-color', app.getStyleProperty(':root', '--color-highlight'), 'transition', `${milliseconds}ms`)
-        setTimeout(() => {
-            this.style('background-color', original)
-            setTimeout(() => oncomplete(this), milliseconds)
-        }, milliseconds)
-        return this
-    }
     /** @param {number|string} value @returns {AppElement|string} */
     identifier(value = null) {
         if (value == null) {
@@ -7716,13 +7745,26 @@ class AppElement {
             return keys.includes(key)
         }
     }
-    /** @param {string} tagName @returns {boolean} */
-    isTagName(tagName) {
-        return this.element.tagName.upper() == tagName.upper()
+    /** @param {string} tagNames @returns {boolean} */
+    isTagName(tagNames) {
+        for (let tagName of tagNames.strip(' ,').split(',')) {
+            if (this.getTagName('lower') == tagName.lower()) {
+                return true
+            }
+        }
+        return false
     }
     /** @returns {boolean} */
     isVisible() {
         return this.getStylePropertyComputed('display') != 'none'
+    }
+    /** @param {number} count @returns {AppElement} */
+    parent(count = 1) {
+        let element = this.element
+        for (let i = 0; i < count; i++) {
+            element = element.parentElement
+        }
+        return app.element(element)
     }
     /** @param {string|string[]|{ string: any }} value @returns {AppElement|any} */
     property(value) {
@@ -8087,8 +8129,7 @@ class AppElement {
     }
     /** @param {string} value @param {boolean} append @returns {AppElement|string} */
     text(value = null, append = false) {
-        let tagName = this.getTagName('upper')
-        if (tagName == 'INPUT' || tagName == 'SELECT') {
+        if (this.isTagName('input,select')) {
             return this.value(value, append)
         } else {
             return this.innerHTML(value, append)
@@ -8144,204 +8185,440 @@ class AppElement {
         return value
     }
 }
-class Cards {
-    constructor(obj = null) {
-        this.attr = { backgroundColor: '#0000ff', height: 155.55, id: 'card', left: '', select: 'translateY(-20px)', side: 'front', top: '', transform: '', transition: '500ms', width: 100, }
-        this.count = 1
-        this.cards = []
-        this.discarded = []
-        this.deck = []
-        this.suits = ['D', 'C', 'H', 'S']
-        this.symbols = ['&#9830;', '&#9827;', '&#9829;', '&#9824;']
-        this.table = []
-        this.trumps = 'ace_high'
-        if (obj) this.setAttributes(obj)
+class ApplicationProgrammingInterface {
+    constructor() {
+        // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+        /** @type {function(ProgressEvent): void} */
+        this.onAbortListener = ApplicationProgrammingInterface.onAbortListener
+        /** @type {function(ProgressEvent): void} */
+        this.onErrorListener = ApplicationProgrammingInterface.onErrorListener
+        /** @type {function(ProgressEvent): void} */
+        this.onLoadListener = ApplicationProgrammingInterface.onLoadListener
+        /** @type {function(ProgressEvent): void} */
+        this.onLoadEndListener = ApplicationProgrammingInterface.onLoadEndListener
+        /** @type {function(ProgressEvent): void} */
+        this.onLoadStartListener = ApplicationProgrammingInterface.onLoadStartListener
+        /** @type {function(ProgressEvent): void} */
+        this.onProgressListener = ApplicationProgrammingInterface.onProgressListener
+        /** @type {function(Event): void} */
+        this.onReadyStateChangeListener = ApplicationProgrammingInterface.onReadyStateChangeListener
+        /** @type {function(any): void} */
+        this.onResponseListener = ApplicationProgrammingInterface.onResponseListener
+        /** @type {XMLHttpRequest} */
+        this.request = null
+        /** @type {boolean} */
+        this.requestAsynchronous = false
+        /** @type {any} */
+        this.requestBody = null
+        /** @type {string} */
+        this.requestController = ''
+        /** @type {object} */
+        this.requestHeaders = new object()
+        /** @type {string} */
+        this.requestIdentifier = null
+        /** @type {string} */
+        this.requestMimeType = 'text/xml'
+        /** @type {string} */
+        this.requestPassword = null
+        /** @type {string} */
+        this.requestQuery = ''
+        /** @type {string} */
+        this.requestResponseValueDefault = null
+        /** @type {string} */
+        this.requestResponseType = null
+        /** @type {string} */
+        this.requestRoute = ''
+        /** @type {string} */
+        this.requestUsername = null
+        /** @type {number} */
+        this.requestTimeout = 0
+        /** @type {string} */
+        this.requestURL = null
+        /** @type {boolean} */
+        this.requestWithCredentials = false
     }
 
-    setAttributes(obj) {
-        for (let key in obj) if (key in this.attr) this.attr[key] = obj[key]
-        if ('backgroundColor' in obj) this.cards.filter((crd) => this.side(crd) == 'back').map((crd) => crd.style.backgroundColor = this.attr.backgroundColor)
-        if ('transition' in obj) this.cards.map((crd) => crd.style.transition = this.attr.transition)
-        if ('width' in obj) this.cards.map((crd) => { crd.style.width = this.attr.width + 'px', crd.style.height = (3.5 / 2.25) * this.attr.width + 'px' })
-    }
-    content(crd) {
-        let arr = this.get('e', crd)
-        let fs = [this.attr.width / 5, this.attr.width + (this.attr.width / 3)]
-        return `<b style=\"color: ${arr['color']}; font-size: ${fs[0]}px\">${arr['face']}</b>` +
-            `<div style=\"color:${arr['color']}; font-size: ${fs[1]}px; margin-top: -27.5px; text-align: center;\">${arr['symbol']}</div>` +
-            `<b style=\"color: ${arr['color']}; float:right; font-size: ${fs[0]}px; margin-top:-26px;\">${arr['face']}</b>`
-    }
-    create() {
-        this.cards = [], this.deck = [], this.discarded = [], this.table = []
-        let map = null
-        if (this.trumps == 'ace_high') map = { 'D2': 'D2', 'C2': 'C2', 'H2': 'H2', 'S2': 'S2' }
-        if (this.trumps == 'ace_low') map = { 'C14': 'C1', 'D14': 'D1', 'H14': 'H1', 'S14': 'S1' }
-        if (this.trumps == 'jokers_deuces') map = { 'D2': 'S16', 'C2': 'S17', 'H2': 'S18', 'S2': 'S15' }
-        for (let i = 0; i < this.count * 52; i++) {
-            let crd = this.suits[Math.floor(i / 13) % 4] + ((i % 13) + 2)
-            crd = crd in map ? map[crd] : crd
-            this.cards.push(this.element(crd))
-        }
-        this.deck = this.cards.map((crd) => crd)
-        for (let i of [1, 2, 3]) {
-            this.discarded = this.deck
-            this.deck = []
-            this.shuffle()
-        }
-        return this.deck
-    }
-    discard(...arr) {
-        if (arr.length > 0) {
-            arr.forEach(crd => {
-                let a = this.deck.findIndex((elt) => elt == crd)
-                let b = this.table.findIndex((elt) => elt == crd)
-                this[a == -1 ? 'table' : 'deck'].splice(a == -1 ? b : a, 1).forEach(crd => this.discarded.push(crd))
-            })
-        } else {
-            this.table.forEach(crd => this.discarded.push(crd))
-            this.table = []
-        }
-    }
-    element(crd) {
-        let elt = document.createElement('div')
-        elt.id = this.attr.id
-        elt.style.backgroundColor = this.attr.side == 'back' ? this.attr.backgroundColor : 'white'
-        elt.style.border = '1px solid black'
-        elt.style.borderRadius = '5px'
-        elt.style.boxSizing = 'border-box'
-        elt.style.fontSize = '15px'
-        elt.style.height = this.attr.height + 'px'
-        elt.style.left = this.attr.left
-        elt.style.opacity = '1'
-        elt.style.padding = '5px'
-        elt.style.position = 'absolute'
-        elt.style.textAlign = 'left'
-        elt.style.top = this.attr.top
-        elt.style.transform = this.attr.transform
-        elt.style.transition = this.attr.transition
-        elt.style.width = this.attr.width + 'px'
-        elt.style.zIndex = 0
-        elt.something = crd
-        elt.innerHTML = this.attr.side == 'back' ? '' : this.content(elt)
-        return elt
-    }
-    flip(crd, side = null) {
-        let front = side == null ? crd.style.backgroundColor == 'white' : side == 'back'
-        crd.style.backgroundColor = front ? this.attr.backgroundColor : 'white'
-        crd.innerHTML = front ? '' : this.content(crd.something)
-    }
-    get(arg, crd) {
-        crd = crd instanceof Element ? crd.something : crd
-        let v = Number(crd.substring(1))
-        switch (arg.toLowerCase()) {
-            case 'c':
-            case 'card':
-                return crd
-            case 's':
-            case 'suit':
-                return crd[0]
-            case 'sv':
-            case 'suit_value':
-                return this.suits.indexOf(crd[0])
-            case 'v':
-            case 'value':
-                return v
-            case 'fv':
-            case 'face_value':
-                return v <= 10 ? v : (11 <= v && v <= 13) ? 10 : 11
-            case 'f':
-            case 'face':
-                let map = { 1: 'A', 11: 'J', 12: 'Q', 13: 'K', 14: 'A', 15: '2', 16: '2', 17: 'Jo', 18: 'Jo' }
-                return v in map ? map[v] : v
-            case 'y':
-            case 'symbol':
-                return this.symbols[this.suits.indexOf(crd == 'S16' ? 'D' : crd[0])]
-            case 'e':
-            case 'element':
-                return { face: this.get('f', crd), symbol: this.get('y', crd), color: crd[0] == 'D' || crd[0] == 'H' || crd == 'S16' || crd == 'S18' ? 'red' : 'black' }
-            case 'd':
-            case 'data':
-                return { suit: this.get('s', crd), value: this.get('v', crd) }
-        }
-    }
-    hasSuit(sut, hnd) {
-        return hnd.some((crd) => this.get('s', crd) == sut)
-    }
-    index() {
-        this.deck.map((crd, i, arr) => crd.style.zIndex = (arr.length - i))
-    }
-    position(crd, pos, rand = [random(-5, 5), random(-5, 5), random(-5, 5)]) {
-        crd.style.left = rand[0] + pos[0] + '%'
-        crd.style.top = rand[1] + pos[1] + '%'
-        crd.style.transform = pos[2] + ' rotate(' + rand[2] + 'deg)'
+    /** @readonly @type {string} */
+    static METHOD_DELETE = "DELETE"
+    /** @readonly @type {string} */
+    static METHOD_GET = "GET"
+    /** @readonly @type {string} */
+    static METHOD_HEAD = "HEAD"
+    /** @readonly @type {string} */
+    static METHOD_OPTIONS = "OPTIONS"
+    /** @readonly @type {string} */
+    static METHOD_PUT = "PUT"
+    /** @readonly @type {string} */
+    static METHOD_POST = "POST"
+    /** @readonly @type {string} */
+    static METHOD_TRACE = "TRACE"
+
+    /** @readonly @type {number} */
+    static READY_STATE_UNSET = 0
+    /** @readonly @type {number} */
+    static READY_STATE_OPENED = 1
+    /** @readonly @type {number} */
+    static READY_STATE_HEADERS_RECEIVED = 2
+    /** @readonly @type {number} */
+    static READY_STATE_LOADING = 3
+    /** @readonly @type {number} */
+    static READY_STATE_DONE = 4
+
+    /** @readonly @type {string} */
+    static RESPONSE_TYPE_DEFAULT = ""
+    /** @readonly @type {string} */
+    static RESPONSE_TYPE_ARRAYBUFFER = "arraybuffer"
+    /** @readonly @type {string} */
+    static RESPONSE_TYPE_BLOB = "blob"
+    /** @readonly @type {string} */
+    static RESPONSE_TYPE_DOCUMENT = "document"
+    /** @readonly @type {string} */
+    static RESPONSE_TYPE_JSON = "json"
+    /** @readonly @type {string} */
+    static RESPONSE_TYPE_TEXT = "text"
+
+    /** @type {function(ProgressEvent): void} */
+    static onAbortListener = (event) => { }
+    /** @type {function(ProgressEvent): void} */
+    static onErrorListener = (event) => { }
+    /** @type {function(ProgressEvent): void} */
+    static onLoadListener = (event) => { }
+    /** @type {function(ProgressEvent): void} */
+    static onLoadEndListener = (event) => { }
+    /** @type {function(ProgressEvent): void} */
+    static onLoadStartListener = (event) => { }
+    /** @type {function(ProgressEvent): void} */
+    static onProgressListener = (event) => { }
+    /** @type {function(Event): void} */
+    static onReadyStateChangeListener = (event) => { }
+    /** @type {function(any): void} */
+    static onResponseListener = (data) => { }
+
+    /** @returns {void} */
+    abort() {
+        this.request.abort()
         return this
     }
-    pull(to = 'table') {
-        if (this.deck.length == 0) {
-            this.shuffle()
-            return this.pull(to)
+    /** @param {boolean} value @returns {ApplicationProgrammingInterface} */
+    asynchronous(value) {
+        this.requestAsynchronous = value
+        return this
+    }
+    /** @param {any} value @returns {ApplicationProgrammingInterface} */
+    body(body) {
+        if (util.istype(body, 'array|object')) {
+            body = util.json_encode(body)
         }
-        let crd = this.deck[0]
-        this.deck.shift()
-        this[to].push(crd)
-        return crd
+        this.requestBody = body
+        return this
     }
-    side(crd) {
-        return crd.style.backgroundColor == 'white' ? 'front' : 'back'
+    /** @param {string} controller @returns {ApplicationProgrammingInterface} */
+    controller(controller) {
+        if (controller == '' || controller == null) {
+            this.requestController = ''
+        } else {
+            this.requestController = controller[0] == '/' ? controller : `/${controller}`
+        }
+        return this
     }
-    sort(arg, hnd) {
-        if (arg == 's' || arg == 'suit' || true) {
-            let arr = [[], [], [], []].map((v) => new Array(19))
-            hnd.forEach(crd => arr[this.get('sv', crd.something)][this.get('v', crd.something)] = crd)
-            for (let i = 0, c = 0; i < 76; i++) {
-                if (arr[Math.floor(i / 19)][i % 19]) {
-                    hnd[c] = arr[Math.floor(i / 19)][i % 19]
-                    c += 1
-                }
+    /** @param {string} route @returns {any} */
+    delete(route = null) {
+        this.#setRequest(ApplicationProgrammingInterface.METHOD_DELETE, route)
+        this.request.send()
+        return this.#getResponse()
+    }
+    /** @param {string} route @returns {any} */
+    get(route = null) {
+        this.#setRequest(ApplicationProgrammingInterface.METHOD_GET, route)
+        this.request.send()
+        return this.#getResponse()
+    }
+    /** @param {string} headerKey @param {string} headerValue @returns {ApplicationProgrammingInterface|string} */
+    header(headerKey, headerValue) {
+        this.requestHeaders.set(headerKey, headerValue)
+        return this
+    }
+    /** @param {string|{string:string}} value @returns {ApplicationProgrammingInterface|string} */
+    headers(value) {
+        let headers = object.fromdata(value)
+        this.requestHeaders.update(headers)
+        return this
+    }
+    /** @param {number} code  @returns {boolean} */
+    isResponseCode(code) {
+        return this.responseCode() == code
+    }
+    /** @param {string} value @returns {ApplicationProgrammingInterface} */
+    mimeType(value) {
+        this.requestMimeType = value
+        return this
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    onabort(listener) {
+        this.onAbortListener = listener
+        return this
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    onerror(listener) {
+        this.onErrorListener = listener
+        return this
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    onload(listener) {
+        this.onLoadListener = listener
+        return this
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    onloadend(listener) {
+        this.onLoadEndListener = listener
+        return this
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    onloadstart(listener) {
+        this.onLoadStartListener = listener
+        return this
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    onprogress(listener) {
+        this.onProgressListener = listener
+        return this
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    onreadystatechange(listener) {
+        this.onReadyStateChangeListener = listener
+        return this
+    }
+    /** @param {function(any): void} listener @returns {ApplicationProgrammingInterface} */
+    onresponse(listener) {
+        this.onResponseListener = listener
+        return this
+    }
+    /** @param {string} value @returns {ApplicationProgrammingInterface} */
+    password(value) {
+        this.requestPassword = value
+        return this
+    }
+    /** @param {string} route @returns {any} */
+    post(route = null) {
+        this.#setRequest(ApplicationProgrammingInterface.METHOD_POST, route)
+        this.request.send(this.requestBody)
+        return this.#getResponse()
+    }
+    /** @param {string} route @returns {any} */
+    put(route = null) {
+        this.#setRequest(ApplicationProgrammingInterface.METHOD_PUT, route)
+        this.request.send(this.requestBody)
+        return this.#getResponse()
+    }
+    /** @param {string|{string:string}} value @returns {ApplicationProgrammingInterface} */
+    query(value) {
+        this.requestQuery = '?'
+        let query = object.fromdata(value)
+        for (let [queryKey, queryValue] of enumerate(query)) {
+            this.requestQuery += `${this.requestQuery.length == 1 ? '' : '&'}${queryKey}=${queryValue}`
+        }
+        return this
+    }
+    /** @returns {any} */
+    response() {
+        return this.request.response
+    }
+    /** @returns {number} */
+    responseCode() {
+        return this.request.status
+    }
+    /** @returns {boolean} */
+    responseCodeError() {
+        return this.responseCodeErrorClient() || this.responseCodeErrorServer()
+    }
+    /** @returns {boolean} */
+    responseCodeErrorClient() {
+        return 400 <= this.request.status && this.request.status <= 499
+    }
+    /** @returns {boolean} */
+    responseCodeErrorServer() {
+        return 500 <= this.request.status && this.request.status <= 599
+    }
+    /** @returns {boolean} */
+    responseCodeInformational() {
+        return 100 <= this.request.status && this.request.status <= 199
+    }
+    /** @returns {boolean} */
+    responseCodeRedirection() {
+        return 300 <= this.request.status && this.request.status <= 399
+    }
+    /** @returns {boolean} */
+    responseCodeSuccessful() {
+        return 200 <= this.request.status && this.request.status <= 299
+    }
+    /** @param {any} responseValueDefault @returns {ApplicationProgrammingInterface} */
+    responseDefault(responseValueDefault) {
+        this.requestResponseValueDefault = responseValueDefault
+        return this
+    }
+    /** @param {string} header @returns {string|null} */
+    responseHeader(header) {
+        let headers = this.responseHeaders()
+        return headers.get(header)
+    }
+    /** @returns {{string:string}} */
+    responseHeaders() {
+        let headers = new object()
+        for (let header of this.request.getAllResponseHeaders().split('\r\n')) {
+            headers.set(...header.split(': '))
+        }
+        return headers
+    }
+    /** @returns {number} */
+    responseStatus() {
+        return this.request.status
+    }
+    /** @returns {string} */
+    responseStatusText() {
+        return this.request.statusText
+    }
+    /** @returns {string} */
+    responseText() {
+        return this.request.responseText
+    }
+    /** @param {string} responseType @returns {ApplicationProgrammingInterface} */
+    responseType(responseType) {
+        this.requestResponseType = responseType
+        return this
+    }
+    /** @returns {string} */
+    responseURL() {
+        return this.request.responseURL
+    }
+    /** @returns {Document} */
+    responseXML() {
+        return this.request.responseXML
+    }
+    /** @param {string} route @returns {ApplicationProgrammingInterface} */
+    route(route) {
+        this.requestRoute = route[0] == '/' ? route : `/${route}`
+        return this
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    setOnAbortListener(listener) {
+        this.onAbortListener = listener
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    setOnErrorListener(listener) {
+        this.onErrorListener = listener
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    setOnLoadListener(listener) {
+        this.onLoadListener = listener
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    setOnLoadEndListener(listener) {
+        this.onLoadEndListener = listener
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    setOnLoadStartListener(listener) {
+        this.onLoadStartListener = listener
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    setOnProgressListener(listener) {
+        this.onProgressListener = listener
+    }
+    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    setOnReadyStateChangeListener(listener) {
+        this.onReadyStateChangeListener = listener
+    }
+    /** @param {function(any): void} listener @returns {void} */
+    setOnResponseListener(listener) {
+        this.onResponseListener = listener
+    }
+    /** @param {number} timeout @returns {ApplicationProgrammingInterface} */
+    timeout(timeout) {
+        this.requestTimeout = timeout
+    }
+    /** @param {string} url @returns {ApplicationProgrammingInterface} */
+    url(url) {
+        this.requestController = ''
+        this.requestRoute = ''
+        this.requestQuery = ''
+        this.requestURL = url
+        return this
+    }
+    /** @param {string} value @returns {ApplicationProgrammingInterface} */
+    username(value) {
+        this.requestUsername = value
+        return this
+    }
+    /** @param {boolean} value @returns {ApplicationProgrammingInterface} */
+    withCredentials(value) {
+        this.request.withCredentials = value
+        return this
+    }
+    /** @returns {any} */
+    #getResponse() {
+        app.progressStop()
+        let response = this.request.response
+        let responseDefault = this.requestResponseValueDefault
+        this.requestResponseValueDefault = null
+        if (this.responseCodeError() && response == '') {
+            return this.requestResponseValueDefault ? responseDefault : response
+        }
+        if (this.responseHeader('content-type') == 'application/json') {
+            return util.json_decode(response)
+        }
+        if (this.responseHeader('content-type') == 'text/plain') {
+            if (util.istype(response, 'string-array|string-object')) {
+                return util.json_decode(response)
+            }
+            else if (util.istype(response, 'string-boolean')) {
+                return response == 'true'
+            }
+            else if (util.istype(response, 'string-number')) {
+                return Number(response)
+            }
+            else {
+                return response
             }
         }
-        if (arg == 'v' || arg == 'value') {
-            hnd.sort((a, b) => this.get('v', a.something) - this.get('v', b.something))
+        if (this.responseHeader('content-type') == 'image/png') {
+
         }
-        return hnd
+        return response
     }
-    shuffle() {
-        do {
-            let idx = Math.floor(Math.random() * this.discarded.length)
-            this.deck.push(this.discarded[idx])
-            this.discarded.splice(idx, 1)
-        } while (this.discarded.length > 0)
-    }
-    select(crd, hnd = []) {
-        hnd.map((crd) => crd.style.transform = crd.style.transform.replace(` ${this.attr.select}`, ''))
-        crd.style.transform += ` ${this.attr.select}`
-    }
-    value(elt, crd) {
-        elt.something = crd
-        elt.innerHTML = this.content(crd)
-        return elt
-    }
-}
-class Color {
-    #values
-    constructor(r, g, b, a = 1) {
-        this.#values = [r, g, b, a]
-    }
-    get alpha() {
-        return this.#values[3]
-    }
-    set alpha(value) {
-        if (value < 0 || value > 1) {
-            throw new RangeError("Alpha value must be between 0 and 1")
+    /** @param {string} method @param {string} route @returns {void} */
+    #setRequest(method, route) {
+        if (route) {
+            this.route(route)
         }
-        this.#values[3] = value
+        if (!this.requestAsynchronous) {
+            app.progressStart(this.requestIdentifier)
+        }
+        let url = this.requestURL ? this.requestURL : `${this.requestController}${this.requestRoute}${this.requestQuery}`
+        this.request = new XMLHttpRequest()
+        if (this.requestAsynchronous && this.requestResponseType) {
+            this.request.responseType = this.requestResponseType
+        }
+        this.request.timeout = this.requestTimeout
+        this.request.onabort = this.onAbortListener
+        this.request.onerror = this.onErrorListener
+        this.request.onload = this.onLoadListener
+        this.request.onloadend = this.onLoadEndListener
+        this.request.onloadstart = this.onLoadStartListener
+        this.request.onprogress = this.onProgressListener
+        this.request.onreadystatechange = this.onReadyStateChangeListener
+        this.request.addEventListener('loadend', (event) => {
+            this.onResponseListener(this.#getResponse())
+        })
+        this.request.overrideMimeType(this.requestMimeType)
+        this.request.open(method, url, this.requestAsynchronous, this.requestUsername, this.requestPassword)
+        for (let [headerKey, headerValue] of enumerate(this.requestHeaders)) {
+            this.request.setRequestHeader(headerKey, headerValue)
+        }
+        this.requestIdentifier = util.identifier()
+        this.requestHeaders.clear()
+        this.requestQuery = ''
+        this.requestRoute = ''
+        this.requestURL = null
     }
-}
-class Colors {
-    static transparent = '#00000000'
-    static overlayLight = '#33000000'
-    static overlayMedium = '#66000000'
-    static overlayDark = '#99000000'
 }
 class DataBinding {
     /*
@@ -8462,27 +8739,27 @@ class Timestamp {
     static DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
     /** @param {Date|number|string} date1 @param {Date|number|string} date2 @returns {boolean} */
-    static isSameDay(date1, date2 = util.timestamp('object')) {
-        date1 = util.timestamp(date1, 'object')
-        date2 = util.timestamp(date2, 'object')
+    static isSameDay(date1, date2 = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
+        date1 = util.timestamp(date1, util.TIMESTAMP_OPTION_OBJECT)
+        date2 = util.timestamp(date2, util.TIMESTAMP_OPTION_OBJECT)
         return date1.getFullYear() == date2.getFullYear() && date1.getMonth() == date2.getMonth() && date1.getDate() == date2.getDate()
     }
 
     /** @param {Date|number|string} date @returns {string} */
-    static getDate(date = util.timestamp('object')) {
-        date = util.timestamp(date, 'object')
+    static getDate(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
+        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
         let year = date.getFullYear().toString()
         let month = (date.getMonth() + 1).toString().rjust(2, '0')
         let dayOfMonth = date.getDate().toString().rjust(2, '0')
         return `${year}-${month}-${dayOfMonth}`
     }
     /** @param {Date|number|string} date @param {boolean} short @returns {string} */
-    static getDateTime(date = util.timestamp('object'), short = false) {
+    static getDateTime(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT), short = false) {
         return `${Timestamp.getDate(date)} ${Timestamp.getTime(date, short)}`
     }
     /** @param {Date|number|string} date @param {boolean} short @returns {string} */
-    static getDayOfWeek(date = util.timestamp('object'), short = false) {
-        date = util.timestamp(date, 'object')
+    static getDayOfWeek(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT), short = false) {
+        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
         let dayOfWeek = Timestamp.DAYS_OF_WEEK[date.getDay()]
         if (short) {
             return dayOfWeek.slice(0, 3)
@@ -8491,9 +8768,9 @@ class Timestamp {
         }
     }
     /** @param {Date|number|string} timestamp1 @param {Date|number|string} timestamp2 @param {boolean} short @returns {string} */
-    static getDifference(timestamp1, timestamp2 = util.timestamp('seconds'), short = true) {
-        timestamp1 = util.timestamp(timestamp1, 'seconds')
-        timestamp2 = util.timestamp(timestamp2, 'seconds')
+    static getDifference(timestamp1, timestamp2 = util.timestamp(util.TIMESTAMP_OPTION_SECONDS), short = true) {
+        timestamp1 = util.timestamp(timestamp1, util.TIMESTAMP_OPTION_SECONDS)
+        timestamp2 = util.timestamp(timestamp2, util.TIMESTAMP_OPTION_SECONDS)
         let difference = Math.abs(timestamp2 - timestamp1)
         if (difference == 0) return 'Now'
         if (difference <= 1) return short ? '1sec': '1 second'
@@ -8540,18 +8817,18 @@ class Timestamp {
         if (difference <= 315360000) return short ? '10yr' : '10 years'
     }
     /** @param {Date|number|string} date @returns {string} */
-    static getHours(date = util.timestamp('object')) {
-        date = util.timestamp(date, 'object')
+    static getHours(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
+        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
         return date.getHours().toString().rjust(2, '0')
     }
     /** @param {Date|number|string} date @returns {string} */
-    static getMinutes(date = util.timestamp('object')) {
-        date = util.timestamp(date, 'object')
+    static getMinutes(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
+        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
         return date.getMinutes().toString().rjust(2, '0')
     }
     /** @param {Date|number|string} date @param {boolean} short @returns {string} */
-    static getMonth(date = util.timestamp('object'), short = false) {
-        date = util.timestamp(date, 'object')
+    static getMonth(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT), short = false) {
+        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
         let month = Timestamp.MONTHS[date.getMonth()]
         if (short) {
             return month.slice(0, 3)
@@ -8560,13 +8837,13 @@ class Timestamp {
         }
     }
     /** @param {Date|number|string} date @returns {string} */
-    static getSeconds(date = util.timestamp('object')) {
-        date = util.timestamp(date, 'object')
+    static getSeconds(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
+        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
         return date.getSeconds().toString().rjust(2, '0')
     }
     /** @param {Date|number|string} date @param {boolean} short @returns {string} */
-    static getTime(date = util.timestamp('object'), short = false) {
-        date = util.timestamp(date, 'object')
+    static getTime(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT), short = false) {
+        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
         let hours = date.getHours().toString().rjust(2, '0')
         let minutes = date.getMinutes().toString().rjust(2, '0')
         let seconds = date.getSeconds().toString().rjust(2, '0')
@@ -8578,8 +8855,8 @@ class Timestamp {
         }
     }
     /** @param {Date|number|string} date @returns {string} */
-    static getYear(date = util.timestamp('object')) {
-        date = util.timestamp(date, 'object')
+    static getYear(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
+        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
         return date.getFullYear().toString()
     }
 }
@@ -8635,7 +8912,7 @@ class Viewer {
         this.viewSelector.value(index).dispatchEvent('input')
     }
 }
-//_________________________________________________________________________________________________________________________________________________//
+//__________________________________________________________________________________________________________________________________________________//
 class View {
     /** @constructor */
     constructor() {
@@ -8645,8 +8922,10 @@ class View {
         this.tag = ''
     }
 
+    /** @type {function(Event, AppElement): void} */
+    static onEventListenerInterface = (event, element) => { }
     /** @typedef {function(View): null} Listener */
-    static onListener = (view) => { }
+    static onListener = (...args) => { }
 
     /** @param {AppElement} element @returns {number[]} */
     static getScrollOffset(element) {
@@ -8708,6 +8987,10 @@ class View {
     isVisible() {
         return app.containsElement(this.view.getIdentifier()) && this.view.isVisible()
     }
+    /** @param {AppElement} element  @returns {boolean} */
+    isWithinView(element) {
+        return element.isEqualTo(this.view, true)
+    }
     /** @param {{string:string}|string} attributes */
     setAttributes(attributes) {
         attributes = object.fromdata(attributes)
@@ -8740,7 +9023,7 @@ class View {
     /** @param {AppElement} element @param {AppElement|string} value @param {boolean} wait @returns {AppElement} */
     setImage(element, value, wait = false) {
         if (util.istype(value, 'string')) {
-            if (wait) {
+            if (wait && app.isRunningRemote()) {
                 let data = app.createWebConnection().headers('Accept: text/base64').get(app.getPathImages(value))
                 element.src(`data:image/png;base64,${data}`)
             } else {
@@ -8755,9 +9038,11 @@ class View {
     /** @param {string} tag @returns {void} */
     setTag(tag) {
         this.tag = tag
+        this.view.setAttribute('tag', tag)
     }
     /** @param {AppElement} element @param {AppElement|number|string} value @returns {AppElement} */
     setText(element, value) {
+        element.innerHTML('')
         if (value == null) {
             element.hide()
             return element
@@ -8766,7 +9051,6 @@ class View {
             element.innerHTML(value)
         }
         if (util.istype(value, 'element')) {
-            // element.outerHTML(app.element(value).outerHTML())
             element.appendChild(...app.element(value).children())
         }
         if (!element.isVisible()) {
@@ -8852,21 +9136,21 @@ class Dialog extends View {
     }
 
     /** @readonly @type {string} */
-    static STYLE_DEFAULT = ''
+    static STYLE_DEFAULT      = ''
     /** @readonly @type {string} */
-    static STYLE_MULTICHOICE = 'multichoice'
+    static STYLE_MULTICHOICE  = 'multichoice'
     /** @readonly @type {string} */
     static STYLE_SINGLECHOICE = 'singlechoice'
 
     /** @readonly @type {number} */
-    static BUTTON_NEUTRAL = 0
+    static BUTTON_NEUTRAL  = 0
     /** @readonly @type {number} */
     static BUTTON_NEGATIVE = 1
     /** @readonly @type {number} */
     static BUTTON_POSITIVE = 2
 
     /** @readonly @type {string} */
-    static BUTTON_TEXT_NEUTRAL = 'DONE'
+    static BUTTON_TEXT_NEUTRAL  = 'DONE'
     /** @readonly @type {string} */
     static BUTTON_TEXT_NEGATIVE = 'CANCEL'
     /** @readonly @type {string} */
@@ -8968,6 +9252,17 @@ class Dialog extends View {
         }
         return values
     }
+    /** @returns {string[]} */
+    getSelectedMultipleChoiceItems() {
+        let values = new array()
+        for (let item of this.getItems()) {
+            let input = item.children(0)
+            if (input.getProperty('checked')) {
+                values.append(input.getAttribute('value'))
+            }
+        }
+        return values
+    }
     /** @returns {string} */
     getSelectedSingleChoiceItem() {
         for (let item of this.getItems()) {
@@ -9060,14 +9355,52 @@ class Dialog extends View {
     }
     /** @param {string|string[][]} items @param {string} checkedItems @returns {void} */
     setMultiChoiceItems(items, checkedItems = []) {
+        // items: string[][] = [[title,value],[title,value]]
+        // items: string = title:value,title:value
+        // items: string = value,value
+        // checkedItem: string = [value,value]
+        // checkedItem: string = value,value
         this.style = Dialog.STYLE_MULTICHOICE
-        this.view.attribute(`style: ${this.style}`)
-        // items: array = [[title,value],[title,value],...] | string = title:value,title:value,...
-        // checkedItems: array = [value,value] | string = value,value...
+        this.view.setAttribute('style', this.style)
         items = array.fromdata(items)
         checkedItems = util.istype(checkedItems, 'string') ? checkedItems.split(',') : checkedItems
         for (let itemData of items) {
-            let [title, value] = itemData
+            let [title, value] = ['', '']
+            if (util.istype(itemData, 'array-string')) {
+                [title, value] = itemData
+            }
+            if (util.istype(itemData, 'string')) {
+                [title, value] = [itemData, itemData]
+            }
+            let item = app.element('div').appendChild(
+                app.element('input').view('checkbox').attribute(`type: checkbox; value: ${value};`),
+                app.element('div').text(title)
+            )
+            if (value != null && checkedItems.includes(value)) {
+                item.children(0).attribute('checked: ')
+            }
+            this.#getBody().appendChild(item)
+        }
+    }
+    /** @param {string|string[][]} items @param {string} checkedItems @returns {void} */
+    setMultipleChoiceItems(items, checkedItems = []) {
+        // items: string[][] = [[title,value],[title,value]]
+        // items: string = title:value,title:value
+        // items: string = value,value
+        // checkedItem: string = [value,value]
+        // checkedItem: string = value,value
+        this.style = Dialog.STYLE_MULTICHOICE
+        this.view.setAttribute('style', this.style)
+        items = array.fromdata(items)
+        checkedItems = util.istype(checkedItems, 'string') ? checkedItems.split(',') : checkedItems
+        for (let itemData of items) {
+            let [title, value] = ['', '']
+            if (util.istype(itemData, 'array-string')) {
+                [title, value] = itemData
+            }
+            if (util.istype(itemData, 'string')) {
+                [title, value] = [itemData, itemData]
+            }
             let item = app.element('div').appendChild(
                 app.element('input').view('checkbox').attribute(`type: checkbox; value: ${value};`),
                 app.element('div').text(title)
@@ -9136,13 +9469,20 @@ class Dialog extends View {
     }
     /** @param {string|string[][]} items @param {string} checkedItem @returns {void} */
     setSingleChoiceItems(items, checkedItem = null) {
-        this.style = Dialog.STYLE_SINGLECHOICE
-        this.view.attribute(`style: ${this.style}`)
         // items: string[][] = [[title,value],[title,value],...]
         // items: string = title:value,title:value,...
+        // items: string = value,value,...
         // checkedItem: string = value
+        this.style = Dialog.STYLE_SINGLECHOICE
+        this.view.setAttribute('style', this.style)
         for (let itemData of array.fromdata(items)) {
-            let [title, value] = itemData
+            let [title, value] = ['', '']
+            if (util.istype(itemData, 'array-string')) {
+                [title, value] = itemData
+            }
+            if (util.istype(itemData, 'string')) {
+                [title, value] = [itemData, itemData]
+            }
             let item = app.element('div').appendChild(
                 app.element('input').attribute(`name: single-choice; type: radio; value: ${value}`),
                 app.element('div').text(title)
@@ -9177,12 +9517,12 @@ class Dialog extends View {
     /** @param {number} delay @returns {void} */
     show(delay = 10) {
         if (!this.isVisible()) {
-            // NOTE: prevent immediate dismissisal after calling show() provided that canceledOnTouchOutside=true and dialog.show() is gui activated
-            app.body().appendChild(this.view)
-            this.#getBody().setStyleProperty('max-height', this.view.getHeight(false) * 0.8)
-            this.onShowListener(this)
-            // setTimeout(() => {
-            // }, delay)
+            // NOTE: prevent immediate dismissisal after calling show() provided that canceledOnTouchOutside=true and dialog is gui activated
+            setTimeout(() => {
+                app.body().appendChild(this.view)
+                this.#getBody().setStyleProperty('max-height', this.view.getHeight(false) * 0.8)
+                this.onShowListener(this)
+            }, delay)
         }
     }
     // 
@@ -9253,10 +9593,11 @@ class DialogProgress extends Dialog {
         this.setTitle('Please Wait...')
         this.setStyle(DialogProgress.STYLE_HORIZONTAL)
     }
+
     /** @readonly @type {string} */    
     static STYLE_HORIZONTAL = 'horizontal'
     /** @readonly @type {string} */        
-    static STYLE_SPINNER = 'spinner'
+    static STYLE_SPINNER    = 'spinner'
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
@@ -9399,25 +9740,25 @@ class Drawer extends View {
     }
 
     /** @readonly @type {string} */
-    static LOCK_MODE_LOCKED_OPEN = 'LOCKED_OPEN'
+    static LOCK_MODE_LOCKED_OPEN   = 'LOCKED_OPEN'
     /** @readonly @type {string} */
     static LOCK_MODE_LOCKED_CLOSED = 'LOCKED_CLOSED'
     /** @readonly @type {string} */
-    static LOCK_MODE_UNLOCKED = 'UNLOCKED'
+    static LOCK_MODE_UNLOCKED      = 'UNLOCKED'
 
     /** @readonly @type {string} */
-    static SIDE_LEFT = 'LEFT'
+    static SIDE_LEFT  = 'LEFT'
     /** @readonly @type {string} */
     static SIDE_RIGHT = 'RIGHT'
 
     /** @readonly @type {string} */
-    static STATE_CLOSED = 'CLOSED'
+    static STATE_CLOSED   = 'CLOSED'
     /** @readonly @type {string} */
     static STATE_DRAGGING = 'DRAGGING'
     /** @readonly @type {string} */
-    static STATE_IDLE = 'IDLE'
+    static STATE_IDLE     = 'IDLE'
     /** @readonly @type {string} */
-    static STATE_OPEN = 'OPEN'
+    static STATE_OPEN     = 'OPEN'
     /** @readonly @type {string} */
     static STATE_SETTLING = 'SETTLING'
 
@@ -9493,11 +9834,11 @@ class Calender extends View {
     constructor(attributes = {}) {
         super()
         /** @type {Date} */
-        this.date = util.timestamp('object')
+        this.date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)
         /** @type {number} */
         this.firstDayOfWeek = Calender.DAY_OF_WEEK_SUNDAY
         /** @type {Date} */
-        this.selectedDate = util.timestamp('object')
+        this.selectedDate = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)
         /** @type {string} */
         this.selectedDateColor = app.configuration('color-accent')
         /** @type {string} */
@@ -9534,43 +9875,43 @@ class Calender extends View {
     }
 
     /** @readonly @type {number} */
-    static DAY_OF_WEEK_SUNDAY = 0
+    static DAY_OF_WEEK_SUNDAY    = 0
     /** @readonly @type {number} */
-    static DAY_OF_WEEK_MONDAY = 1
+    static DAY_OF_WEEK_MONDAY    = 1
     /** @readonly @type {number} */
-    static DAY_OF_WEEK_TUESDAY = 2
+    static DAY_OF_WEEK_TUESDAY   = 2
     /** @readonly @type {number} */
     static DAY_OF_WEEK_WEDNESDAY = 3
     /** @readonly @type {number} */
-    static DAY_OF_WEEK_THURSDAY = 4
+    static DAY_OF_WEEK_THURSDAY  = 4
     /** @readonly @type {number} */
-    static DAY_OF_WEEK_FRIDAY = 5
+    static DAY_OF_WEEK_FRIDAY    = 5
     /** @readonly @type {number} */
-    static DAY_OF_WEEK_SATURDAY = 6
+    static DAY_OF_WEEK_SATURDAY  = 6
     /** @readonly @type {number} */
-    static MONTH_JANUARY = 0
+    static MONTH_JANUARY   = 0
     /** @readonly @type {number} */
-    static MONTH_FEBRUARY = 1
+    static MONTH_FEBRUARY  = 1
     /** @readonly @type {number} */
-    static MONTH_MARCH = 2
+    static MONTH_MARCH     = 2
     /** @readonly @type {number} */
-    static MONTH_APRIL = 3
+    static MONTH_APRIL     = 3
     /** @readonly @type {number} */
-    static MONTH_MAY = 4
+    static MONTH_MAY       = 4
     /** @readonly @type {number} */
-    static MONTH_JUNE = 5
+    static MONTH_JUNE      = 5
     /** @readonly @type {number} */
-    static MONTH_JULY = 6
+    static MONTH_JULY      = 6
     /** @readonly @type {number} */
-    static MONTH_AUGUST = 7
+    static MONTH_AUGUST    = 7
     /** @readonly @type {number} */
     static MONTH_SEPTEMBER = 8
     /** @readonly @type {number} */
-    static MONTH_OCTOBER = 9
+    static MONTH_OCTOBER   = 9
     /** @readonly @type {number} */
-    static MONTH_NOVEMBER = 10
+    static MONTH_NOVEMBER  = 10
     /** @readonly @type {number} */
-    static MONTH_DECEMBER = 11
+    static MONTH_DECEMBER  = 11
 
     /** @readonly @type {string[]} */
     static DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -9603,9 +9944,9 @@ class Calender extends View {
     }
 
     /** @param {Date|number|string} date1 @param {Date|number|string} date2 @returns {boolean} */
-    static isSameDay(date1, date2 = util.timestamp('object')) {
-        date1 = util.timestamp(date1, 'object')
-        date2 = util.timestamp(date2, 'object')
+    static isSameDay(date1, date2 = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
+        date1 = util.timestamp(date1, util.TIMESTAMP_OPTION_OBJECT)
+        date2 = util.timestamp(date2, util.TIMESTAMP_OPTION_OBJECT)
         return date1.getFullYear() == date2.getFullYear() && date1.getMonth() == date2.getMonth() && date1.getDate() == date2.getDate()
     }
 
@@ -9741,7 +10082,7 @@ class Calender extends View {
         while (firstDayOfPeriod.getDay() != this.firstDayOfWeek) {
             firstDayOfPeriod.setHours(firstDayOfPeriod.getHours() - 24)
         }
-        let todayDate = util.timestamp('object')
+        let todayDate = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)
         let date = new Date(firstDayOfPeriod)
         for (let i = 0; i < 35; i++) {
             if (i == 0) {
@@ -9869,20 +10210,42 @@ class Item extends View {
             ),
             app.element('div')
         )
+        this.getView().addListener('mouseenter', (...args) => this.onEventListenerInterface(...args))
+        this.getView().addListener('mouseleave', (...args) => this.onEventListenerInterface(...args))
+        // mouseover mouseout mousemove 
         super.setAttributes(attributes)
         // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
+        // TODO: setup auto show popupmenu on mouseenter popupmenu.anchor
+        if (event.type == 'mouseenter') {
+            if (!this.hasMenu()) return
+            // this.getMenu().showOn()
+        }
+        if (event.type == 'mouseleave') {
+            if (!this.hasMenu()) return
+            // this.getMenu().dismiss()
+        }
     }
 
+    /** @returns {AppElement} */
+    getBody() {
+        return this.#getBody()
+    }
     /** @returns {PopupMenu} */
     getMenu() {
         return this.menu
     }
     /** @returns {number} */
     getOrder() {
+        for (let [order, element] of enumerate(this.getView().parentElement().children())) {
+            if (element.isEqualTo(this.getView())) {
+                return order
+            }
+        }
+        return -1
     }
     /** @returns {number|null} */
     getPosition() {
@@ -9915,9 +10278,21 @@ class Item extends View {
     /** @returns {boolean} */
     isCheckable() {
         let icon = this.#getIcon()
-        return icon.getTagName() == 'INPUT'
+        return icon.isTagName('input')
     }
-    /** @param {string} title  @returns {boolean} */
+    /** @returns {boolean} */
+    isMenu() {
+        return this.menu != null
+    }
+    /** @param {number} order @returns {boolean} */
+    isOrder(order) {
+        for (let [index, element] of enumerate(this.getView().parentElement().children())) {
+            if (element.isEqualTo(this.getView())) {
+                return index == order
+            }
+        }
+    }
+    /** @param {string} title @returns {boolean} */
     isTitle(title) {
         return this.getTitle() == title
     }
@@ -9925,6 +10300,7 @@ class Item extends View {
     isVisible() {
         return this.view.style('visibility') != 'hidden'
     }
+    /** @param {AppElement|string} body @returns {void} */
     setBody(body) {
         super.setText(this.#getBody(), body)
     }
@@ -10017,6 +10393,10 @@ class Link extends View {
 class List extends View {
     constructor(attributes = {}) {
         super()
+        /** @type {boolean} */
+        this.isCheckableMultipleChoice = false
+        /** @type {boolean} */
+        this.isCheckableSingleChoice = false
         /** @type {Item[]} */
         this.items = new array()
         /** @type {function(List, Item): void} */
@@ -10033,14 +10413,16 @@ class List extends View {
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        for (let [position, item] of this.getItems().enumerate()) {
-            if (element.isEqualTo(item.getView(), true)) {
+        if (event.type == 'click') {
+            for (let [position, item] of enumerate(this.getItems())) {
+                if (!element.isEqualTo(item.getView(), true)) continue
                 if (!item.isEnabled()) continue
                 if (item.isCheckable()) {
                     item.setChecked(!item.isChecked())
                 }
                 this.onItemClickListener(this, item)
             }
+
         }
     }
 
@@ -10070,6 +10452,15 @@ class List extends View {
         for (let itemData of data) {
             this.addItem(itemData)
         }
+    }
+    /** @returns {void} */
+    clear() {
+        this.items.clear()
+        this.view.innerHTML('')
+    }
+    /** @returns {boolean} */
+    empty() {
+        return this.size() == 0
     }
     /** @returns {Item[]} */
     getItems() {
@@ -10288,6 +10679,8 @@ class Popup extends View {
         /** @type {boolean} */
         this.autoDismiss = true
         /** @type {boolean} */
+        this.dismissOnTouchInside = true
+        /** @type {boolean} */
         this.dismissOnTouchOutside = false
         /** @type {number} */
         this.dismissTimeout = 2000
@@ -10311,9 +10704,17 @@ class Popup extends View {
     }
 
     /** @readonly @type {string} */
-    static SIDE_LEFT = 'LEFT'
+    static SIDE_BOTTOM = 'bottom'
     /** @readonly @type {string} */
-    static SIDE_RIGHT = 'RIGHT'
+    static SIDE_BOTTOM_LEFT = 'bottom-left'
+    /** @readonly @type {string} */
+    static SIDE_BOTTOM_RIGHT = 'bottom-right'
+    /** @readonly @type {string} */
+    static SIDE_LEFT  = 'left'
+    /** @readonly @type {string} */
+    static SIDE_RIGHT = 'right'
+    /** @readonly @type {string} */
+    static SIDE_TOP   = 'top'
 
     /** @type {function(Popup): void} */
     static onDismissListener = (popup) => { }
@@ -10322,18 +10723,18 @@ class Popup extends View {
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        if (this.isVisible()) {
-            if (element.isEqualTo(this.view)) {
-                clearTimeout(this.timeoutID)
-                this.dismiss()
-            } else {
+        if (event.type == 'click') {
+            if (this.isVisible() && this.isWithinView(element)) {
+                if (this.dismissOnTouchInside) {
+                    this.dismiss()
+                }
+            }
+            if (this.isVisible() && !this.isWithinView(element) && this.isAnchor() && !element.isEqualTo(this.anchor)) {
                 if (this.dismissOnTouchOutside) {
                     this.dismiss()
                 }
             }
-        }
-        if (!this.isVisible() && this.isAnchor()) {
-            if (element.isEqualTo(this.anchor)) {
+            if (!this.isVisible() && this.isAnchor() && element.isEqualTo(this.anchor)) {
                 this.showOn()
             }
         }
@@ -10354,6 +10755,10 @@ class Popup extends View {
     /** @returns {AppElement} */
     getAnchor() {
         return this.anchor
+    }
+    /** @returns {AppElement} */
+    getBody() {
+        return this.view
     }
     /** @returns {number} */
     getDismissTimeout() {
@@ -10387,6 +10792,10 @@ class Popup extends View {
     setDismissTimeout(dismissTimeout) {
         this.dismissTimeout = dismissTimeout
     }
+    /** @param {boolean} dismissOnTouchInside @returns {void} */
+    setDismissOnTouchInside(dismissOnTouchInside) {
+        this.dismissOnTouchInside = dismissOnTouchInside
+    }
     /** @param {boolean} dismissOnTouchOutside @returns {void} */
     setDismissOnTouchOutside(dismissOnTouchOutside) {
         this.dismissOnTouchOutside = dismissOnTouchOutside
@@ -10413,16 +10822,16 @@ class Popup extends View {
     }
     /** @param {number} x @param {number} y @returns {void} */
     showAt(x = this.positionX, y = this.positionY) {
-        this.show()
         let viewWidth = this.view.getWidth()
         let viewHeight = this.view.getHeight()
         let viewportWidth = app.body().getWidth()
         let viewportHeight = app.body().getHeight()
         let left = x + viewWidth > viewportWidth ? x - viewWidth - 10 : x
         let top = y + viewHeight > viewportHeight ? y - viewHeight - 10 : y
-        left = left < 0 ? 10 : left
-        top = top < 0 ? 10 : top
-        this.view.style('left', left).style('top', top)
+        left = left < 0 ? 0 : left
+        top = top < 0 ? 0 : top
+        this.view.setStyleProperty('left', left)
+        this.view.setStyleProperty('top', top)
         clearTimeout(this.timeoutID)
         if (this.autoDismiss) {
             this.timeoutID = setTimeout(() => this.dismiss(), this.dismissTimeout)
@@ -10435,6 +10844,10 @@ class Popup extends View {
         let rect = anchor.getBoundingClientRect()
         let x
         let y
+        if (side == Popup.SIDE_BOTTOM) {
+            x = rect.x
+            y = rect.y + rect.height
+        }
         if (side == Popup.SIDE_LEFT) {
             x = rect.x
             y = rect.y
@@ -10443,17 +10856,21 @@ class Popup extends View {
             x = rect.x + rect.width
             y = rect.y
         }
+        if (side == Popup.SIDE_TOP) {
+            x = rect.x
+            y = rect.y
+        }
         let element = this.anchor
         do {
             element = element.parentElement()
-            if (element.isTagName('BODY')) break
+            if (element.isTagName('body')) break
             x += element.getProperty('scrollLeft')
             y += element.getProperty('scrollTop')
             // print(`lengthX=${element.getProperty('offsetWidth')}, lengthY=${element.getProperty('offsetHeight')}, scrollX=${element.getProperty('scrollLeft')}, scrollY=${element.getProperty('scrollTop')}`)
             // print(`x=${x}, y=${y}`)
         } while (true)
-        x = x == 0 ? 10 : x
-        y = y == 0 ? 10 : y
+        x = x == 0 ? 5 : x
+        y = y == 0 ? 5 : y
         this.showAt(x, y)
     }
     /** @returns {AppElement} */
@@ -10524,6 +10941,10 @@ class PopupMenu extends Popup {
     hasVisibleItems() {
         return this.menu.hasVisibleItems()
     }
+    /** @param {string} title @returns {boolean} */
+    isTitle(title) {
+        return this.#getTitle().text() == title
+    }
     /** @returns {void} */
     removeAllItems() {
         this.menu.removeAllItems()
@@ -10577,20 +10998,6 @@ class PopupMenu extends Popup {
         return this.view.children(0)
     }
 }
-class Progress extends View {
-    constructor(attributes = {}) {
-        super()
-        // 
-        super.view = app.element('div').view(super.getClassName())
-        app.addEventListenerInterface('', this, true)
-        super.setAttributes(attributes)
-        // 
-    }
-
-    /** @param {Event} event @param {AppElement} element @returns {void} */
-    onEventListenerInterface(event, element) {
-    }
-}
 class ProgressBar extends View {
     constructor(attributes = {}) {
         super()
@@ -10615,7 +11022,7 @@ class ProgressBar extends View {
     }
 
     /** @readonly @type {string} */
-    static INDETERMINATE_BEHAVIOR_CYCLE = 'CYCLE'
+    static INDETERMINATE_BEHAVIOR_CYCLE  = 'CYCLE'
     /** @readonly @type {string} */
     static INDETERMINATE_BEHAVIOR_REPEAT = 'REPEAT'
 
@@ -10810,6 +11217,10 @@ class Search extends View {
         setTimeout(() => this.#getIcon().style('margin: unset;'), 500)
         this.onCloseListener(this)
     }
+    /** @returns {AppElement} */
+    getInput() {
+        return this.#getInput()
+    }
     /** @returns {string} */
     getInputType(inputType) {
         return this.#getInput().getAttribute('type')
@@ -10871,7 +11282,6 @@ class Search extends View {
     }
     /** @param {Listener} listener @returns {void} */
     setOnQueryTextListener(listener) {
-        // onQueryTextChange
         this.onQueryTextListener = listener
     }
     /** @param {Listener} listener @returns {void} */
@@ -10887,7 +11297,7 @@ class Search extends View {
     }
     /** @param {string} query @returns {void} */
     setQueryHint(queryHint) {
-        this.#getInput().attribute(`placeholder: ${queryHint}`)
+        this.#getInput().setAttribute('placeholder', queryHint)
     }
     /** @param {string|string[]} suggestions @returns {void} */
     setSuggestions(suggestions) {
@@ -11191,14 +11601,14 @@ class Tabs extends View {
     }
 
     /** @readonly @type {string} */
-    static TAB_MODE_AUTO = 'AUTO'
+    static TAB_MODE_AUTO       = 'AUTO'
     /** @readonly @type {string} */
-    static TAB_MODE_FIXED = 'FIXED'
+    static TAB_MODE_FIXED      = 'FIXED'
     /** @readonly @type {string} */
     static TAB_MODE_SCROLLABLE = 'SCROLLABLE'
 
     /** @readonly @type {string} */
-    static TAB_LABEL_VISIBILITY_LABELED = 'LABELED'
+    static TAB_LABEL_VISIBILITY_LABELED   = 'LABELED'
     /** @readonly @type {string} */
     static TAB_LABEL_VISIBILITY_UNLABELED = 'UNLABELED'
 
@@ -11388,14 +11798,14 @@ class Table extends View {
     static ACTION_BUTTON_UPDATE = 'update'
 
     /** @readonly @type {string} */
-    static CELL_TYPE_TEXT = 'text'
+    static CELL_TYPE_TEXT     = 'text'
     /** @readonly @type {string} */
-    static CELL_TYPE_INPUT = 'input'
+    static CELL_TYPE_INPUT    = 'input'
     /** @readonly @type {string} */
     static CELL_TYPE_SELECTOR = 'selector'
 
     /** @readonly @type {string} */
-    static SELECTION_TYPE_SINGLE = 'SINGLE'
+    static SELECTION_TYPE_SINGLE   = 'SINGLE'
     /** @readonly @type {string} */
     static SELECTION_TYPE_MULTIPLE = 'MULTIPLE'
 
@@ -11406,28 +11816,31 @@ class Table extends View {
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        for (let row of this.getRows()) {
-            if (element.isEqualTo(row)) {
-                if (this.selectionType == Table.SELECTION_TYPE_SINGLE) {
-                    this.unselectAll()
-                    this.selectRow(row)
-                }
-                if (this.selectionType == Table.SELECTION_TYPE_MULTIPLE) {
-                    if (this.isRowSelected(row)) {
-                        this.unselectRow(row)
-                    } else {
+        if (event.type == 'click') {
+            for (let row of this.getRows()) {
+                if (element.isEqualTo(row)) {
+                    if (this.selectionType == Table.SELECTION_TYPE_SINGLE) {
+                        this.unselectAll()
                         this.selectRow(row)
                     }
+                    if (this.selectionType == Table.SELECTION_TYPE_MULTIPLE) {
+                        if (this.isRowSelected(row)) {
+                            this.unselectRow(row)
+                        } else {
+                            this.selectRow(row)
+                        }
+                    }
+                    this.onRowSelectedListener(this, row)
                 }
-                this.onRowSelectedListener(this, row)
             }
-        }
-        for (let [position, button] of enumerate(this.#getActionButtons())) {
-            if (element.isEqualTo(button)) {
-                this.#getActionButtonDelete().hide()
-                this.#getActionButtonUpdate().hide()
-                this.onActionButtonClickListener(this, element)
-                break
+            if (this.isActionButtonsEnabled()) {
+                for (let [position, button] of enumerate(this.#getActionButtons())) {
+                    if (!element.isEqualTo(button)) continue
+                    this.#getActionButtonDelete().hide()
+                    this.#getActionButtonUpdate().hide()
+                    this.onActionButtonClickListener(this, element)
+                    break
+                }
             }
         }
     }
@@ -11467,6 +11880,10 @@ class Table extends View {
         let row = app.element('div')
         this.#getBody().appendChild(row)
         return row
+    }
+    /** @returns {void} */
+    clear() {
+        this.removeAllRows()
     }
     /** @param {AppElement} row @param {number} position @returns {AppElement} */
     getCellAt(row, position) {
@@ -11600,8 +12017,10 @@ class Table extends View {
         if (!this.isRowSelected(row)) {
             row.attribute('selected: ').style(`background-color: ${app.getStyleProperty(':root', '--color-select')}`)
         }
-        this.#getActionButtonDelete().show()
-        this.#getActionButtonUpdate().show()
+        if (this.isActionButtonsEnabled()) {
+            this.#getActionButtonDelete().show()
+            this.#getActionButtonUpdate().show()
+        }
     }
     /** @param {number} position @returns {void} */
     selectRowAt(position) {
@@ -11621,6 +12040,7 @@ class Table extends View {
     }
     /** @param {string|string[]} headers @returns {void} */
     setHeaders(headers) {
+        // NOTE: requires execution of setView()
         this.headers = array.fromdata(headers)
         this.#getHeader().innerHTML('')
         let total = 0
@@ -12001,10 +12421,16 @@ class Window extends View {
         this.menubar = new MenuBar()
         /** @type {boolean} */
         this.moving = false
+        /** @type {function(Window, Event, AppElement): void} */
+        this.onClickListener = View.onListener
         /** @type {function(Window): void} */
-        this.onCloseListener = Window.onCloseListener
+        this.onCloseListener = View.onListener
         /** @type {function(Window): void} */
-        this.onOpenListener = Window.onOpenListener
+        this.onMaximizeListener = View.onListener
+        /** @type {function(Window): void} */
+        this.onMinimizeListener = View.onListener
+        /** @type {function(Window): void} */
+        this.onOpenListener = View.onListener
         /** @type {number} */
         this.positionX = 0
         /** @type {number} */
@@ -12018,8 +12444,8 @@ class Window extends View {
             app.element('div').appendChild(
                 app.element('img').view('icon'),
                 app.element('div'),
-                app.element('img').view('icon'),
-                app.element('img').view('icon'),
+                app.element('img').view('icon').attribute('type: button;').style('border-radius: 0px;'),
+                app.element('img').view('icon').attribute('type: button;').style('border-radius: 0px;'),
             ),
             this.menubar.getView(),
             app.element('div'),
@@ -12032,12 +12458,26 @@ class Window extends View {
         super.setImage(this.#getSizer(), 'minimize')
         super.setImage(this.#getCloser(), 'close')
         this.setGeometry(Window.POSITION_CENTER, Window.POSITION_CENTER, '75%', '75%')
+        // 
+        let mutationObserver = new MutationObserver((mutationsRecords, mutationObserver) => {
+            for (let mutationRecord of mutationsRecords) {
+                // elements appeneded
+                if (mutationRecord.addedNodes.length > 0) {
+                    this.#setMaxHeight()
+                }
+                // elements removed
+                if (mutationRecord.removedNodes.length > 0) {
+                    this.#setMaxHeight()
+                }
+            }
+        })
+        mutationObserver.observe(this.#getBody().getElement(), { childList: true, subtree: true });
     }
 
     /** @readonly @type {string} */
     static POSITION_CENTER = 'CENTER'
     /** @readonly @type {string} */
-    static POSITION_END = 'END'
+    static POSITION_END   = 'END'
     /** @readonly @type {string} */
     static POSITION_START = 'START'
 
@@ -12046,12 +12486,18 @@ class Window extends View {
     /** @readonly @type {string} */
     static SIZE_MINIMIZE = 'MINIMIZE'
 
+    /** @type {function(Window, Event, AppElement): void} */
+    static onClickListener = (window, event, element) => { }
     /** @type {function(Window): void} */
     static onCloseListener = (window) => { }
     /** @type {function(MenuBar, Item): void} */
     static onMenuItemClickListener = (menuBar, item) => { }
     /** @type {function(Window): void} */
     static onOpenListener = (window) => { }
+    /** @type {function(Window): void} */
+    static onMaximizeListener = (window) => { }
+    /** @type {function(Window): void} */
+    static onMinimizeListener = (window) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
@@ -12067,6 +12513,7 @@ class Window extends View {
             if (element.isEqualTo(this.#getCloser())) {
                 this.close()
             }
+            this.onClickListener(this, event, element)
         }
         // TODO: determine when mouse leaves header while movement is activated
         if (event.type == 'mousedown') {
@@ -12143,6 +12590,7 @@ class Window extends View {
     }
     /** @returns {void} */
     maximize() {
+        if (this.isMaximized()) return
         this.size = Window.SIZE_MAXIMIZE
         super.setImage(this.#getSizer(), 'minimize', true)
         this.#getMenuBar().show()
@@ -12150,9 +12598,11 @@ class Window extends View {
         this.#getFooter().show()
         this.view.style('height', this.getHeight())
         this.view.style('width', this.getWidth())
+        this.onMaximizeListener(this)
     }
     /** @returns {void} */
     minimize() {
+        if (this.isMinimized()) return
         this.size = Window.SIZE_MINIMIZE
         super.setImage(this.#getSizer(), 'maximize', true)
         this.#getMenuBar().hide()
@@ -12160,6 +12610,7 @@ class Window extends View {
         this.#getFooter().hide()
         this.view.style('height', this.#getHeader().getHeight())
         this.view.style('width', 200)
+        this.onMinimizeListener(this)
     }
     /** @returns {void} */
     open() {
@@ -12167,13 +12618,7 @@ class Window extends View {
             app.body().appendChild(this.getView())
             this.sendForward()
             this.onOpenListener(this)
-            // NOtE: set view|view.body style property max-height to provide y-axis scrollbar provided that the body's content exceeds max-height
-            let percentageView = this.getView().getStylePropertyComputed('max-height')
-            let heightView = app.getHeight() * (percentageView.remove('%') / 100)
-            this.getView().setStyleProperty('max-height', heightView)
-            let percentageBody = this.getBody().getStylePropertyComputed('max-height')
-            let heightBody = heightView * (percentageBody.remove('%') / 100)
-            this.getBody().setStyleProperty('max-height', heightBody)
+            this.#setMaxHeight()
         }
     }
     /** @returns {void} */
@@ -12239,12 +12684,24 @@ class Window extends View {
         this.menubar = menubar
     }
     /** @param {Listener} listener @returns {void} */
+    setOnClickListener(listener) {
+        this.onClickListener = listener
+    }
+    /** @param {Listener} listener @returns {void} */
     setOnCloseListener(listener) {
         this.onCloseListener = listener
     }
     /** @param {Listener} listener @returns {void} */
+    setOnMaximizeListener(listener) {
+        this.onMaximizeListener = listener
+    }
+    /** @param {Listener} listener @returns {void} */
     setOnMenuItemClickListener(listener) {
         this.menubar.setOnMenuItemClickListener(listener)
+    }
+    /** @param {Listener} listener @returns {void} */
+    setOnMinimizeListener(listener) {
+        this.onMinimizeListener = listener
     }
     /** @param {Listener} listener @returns {void} */
     setOnOpenListener(listener) {
@@ -12353,6 +12810,21 @@ class Window extends View {
     #getTitle() {
         return this.view.children(0).children(1)
     }
+    /** @returns {void} */
+    #setMaxHeight() {
+        // NOTE: set view and body style property max-height to active y-axis scrollbar provided that the body's content exceeds calculated max-height
+        this.#getBody().setStyleProperty('max-height', '')
+        let percentageView = this.getView().getStylePropertyComputed('max-height')
+        if (percentageView == 0) return 
+        let maxHeightView = app.getHeight() * (percentageView.remove('%') / 100)
+        this.getView().setStyleProperty('max-height', maxHeightView)
+        let heightView = this.getView().getHeight()
+        let heightHeader = this.#getHeader().getHeight()
+        let heightMenuBar = this.#getMenuBar().getHeight()
+        let heightFooter = this.#getFooter().getHeight()
+        let heightBody = heightView - (heightHeader + heightMenuBar + heightFooter) - 12.5
+        this.#getBody().setStyleProperty('max-height', heightBody)
+    }
 }
 class _ extends View {
     constructor(attributes = {}) {
@@ -12372,6 +12844,11 @@ class _ extends View {
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
+        // print(`${this.getClassName()}(${this.getIdentifier()}).onEventListenerInterface(event={type=${event.type}}, element={id=${element.identifier()}})`)
+
+        if (event.type == 'click') {
+
+        }
     }
 
     /** @returns {*} */
@@ -12383,7 +12860,203 @@ class _ extends View {
 
     }
 }
-//_________________________________________________________________________________________________________________________________________________//
+//__________________________________________________________________________________________________________________________________________________//
+class Cards {
+    constructor(obj = null) {
+        this.attr = { backgroundColor: '#0000ff', height: 155.55, id: 'card', left: '', select: 'translateY(-20px)', side: 'front', top: '', transform: '', transition: '500ms', width: 100, }
+        this.count = 1
+        this.cards = []
+        this.discarded = []
+        this.deck = []
+        this.suits = ['D', 'C', 'H', 'S']
+        this.symbols = ['&#9830;', '&#9827;', '&#9829;', '&#9824;']
+        this.table = []
+        this.trumps = 'ace_high'
+        if (obj) this.setAttributes(obj)
+    }
+
+    setAttributes(obj) {
+        for (let key in obj) if (key in this.attr) this.attr[key] = obj[key]
+        if ('backgroundColor' in obj) this.cards.filter((crd) => this.side(crd) == 'back').map((crd) => crd.style.backgroundColor = this.attr.backgroundColor)
+        if ('transition' in obj) this.cards.map((crd) => crd.style.transition = this.attr.transition)
+        if ('width' in obj) this.cards.map((crd) => { crd.style.width = this.attr.width + 'px', crd.style.height = (3.5 / 2.25) * this.attr.width + 'px' })
+    }
+    content(crd) {
+        let arr = this.get('e', crd)
+        let fs = [this.attr.width / 5, this.attr.width + (this.attr.width / 3)]
+        return `<b style=\"color: ${arr['color']}; font-size: ${fs[0]}px\">${arr['face']}</b>` +
+            `<div style=\"color:${arr['color']}; font-size: ${fs[1]}px; margin-top: -27.5px; text-align: center;\">${arr['symbol']}</div>` +
+            `<b style=\"color: ${arr['color']}; float:right; font-size: ${fs[0]}px; margin-top:-26px;\">${arr['face']}</b>`
+    }
+    create() {
+        this.cards = [], this.deck = [], this.discarded = [], this.table = []
+        let map = null
+        if (this.trumps == 'ace_high') map = { 'D2': 'D2', 'C2': 'C2', 'H2': 'H2', 'S2': 'S2' }
+        if (this.trumps == 'ace_low') map = { 'C14': 'C1', 'D14': 'D1', 'H14': 'H1', 'S14': 'S1' }
+        if (this.trumps == 'jokers_deuces') map = { 'D2': 'S16', 'C2': 'S17', 'H2': 'S18', 'S2': 'S15' }
+        for (let i = 0; i < this.count * 52; i++) {
+            let crd = this.suits[Math.floor(i / 13) % 4] + ((i % 13) + 2)
+            crd = crd in map ? map[crd] : crd
+            this.cards.push(this.element(crd))
+        }
+        this.deck = this.cards.map((crd) => crd)
+        for (let i of [1, 2, 3]) {
+            this.discarded = this.deck
+            this.deck = []
+            this.shuffle()
+        }
+        return this.deck
+    }
+    discard(...arr) {
+        if (arr.length > 0) {
+            arr.forEach(crd => {
+                let a = this.deck.findIndex((elt) => elt == crd)
+                let b = this.table.findIndex((elt) => elt == crd)
+                this[a == -1 ? 'table' : 'deck'].splice(a == -1 ? b : a, 1).forEach(crd => this.discarded.push(crd))
+            })
+        } else {
+            this.table.forEach(crd => this.discarded.push(crd))
+            this.table = []
+        }
+    }
+    element(crd) {
+        let elt = document.createElement('div')
+        elt.id = this.attr.id
+        elt.style.backgroundColor = this.attr.side == 'back' ? this.attr.backgroundColor : 'white'
+        elt.style.border = '1px solid black'
+        elt.style.borderRadius = '5px'
+        elt.style.boxSizing = 'border-box'
+        elt.style.fontSize = '15px'
+        elt.style.height = this.attr.height + 'px'
+        elt.style.left = this.attr.left
+        elt.style.opacity = '1'
+        elt.style.padding = '5px'
+        elt.style.position = 'absolute'
+        elt.style.textAlign = 'left'
+        elt.style.top = this.attr.top
+        elt.style.transform = this.attr.transform
+        elt.style.transition = this.attr.transition
+        elt.style.width = this.attr.width + 'px'
+        elt.style.zIndex = 0
+        elt.something = crd
+        elt.innerHTML = this.attr.side == 'back' ? '' : this.content(elt)
+        return elt
+    }
+    flip(crd, side = null) {
+        let front = side == null ? crd.style.backgroundColor == 'white' : side == 'back'
+        crd.style.backgroundColor = front ? this.attr.backgroundColor : 'white'
+        crd.innerHTML = front ? '' : this.content(crd.something)
+    }
+    get(arg, crd) {
+        crd = crd instanceof Element ? crd.something : crd
+        let v = Number(crd.substring(1))
+        switch (arg.toLowerCase()) {
+            case 'c':
+            case 'card':
+                return crd
+            case 's':
+            case 'suit':
+                return crd[0]
+            case 'sv':
+            case 'suit_value':
+                return this.suits.indexOf(crd[0])
+            case 'v':
+            case 'value':
+                return v
+            case 'fv':
+            case 'face_value':
+                return v <= 10 ? v : (11 <= v && v <= 13) ? 10 : 11
+            case 'f':
+            case 'face':
+                let map = { 1: 'A', 11: 'J', 12: 'Q', 13: 'K', 14: 'A', 15: '2', 16: '2', 17: 'Jo', 18: 'Jo' }
+                return v in map ? map[v] : v
+            case 'y':
+            case 'symbol':
+                return this.symbols[this.suits.indexOf(crd == 'S16' ? 'D' : crd[0])]
+            case 'e':
+            case 'element':
+                return { face: this.get('f', crd), symbol: this.get('y', crd), color: crd[0] == 'D' || crd[0] == 'H' || crd == 'S16' || crd == 'S18' ? 'red' : 'black' }
+            case 'd':
+            case 'data':
+                return { suit: this.get('s', crd), value: this.get('v', crd) }
+        }
+    }
+    hasSuit(sut, hnd) {
+        return hnd.some((crd) => this.get('s', crd) == sut)
+    }
+    index() {
+        this.deck.map((crd, i, arr) => crd.style.zIndex = (arr.length - i))
+    }
+    position(crd, pos, rand = [random(-5, 5), random(-5, 5), random(-5, 5)]) {
+        crd.style.left = rand[0] + pos[0] + '%'
+        crd.style.top = rand[1] + pos[1] + '%'
+        crd.style.transform = pos[2] + ' rotate(' + rand[2] + 'deg)'
+        return this
+    }
+    pull(to = 'table') {
+        if (this.deck.length == 0) {
+            this.shuffle()
+            return this.pull(to)
+        }
+        let crd = this.deck[0]
+        this.deck.shift()
+        this[to].push(crd)
+        return crd
+    }
+    side(crd) {
+        return crd.style.backgroundColor == 'white' ? 'front' : 'back'
+    }
+    sort(arg, hnd) {
+        if (arg == 's' || arg == 'suit' || true) {
+            let arr = [[], [], [], []].map((v) => new Array(19))
+            hnd.forEach(crd => arr[this.get('sv', crd.something)][this.get('v', crd.something)] = crd)
+            for (let i = 0, c = 0; i < 76; i++) {
+                if (arr[Math.floor(i / 19)][i % 19]) {
+                    hnd[c] = arr[Math.floor(i / 19)][i % 19]
+                    c += 1
+                }
+            }
+        }
+        if (arg == 'v' || arg == 'value') {
+            hnd.sort((a, b) => this.get('v', a.something) - this.get('v', b.something))
+        }
+        return hnd
+    }
+    shuffle() {
+        do {
+            let idx = Math.floor(Math.random() * this.discarded.length)
+            this.deck.push(this.discarded[idx])
+            this.discarded.splice(idx, 1)
+        } while (this.discarded.length > 0)
+    }
+    select(crd, hnd = []) {
+        hnd.map((crd) => crd.style.transform = crd.style.transform.replace(` ${this.attr.select}`, ''))
+        crd.style.transform += ` ${this.attr.select}`
+    }
+    value(elt, crd) {
+        elt.something = crd
+        elt.innerHTML = this.content(crd)
+        return elt
+    }
+}
+/** @param {boolean[]|string[]|{}} iterable @returns {boolean} */
+window.all = function all(iterable) {
+    if (util.istype(iterable, 'array-boolean')) {
+        for (let value of iterable) {
+            if (value === false) {
+                return false
+            }
+        }
+    }
+    else if (util.istype(iterable, 'array-string')) {
+        for (let value of iterable) {
+            if (value.length == 0) {
+                return false
+            }
+        }
+    }
+    return true
+}
 /** @param {boolean[]|string[]|{}} iterable @returns {boolean} */
 window.any = function any(iterable) {
     if (util.istype(iterable, 'array-boolean')) {
@@ -12395,7 +13068,7 @@ window.any = function any(iterable) {
     }
     else if (util.istype(iterable, 'array-string')) {
         for (let value of iterable) {
-            if (value.length != 0) {
+            if (!(value.length == 0)) {
                 return true
             }
         }
@@ -12406,6 +13079,22 @@ window.any = function any(iterable) {
         }
     }
     return false
+}
+/** @param {any} value @returns {boolean} */
+window.len = function len(object) {
+    if (util.istype(object, 'array')) {
+        return object.length
+    }
+    else if (util.istype(object, 'object')) {
+        let keys = []
+        for (let key in object) {
+            keys.append(key)
+        }
+        return keys.length
+    }
+    else if (util.istype(object, 'string')) {
+        return object.length
+    }
 }
 /** @param {any[]|{}} iterable */
 window.enumerate = function* enumerate(iterable) {
@@ -12441,9 +13130,6 @@ window.excludes = function excludes(key, iterable) {
     }
     if (util.istype(iterable, 'array')) {
         for (let value of iterable) {
-            if (istype(value)) {
-                return false
-            }
             if (value == key) {
                 return false
             }
@@ -12452,9 +13138,6 @@ window.excludes = function excludes(key, iterable) {
     }
     if (util.istype(iterable, 'object')) {
         for (let value in iterable) {
-            if (istype(value)) {
-                return false
-            }
             if (value == key) {
                 return false
             }
@@ -12463,9 +13146,6 @@ window.excludes = function excludes(key, iterable) {
     }
     if (util.istype(iterable, 'string')) {
         for (let value of iterable.split('|')) {
-            if (istype(value)) {
-                return false
-            }
             if (value == key) {
                 return false
             }
@@ -12489,9 +13169,6 @@ window.includes = function includes(key, iterable) {
     }
     if (util.istype(iterable, 'array')) {
         for (let value of iterable) {
-            if (istype(value)) {
-                return true
-            }
             if (value == key) {
                 return true
             }
@@ -12500,10 +13177,7 @@ window.includes = function includes(key, iterable) {
     }
     if (util.istype(iterable, 'object')) {
         for (let [iterableKey, value = iterable[iterableKey]] in iterable) {
-            if (istype(value)) {
-                return true
-            }
-            if (value == key) {
+            if (key == iterableKey) {
                 return true
             }
         }
@@ -12511,9 +13185,6 @@ window.includes = function includes(key, iterable) {
     }
     if (util.istype(iterable, 'string')) {
         for (let value of iterable.split('|')) {
-            if (istype(value)) {
-                return true
-            }
             if (value == key) {
                 return true
             }
