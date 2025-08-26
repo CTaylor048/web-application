@@ -122,50 +122,6 @@ ipv6 | internet_protocol_v6
 mac  | media_access_control
 """
 
-"""
--------------------------------------ERRORS-------------------------------------
-ArrayLengthError: variable-name={} variable-length={len()} length=<eq|ge|gt|le|lt>{}
-ClipboardCopyError: 
-DepreciationError: name={} value={}
-DirectoryNotFoundError: path={}
-FileNotFoundError: path={}
-FileSizeError: file-path={} file-size={} size=<eq|ge|gt|le|lt>{} (bytes)
-KeyError: variable-name= key={}
-IndexError: variable-name={} variable-length={len()} index={}
-ParseHTTPBytesError
-StringLengthError: variable-name={} variable-length={len()} length=<eq|ge|gt|le|lt>{}
-SendPacketError
-TypeError: variable-name= variable-value={} variable-type={type()} type=
-UnsetError: variable-name=
-ValueError: variable-name= variable-value={}
-
--------------------------------REGULAR-EXPRESSIONS------------------------------
-\[(.+):\]                           .slice($1)
-\[:(.+)\]                           .slice(0, $1)
-\[(.+):(.+)\]                       .slice($1, $2)
-\[(.+):(.+)\[(.+):\](.+)?\]         .slice($1, $2.slice($3)$4)
-\[(.+):(.+)\[(.+):(.+)\](.+)?\]     .slice($1, $2.slice($3, $4)$5)
-.slice\((.+)\)                      [$1:]
-.slice\(0, (.+)\)                   [:$1]
-.slice\((.+), (.+)\)                [$1:$2]
-(\w+).length                        len($1)
-len\((\w+)\)                        $1.length
-f"(.+)"                             `$1`
-`(.+)`                              f"$1"
-(\{)                                $$$1
-= (.+) if (.+) else (.+)            = $2 ? $1 : $3
-= (.+) ? (.+) : (.+)                = $2 if $1 else $3
-
-----------------------------OBJECT-INSTANCE-ACCESS------------------------------
-print(util.dump(globals()))
-getattr(globals()['app'], 'main')
-getattr(globals().get('app'), 'main')
-
---------------------------------------------------------------------------------
-"C:\Program Files (x86)\VSCode\resources\app\out\vs\workbench\contrib\terminal\browser\media\shellIntegration.ps1"
-util.system_log(__file__, inspect.currentframe().f_lineno, f"")
-"""
-
 class util:
     """
     Utilities
@@ -4582,4 +4538,3 @@ class Logger(threading.Thread):
         return string
 
 # ___________________________________________________________________________________________________________________________________________________#
-
