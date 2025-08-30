@@ -3325,6 +3325,34 @@ class util:
             query[queryKey] = queryValue
         return query
     # v
+    def vector_addition(vector1: list[float], vector2: list[float]) -> list[float]:
+        if not len(vector1) == len(vector2):
+            return util.system_log(__file__, inspect.currentframe().f_lineno, f"ArrayLengthError: require vectors of identical dimensions")
+        return [c1 + c2 for c1, c2 in zip(vector1, vector2)]
+    def vector_magnitude(vector: list[float]) -> float:
+        return math.sqrt(sum(component**2 for component in vector))
+    def vector_multiplication(vector1: list[float], vector2: list[float]) -> list[float]:
+        if not len(vector1) == len(vector2):
+            return util.system_log(__file__, inspect.currentframe().f_lineno, f"ArrayLengthError: require vectors of identical dimensions")
+        return [c1 * c2 for c1, c2 in zip(vector1, vector2)]
+    def vector_multiplication_scalar(vector: list[float], scalar: float) -> list[float]:
+        return [c * scalar for c in vector]
+    def vector_subtraction(vector1: list[float], vector2: list[float]) -> list[float]:
+        if not len(vector1) == len(vector2):
+            return util.system_log(__file__, inspect.currentframe().f_lineno, f"ArrayLengthError: require vectors of identical dimensions")
+        return [c1 - c2 for c1, c2 in zip(vector1, vector2)]
+    def vector_to_components(magnitude: float, direction: float) -> list[float]:
+        x = util.vector_to_x(magnitude, direction)
+        y = util.vector_to_y(magnitude, direction)
+        return [x, y]
+    def vector_to_direction(x: float, y: float) -> list[float]:
+        return math.atan2(y, x) * util.RADIANS_TO_DEGREES
+    def vector_to_magnitude(x: float, y: float) -> list[float]:
+        return math.sqrt(x**2 + y**2)
+    def vector_to_x(magnitude: float, direction: float) -> list[float]:
+        return magnitude * math.cos(direction * util.DEGREES_TO_RADIANS)
+    def vector_to_y(magnitude: float, direction: float) -> list[float]:
+        return magnitude * math.sin(direction * util.DEGREES_TO_RADIANS)
     def volume(x: float, y: float, z: float) -> float:
         return x * y * z
     # w
@@ -4132,61 +4160,55 @@ class app:
     def __init__(self):
         pass
     
-    arguments_: object|dict[str, str] = object()
-    configuration_: object|dict[str, int|str] = object()
+    __arguments__: object|dict[str, str] = object()
+    __configuration__: object|dict[str, int|str] = object()
+    __variables__: object = object({
+        # do not insert blank entries
+    })
+    executionTimerEntries: dict[str, list]|object = object()
+    executionTimerPerformance: dict[str, list]|object = object()
     instance = None
     isConfigurationFile = True
     name: str
-    variables_: object = object({
-        # do not insert blank entries
-    })
-    executionTimerIdentifier: str = None
-    executionTimerTimestamp: int = None
-    executionTimerPerformance: dict[str, list]|object = object({
-
-    })
-    executionTimerEntries: dict[str, list]|object = object({
-
-    })
 
     def main(path: str, arguments: list[str] = []) -> None:
         print(f"{app.getProcessIdentifier()}.{util.path_info(path, 'filename')}.{__name__}\n")
         # path: string = the path of client file, argument: __file__
         # arguments: string[] = list of values passed into client, argument: sys.argv[1:]
         # 
-        app.variables_.update(util.variables)
+        app.__variables__.update(util.variables)
         path = path.lower()
         app.variables('file', path)
         app.variables('name', util.path_info(path, 'filename'))
         app.variables('path', util.path_info(path, 'dirname'))
         app.getArguments(arguments)
         if os.path.isfile(f"{app.variables('path')}\\configuration.json"): 
-            app.configuration_ = app.getConfiguration()
+            app.__configuration__ = app.getConfiguration()
         # call entry point of program
         # main = getattr(globals()['Main'], 'main')
         # main()
 
     def arguments(key: str = None) -> str:
         if key == None:
-            return app.arguments_
-        if not app.arguments_.iskey(key): util.system_log(__file__, inspect.currentframe().f_lineno, f"KeyError: object=app.arguments key={key}")
+            return app.__arguments__
+        if not app.__arguments__.iskey(key): util.system_log(__file__, inspect.currentframe().f_lineno, f"KeyError: object=app.arguments key={key}")
         # automatic type conversion
-        data = app.arguments_.get(key, None)
+        data = app.__arguments__.get(key, None)
         data = util.string_conversion_decode(data)
         return data
 
     def configuration(key: str = None, value = None, write: bool = False) -> dict|list|object|str:
         if key == None:
-            return app.configuration_
+            return app.__configuration__
         elif value == None:
-            if not app.configuration_.iskey(key): util.system_log(__file__, inspect.currentframe().f_lineno, f"KeyError: object=app.configuration key={key}")
-            data = app.configuration_.get(key, None)
+            if not app.__configuration__.iskey(key): util.system_log(__file__, inspect.currentframe().f_lineno, f"KeyError: object=app.configuration key={key}")
+            data = app.__configuration__.get(key, None)
             data = util.string_conversion_decode(data)
             return data
         else:                
             value = util.string_conversion_encode(value)
-            if app.configuration_.iskey(key):
-                app.configuration_.set(key, value)
+            if app.__configuration__.iskey(key):
+                app.__configuration__.set(key, value)
             else:
                 util.system_log(__file__, inspect.currentframe().f_lineno, f"KeyError: object=app.configuration key={key}")
             if write: app.setConfiguration()
@@ -4207,19 +4229,6 @@ class app:
         import pyperclip
         try: pyperclip.copy(text)
         except pyperclip.PyperclipException as e: print(f"ClipboardCopyError: {e}")
-
-    def _executionTimerStart(identifier: str = util.identifier()) -> None:
-        app.executionTimerIdentifier = identifier
-        app.executionTimerTimestamp = util.timestamp(util.TIMESTAMP_OPTION_MILLISECONDS)
-
-    def _executionTimerEnd() -> None:
-        milliseconds = util.timestamp(util.TIMESTAMP_OPTION_MILLISECONDS) - app.executionTimerTimestamp
-        if app.executionTimerPerformance.iskey(app.executionTimerIdentifier):
-            app.executionTimerPerformance.get(app.executionTimerIdentifier).append(milliseconds)
-        else:
-            app.executionTimerPerformance.set(app.executionTimerIdentifier, [milliseconds])
-        average = int(util.statistics_mean(app.executionTimerPerformance.get(app.executionTimerIdentifier)))
-        print(f"ExecutionTimer: identifier:{app.executionTimerIdentifier} milliseconds:{milliseconds:04d} average:{average:04d}")
 
     def executionTimerStart(identifier: str = util.identifier()) -> None:
         app.executionTimerEntries.set(identifier, util.timestamp(util.TIMESTAMP_OPTION_MILLISECONDS))
@@ -4245,7 +4254,7 @@ class app:
     def getArguments(values: list[str]) -> object:
         keys = list(range(0, len(values)))
         for index, key in enumerate(keys):
-            app.arguments_.set(key, values[index] if len(values) > index else None)
+            app.__arguments__.set(key, values[index] if len(values) > index else None)
     
     def getConfiguration(path: str = '') -> object:
         # read application's configuration file
@@ -4269,7 +4278,7 @@ class app:
         def setIfVariable(oldValue: str):
             if not isinstance(oldValue, str):
                 return [False, oldValue]
-            for variableKey, variableValue in app.variables_.items():
+            for variableKey, variableValue in app.__variables__.items():
                 if f"%{variableKey}%" in oldValue:
                     newValue = oldValue.replace(f'%{variableKey}%', variableValue)
                     return [True, newValue]
@@ -4288,12 +4297,6 @@ class app:
     def getCurrentWorkingDirectory() -> str:
         return os.getcwd()
 
-    def getDeviceMemory() -> int:
-        return 0
-
-    def getDeviceType() -> None:
-        return
-
     def getGlobalVariables() -> dict[str]:
         return globals()
     
@@ -4307,13 +4310,10 @@ class app:
         return os.getpid()
 
     def isArgument(key: str) -> bool:
-        return app.arguments_.iskey(key)
+        return app.__arguments__.iskey(key)
     
     def isArguments() -> bool:
-        return any(app.arguments_.values())
-
-    def isDeviceCharging() -> bool:
-        return
+        return any(app.__arguments__.values())
 
     def isOnline(address: tuple[str, int] = ('8.8.8.8', 53)) -> bool:
         try:
@@ -4324,9 +4324,6 @@ class app:
             return False
         finally:
             socket.setdefaulttimeout(None)
-
-    def open() -> None:
-        pass
 
     def prompt(message: str, defaultValue: str = None, onVerification = None, onInvalidResponseMessage: str = 'invalid') -> tuple[str, bool]:
         # onVerification: function|string
@@ -4361,16 +4358,16 @@ class app:
 
     def setArguments(keys: list[str]) -> object:
         for index, key in enumerate(keys):
-            app.arguments_.set(key, app.arguments_.get(index, None))
-            app.arguments_.pop(index)
+            app.__arguments__.set(key, app.__arguments__.get(index, None))
+            app.__arguments__.pop(index)
     
     def setConfiguration(data: dict = None) -> None:
-        data: object = object(app.configuration_) if data == None else object(data)
+        data: object = object(app.__configuration__) if data == None else object(data)
         # replace each configuration value containing a variable value with the variable's key
         def setIfVariable(oldValue: str):
             if not isinstance(oldValue, str):
                 return [False, oldValue]
-            for variableKey, variableValue in app.variables_.items():
+            for variableKey, variableValue in app.__variables__.items():
                 if variableValue in oldValue:
                     newValue = oldValue.replace(variableValue, f'%{variableKey}%')
                     return [True, newValue]
@@ -4418,17 +4415,14 @@ class app:
         timeout.start()
         return timeout
 
-    def simulateKey() -> None:
-        pass
-
     def variables(key: str = None, value = None) -> None|object|str:
         if not key == None:
             if key[0] == '%' and key[-1] == '%':
                 key = key[1:][:-1]
         if key == None:
-            return app.variables_
+            return app.__variables__
         elif value == None:
-            data = app.variables_.get(key, None)
+            data = app.__variables__.get(key, None)
             # automatic type conversion
             if util.istype(data, 'string-number'):
                 return int(data)
@@ -4439,11 +4433,8 @@ class app:
             # automatic type conversion
             if util.istype(value, 'number'):
                 value = str(value)
-            app.variables_.set(key, value)
+            app.__variables__.set(key, value)
     
-    def wait(milliseconds: int, callback) -> None:
-        pass
-
     # data
     def clearData():
         pass
