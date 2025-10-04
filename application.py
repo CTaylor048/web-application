@@ -293,19 +293,6 @@ class util:
  
     path: str = 'c:\\projects'
     variables: dict[str, str] = {
-        'root-certificate-authority-path': 'c:\\projects\\.certificates\\root-certificate-authority\\1', 
-        'root-certificate-authority-certificate': 'c:\\projects\\.certificates\\root-certificate-authority\\1\\root-ca.pem', 
-        'root-certificate-authority-privatekey': 'c:\\projects\\.certificates\\root-certificate-authority\\1\\root-ca.key', 
-        'intermediate-certificate-authority-path': 'c:\\projects\\.certificates\\intermediate-certificate-authority', 
-        'client-certificate-path': 'c:\\projects\\.certificates\\root-certificate-authority\\1', 
-        'client-certificate': 'c:\\projects\\.certificates\\root-certificate-authority\\1\\root-ca.pem', 
-        'client-privatekey': 'c:\\projects\\.certificates\\root-certificate-authority\\1\\root-ca.key', 
-        'web-server-path': 'c:\\projects\\.certificates\\web-server\\14', 
-        'web-server-certificate': 'c:\\projects\\.certificates\\web-server\\14\\projects.pem', 
-        'web-server-privatekey': 'c:\\projects\\.certificates\\web-server\\14\\projects.key', 
-        'vpn-server-path': 'c:\\projects\\.certificates\\vpn-server\\0', 
-        'vpn-server-certificate': 'c:\\projects\\.certificates\\vpn-server\\0\projects.pem', 
-        'vpn-server-privatekey': 'c:\\projects\\.certificates\\vpn-server\\0\\projects.key', 
     }
 
     """
@@ -4529,3 +4516,4 @@ class Logger(threading.Thread):
         return string
 
 # ___________________________________________________________________________________________________________________________________________________#
+
