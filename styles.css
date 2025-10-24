@@ -12,6 +12,7 @@ text-shadow: <offset-x> <offset-y> <blur-radius> <color>
     --color-header: #323232;
     --color-select: #4b4b4b;
     --color-text: #ffffff;
+    --font-family: "American Typewriter, serif"
     --box-shadow-window: 0 0 10px 3px #000000;
     --text-shadow: 0px 0px 3px #000000;
 
@@ -101,7 +102,8 @@ input[type="checkbox"][icon="check"] {
     box-sizing: border-box;
     cursor: pointer;
     height: var(--icon-dimension);
-    margin: var(--icon-padding);
+    margin: 0;
+    padding: 0;
     width: var(--icon-dimension);
 }
 input[type="checkbox"][icon="check"]:checked {
@@ -110,18 +112,21 @@ input[type="checkbox"][icon="check"]:checked {
 }
 input[type="checkbox"][icon="visibility"] {
     appearance: none;
-    background-attachment: fixed;
     background-color: #00000000;
     background-image: url('/repository/images/visibility_off.png');
     background-position: center;
-    background-size: contain;
     background-repeat: no-repeat;
+    background-size: contain;
+    border-color: #ffffff;
+    border-radius: 50%;
+    border-style: solid;
+    border-width: 1px;
     box-sizing: border-box;
-    border: none;
     cursor: pointer;
     height: var(--icon-dimension);
-    margin: var(--icon-padding);
+    margin: 0;
     opacity: 0.5;
+    padding: 0;
     width: var(--icon-dimension);
 }
 input[type="checkbox"][icon="visibility"]:checked {
@@ -216,6 +221,7 @@ textarea {
     color: var(--color-text);
     background-color: var(--color-default);
     box-sizing: border-box;
+    margin: 1px;
     padding: 5px;
     resize: none;
     white-space: pre;
@@ -507,7 +513,7 @@ div[view="dialog"] {
     min-width: 300px;
     overflow: hidden;
     padding: 10px;
-    position: absolute;
+    position: fixed;
     top: 50%;
     transform: translate(-50%, -50%);
     z-index: 100;
@@ -539,42 +545,49 @@ div[view="dialog"] > div:nth-child(3) {
     overflow-y: auto;
 }
 /* dialog.body.item */
-div[view="dialog"][style="multichoice"] > div:nth-child(3) > div {
+div[view="dialog"][style="multichoice"] > div:nth-child(3) > div,
+div[view="dialog"][type="multichoice"] > div:nth-child(3) > div {
     align-items: center;
     display: flex;
     gap: 10px;
     margin: 10px 0;
 }
 /* dialog.body.item */
-div[view="dialog"][style="singlechoice"] > div:nth-child(3) > div {
+div[view="dialog"][style="singlechoice"] > div:nth-child(3) > div,
+div[view="dialog"][type="singlechoice"] > div:nth-child(3) > div {
     align-items: center;
     display: flex;
     gap: 10px;
     margin: 10px 0;
 }
 /* dialog.body.progress */
-div[view="dialog"][style="progress-horizontal"] > div:nth-child(3) > progress:nth-child(1) {
+div[view="dialog"][style="progress-horizontal"] > div:nth-child(3) > progress:nth-child(1),
+div[view="dialog"][type="progress-horizontal"] > div:nth-child(3) > progress:nth-child(1) {
     height: 5px;
     width: 100%;
 }
 /* dialog.body.indicator */
-div[view="dialog"][style="progress-horizontal"] > div:nth-child(3) > div:nth-child(2) {
+div[view="dialog"][style="progress-horizontal"] > div:nth-child(3) > div:nth-child(2),
+div[view="dialog"][type="progress-horizontal"] > div:nth-child(3) > div:nth-child(2) {
     align-items: center;
     display: flex;
 }
 /* dialog.body.indicator.percentage */
-div[view="dialog"][style="progress-horizontal"] > div:nth-child(3) > div:nth-child(2) > div:nth-child(1) {
+div[view="dialog"][style="progress-horizontal"] > div:nth-child(3) > div:nth-child(2) > div:nth-child(1),
+div[view="dialog"][type="progress-horizontal"] > div:nth-child(3) > div:nth-child(2) > div:nth-child(1) {
     font-size: 85%;
     opacity: 1;
 }
 /* dialog.body.indicator.fraction */
-div[view="dialog"][style="progress-horizontal"] > div:nth-child(3) > div:nth-child(2) > div:nth-child(2) {
+div[view="dialog"][style="progress-horizontal"] > div:nth-child(3) > div:nth-child(2) > div:nth-child(2),
+div[view="dialog"][type="progress-horizontal"] > div:nth-child(3) > div:nth-child(2) > div:nth-child(2) {
     font-size: 85%;
     margin: 0 0 0 auto;
     opacity: 0.75;
 }
 /* dialog.body.progress */
-div[view="dialog"][style="progress-spinner"] > div:nth-child(3) > div:nth-child(1) {
+div[view="dialog"][style="progress-spinner"] > div:nth-child(3) > div:nth-child(1),
+div[view="dialog"][type="progress-spinner"] > div:nth-child(3) > div:nth-child(1) {
     animation-name: spinner;
     animation-direction: normal;
     animation-delay: 0ms;
@@ -624,10 +637,12 @@ div[view="divider"] {
     width: 100%;
     height: 2px;
 }
-div[view="divider"][style="solid"], div[view="divider"][type="solid"] {
+div[view="divider"][style="solid"],
+div[view="divider"][type="solid"] {
     background: var(--color-divider);
 }
-div[view="divider"][style="linear-gradient"], div[view="divider"][type="linear-gradient"] {
+div[view="divider"][style="linear-gradient"],
+div[view="divider"][type="linear-gradient"] {
     background: linear-gradient(to right, transparent, var(--color-divider), var(--color-divider), transparent);
 }
 /* drawer */

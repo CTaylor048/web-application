@@ -1,475 +1,438 @@
 /**
- * @author Corey Taylor
  * @typedef {string} address
- * @typedef {[]} array
+ * @typedef {any[]} array
  * @typedef {number} decimal
  * @typedef {"0"|"1"} bit
  * @typedef {string} binary
  * @typedef {Int8Array|Uint8Array} bytes
  * @typedef {string} hexadecimal
  * @typedef {string} octal
- * @typedef {{}} object
+ * @typedef {Object<string, any>} object
  * @typedef {number} port
  * @typedef {Date|number|string} timestamp
  * 
- * 
- * *************************************ERRORS*************************************
- * ArrayLengthError: variable-name= variable-length=${.length} length=<eq|ge|gt|le|lt>${}
- * DepreciationError: name=${} value=${}
- * KeyError: variable-name= key=${}
- * IndexError: variable-name= variable-length=${.length} index=${}
- * StringLengthError: variable-name= variable-length=${.length} length=<eq|ge|gt|le|lt>${}
- * TypeError: variable-name= variable-value=${} variable-type=${type()} type=
- * UnsetError: variable-name=
- * ValueError: variable-name= variable-value=${}
- * 
- * ********************************************************************************
- * Ctrl+Shift+P > Generate JSDoc
- * 
- * 
+ * @typedef {(...any) => void} Listener
+ *
  */
-Array.prototype.append = function (...values) {
-    this.push(...values)
+Array.prototype.append = function (...items) {
+    this.push(...items);
 }
-Array.prototype.clear = function (...values) {
-    this.splice(0, this.length)
+Array.prototype.clear = function () {
+    this.length = 0;
 }
-Array.prototype.copy = function (index, start = 0, stop = this.length) {
-    let nArray = new array()
-    for (let i = start; i < stop; i++) {
-        nArray.append(this[i])
-    }
-    return nArray
+Array.prototype.copy = function (start = 0, stop = this.length) {
+    return this.slice(start, end);
 }
 Array.prototype.count = function (value) {
-    let count = 0
-    for (let value_ of this) {
-        if (value_ == value) {
-            count += 1
-        }
-    }
-    return count
+    return this.filter(item => item === value).length;
 }
 Array.prototype.empty = function () {
-    return this.length == 0
+    return this.length === 0;
 }
 Array.prototype.enumerate = function* () {
     for (let index = 0; index < this.length; index++) {
         yield [index, this[index]]
     }
 }
+Array.prototype.extend = function(iterable) {
+    if (Array.isArray(iterable)) {
+        this.push(...iterable);
+        return this.length;
+    }
+    throw new Error(`TypeError: iterable parameter requires an array or iterable argument`);
+};
 Array.prototype.get = function (index, defaultvalue = null) {
-    let value = this[index < 0 ? index + this.length : index]
-    return value == null ? defaultvalue : value
+    let i = index < 0 ? this.length + index : index;
+    if (i >= 0 && i < this.length) {
+        return this[i];
+    }
+    return defaultvalue;
 }
-Array.prototype.getFirst = function () {
-    return this[0]
+Array.prototype.getfirst = function () {
+    return this[0];
 }
-Array.prototype.getLast = function () {
-    return this[this.length - 1]
+Array.prototype.getlast = function () {
+    return this[this.length - 1];
 }
 Array.prototype.index = function (value, start = 0) {
-    return this.indexOf(value, start)
+    return this.indexOf(value, start);
 }
 Array.prototype.insert = function (index, value) {
-    this.splice(index, 0, value)
+    let start = Math.trunc(index);
+    this.splice(start, 0, value);
 }
 Array.prototype.pop = function (index = -1) {
-    this.splice(index, 1)
+    let i = index < 0 ? this.length + index : index;
+    return this.splice(i, 1)[0];
 }
 Array.prototype.remove = function (...values) {
     for (let value of values) {
-        let index = this.indexOf(value)
-        this.splice(index, 1)
+        let index = this.indexOf(value);
+        if (index > -1) {
+            this.splice(index, 1);
+        } else {
+            throw new Error(`ValueError: value not in array`);
+        }
     }
 }
 Array.prototype.set = function (index, value) {
-    this.splice(index, 0, value)
+    this.splice(index, 0, value);
 }
 Array.prototype.size = function () {
-    return this.length
+    return this.length;
 }
+
 String.prototype.capitalize = function () {
-    return this[0].toUpperCase() + this.slice(1).toLowerCase()
+    if (this.length == 0) return this.toString();
+    return this.charAt(0).toUpperCase() + this.slice(1).toLowerCase();
 }
 String.prototype.casefold = function () {
-    return this.toLowerCase()
+    return this.toLocaleLowerCase('en-US')
 }
-String.prototype.center = function (length, character = ' ') {
-    let nString = this.toString()
-    if (nString.length < length) {
-        let leftCharacterCount = Math.ceil((length - nString.length) / 2)
-        let rightCharacterCount = Math.floor((length - nString.length) / 2)
-        nString = character.repeat(leftCharacterCount) + nString + character.repeat(rightCharacterCount)
-    }
-    return nString
+String.prototype.center = function (width, fillchar = ' ') {
+    if (width <= this.length) return this.toString();
+    let padding_length = width - this.length;
+    let padding_left = Math.floor(padding_length / 2);
+    let padding_right = padding_length - padding_left;
+    return fillchar.repeat(padding_left) + this.toString() + fillchar.repeat(padding_right);
 }
-String.prototype.count = function (value, start = 0, end = this.length) {
-    let count = 0
-    let i = start
-    while (i < end) {
-        if (this.slice(i, i + value.length) == value) {
-            count += 1
-            i += value.length
-        } else {
-            i += 1
-        }
-    }
-    return count
+String.prototype.count = function (sub, start = 0, end = this.length) {
+    const regex = new RegExp(sub, 'g');
+    let matches = this.slice(start, end).match(regex);
+    return matches ? matches.length : 0;
+    // if (!sub || sub.length === 0) return 0;
+    // let count = 0;
+    // let str = this.slice(start, end);
+    // let pos = str.indexOf(sub);
+    // while (pos !== -1) {
+    //     count++;
+    //     pos = str.indexOf(sub, pos + sub.length);
+    // }
+    // return count;
 }
 String.prototype.empty = function () {
     return this.length == 0
 }
-String.prototype.encode = function (encoding = 'UTF-8', errors) {
-    return
+String.prototype.encode = function (encoding = 'utf-8') {
+    // 1. Check if the TextEncoder API is available.
+    if (typeof TextEncoder === 'undefined') {
+        throw new Error("TextEncoder is unavailable");
+    }
+    const encoder = new TextEncoder(encoding);
+    return encoder.encode(this);
 }
-String.prototype.endswith = function (value, start = 0, end = this.length) {
-    let string = this.slice(start, end)
-    return string.indexOf(value) == string.length - value.length
+String.prototype.endswith = function (suffix, start = 0, end = this.length) {
+    const str = this.slice(start, end);
+    return str.endsWith(suffix);
 }
-String.prototype.expandtabs = function (tabsize) {
-    let string = this.toString()
-    return string.replaceAll('\t', ' '.repeat(tabsize))
+String.prototype.expandtabs = function (tabsize = 4) {
+    let size = Math.max(1, Math.floor(tabsize));
+    let result = '';
+    let currentColumn = 0;
+    for (let i = 0; i < this.length; i++) {
+        const char = this[i];
+        if (char === '\t') {
+            const spacesNeeded = size - (currentColumn % size);
+            const spaces = ' '.repeat(spacesNeeded);
+            result += spaces;
+            currentColumn += spacesNeeded;
+        } else if (char === '\n' || char === '\r') {
+            result += char;
+            currentColumn = 0;
+        } else {
+            result += char;
+            currentColumn++;
+        }
+    }
+    return result;
 }
-String.prototype.find = function (value, start = 0, end = this.length) {
-    let string = this.slice(start, end)
-    let index = string.indexOf(value)
-    return index == -1 ? index : index + start
+String.prototype.find = function (sub, start = 0, end = this.length) {
+    const str = this.slice(start, end);
+    let index = str.indexOf(sub);
+    return (index === -1) ? -1 : index + start;
 }
 String.prototype.format = function () {
-    return
-}
-String.prototype.format_map = function () {
-    return
-}
-String.prototype.identifier = function () {
-    let string = this.toString()
-    let nString = ''
-    let allowedCharacters = '0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z _ a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
-    let notAllowedFirstCharacters = '0 1 2 3 4 5 6 7 8 9'.split(' ')
-    for (let i = 0; i < this.length; i++) {
-        let character = string[i]
-        if (i == 0 && notAllowedFirstCharacters.includes(character)) {
-            nString += '_' + character
-        }
-        else if (!allowedCharacters.includes(character)) {
-            nString += '_'
-        }
+    // determine the source of replacement values:
+    const values = arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0] !== null ? arguments[0] : arguments;
+    // use regular expression to find placeholders
+    return this.replace(/\{(\w+)\}/g, (match, key) => {
+        // 'match' is the full placeholder (e.g., "{name}")
+        // 'key' is the content inside the braces (e.g., "name" or "0")
+        let replacement;
+        // 1. Try to access the value using the key (for named placeholders like {name})
+        if (values.hasOwnProperty(key)) {
+            replacement = values[key];
+        } 
+        // 2. Try to treat the key as an integer index (for positional placeholders like {0})
+        else if (!isNaN(parseInt(key, 10)) && isFinite(key)) {
+            const index = parseInt(key, 10);
+            replacement = values[index];
+        } 
+        // 3. If the key is not found, return the original placeholder to mimic Python's error state (or default to '').
         else {
-            nString += character
+            return match; // Keep the original placeholder un-substituted
         }
-    }
-    return nString.toLowerCase()
+        // convert replacement value to string (or empty string if null/undefined)
+        // NOTE: Python's format is generally more robust in handling types; JS needs coercion.
+        return replacement !== undefined && replacement !== null ? String(replacement) : ''; 
+    });
 }
-String.prototype.index = function (value, start = 0, end = this.length) {
-    // TODO: overload function - create function that receives one or more characters returns the index of character that comes before others
-    let string = this.slice(start, end)
-    let index = string.indexOf(value)
-    return index == -1 ? index : index + start
+String.prototype.format_map = function (mapping) {
+    if (typeof mapping !== 'object' || mapping === null || Array.isArray(mapping)) {
+        throw new Error(`TypeError: mapping parameter requires a non-null object`);
+    }
+    // use regular expression to find placeholders
+    return this.replace(/\{(\w+)\}/g, (match, key) => {
+        // 'match' is the full placeholder (e.g., "{name}")
+        // 'key' is the content inside the braces (e.g., "name")
+        if (mapping.hasOwnProperty(key)) {
+            let replacement = mapping[key];
+            return (replacement !== undefined && replacement !== null) ? String(replacement) : '';
+        } else {
+            throw new Error(`KeyError: '${key}' not found in mapping`);
+            return match;
+        }
+    });
+}
+String.prototype.index = function (sub, start = 0, end = this.length) {
+    let index = this.find(sub, start, end);
+    if (index === -1) {
+        throw new Error(`ValueError: substring not found`);
+    }
+    return index;
 }
 String.prototype.isalnum = function () {
-    if (this.length == 0) return false
-    let allowedCharacters = '0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
-    for (let character of this.toString()) {
-        if (!allowedCharacters.includes(character)) {
-            return false
-        }
-    }
-    return true
+    if (this.length === 0) return false;
+    return /^[\p{L}\p{N}]+$/u.test(this);
 }
 String.prototype.isalpha = function () {
-    if (this.length == 0) return false
-    let allowedCharacters = 'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
-    for (let character of this.toString()) {
-        if (!allowedCharacters.includes(character)) {
-            return false
-        }
-    }
-    return true
+    if (this.length === 0) return false;
+    return /^[\p{L}]+$/u.test(this);
 }
 String.prototype.isdecimal = function () {
-    if (this.length == 0) return false
-    let allowedCharacters = '0 1 2 3 4 5 6 7 8 9'.split(' ')
-    for (let character of this.toString()) {
-        if (!allowedCharacters.includes(character)) {
-            return false
-        }
-    }
-    return true
+    if (this.length === 0) return false;
+    return /^[\p{Nd}]+$/u.test(this);
 }
 String.prototype.isdigit = function () {
-    if (this.length == 0) return false
-    let allowedCharacters = '0 1 2 3 4 5 6 7 8 9 ² ³'.split(' ')
-    for (let character of this.toString()) {
-        if (!allowedCharacters.includes(character)) {
-            return false
-        }
-    }
-    return true
+    if (this.length === 0) return false;
+    return /^[\p{N}]+$/u.test(this);
 }
 String.prototype.isidentifier = function () {
-    if (this.length == 0) return false
-    let allowedCharacters = '0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z _ a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
-    let notAllowedFirstCharacters = '0 1 2 3 4 5 6 7 8 9'.split(' ')
-    let isFirstCharacter = true
-    for (let character of this.toString()) {
-        if (isFirstCharacter) {
-            if (notAllowedFirstCharacters.includes(character)) return false
-            isFirstCharacter = false
-        }
-        if (!allowedCharacters.includes(character)) {
-            return false
-        }
-    }
-    return true
+    if (this.length === 0) return false;
+    // check if the string starts with a number
+    if (/^\p{Nd}/u.test(s)) return false;
+    // check if it contains only valid identifier characters
+    if (!/^[\p{L}\p{Nl}\p{Nd}_]+$/u.test(s)) return false;
+    return true;
 }
 String.prototype.islower = function () {
-    if (this.length == 0) return false
-    let notAllowedCharacters = 'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z'.split(' ')
-    for (let character of this.toString()) {
-        if (notAllowedCharacters.includes(character)) {
-            return false
-        }
-    }
-    return true
+    return /[a-z]/.test(this.toString()) && !/[A-Z]/.test(this.toString());
 }
 String.prototype.isnumeric = function () {
-    if (this.length == 0) return false
-    let allowedCharacters = '0 1 2 3 4 5 6 7 8 9 ² ³'.split(' ')
-    for (let character of this.toString()) {
-        if (!allowedCharacters.includes(character)) {
-            return false
-        }
-    }
-    return true
+    if (this.length === 0) return false;
+    return /^[\p{Nd}\p{Nl}\p{No}]+$/u.test(this);
 }
 String.prototype.isprintable = function () {
-    let notAllowedCharacters = '\n \r \t \b \f'.split(' ')
-    for (let character of this.toString()) {
-        if (notAllowedCharacters.includes(character)) {
-            return false
-        }
-    }
-    return true
+    if (this.length === 0) return false;
+    return !/\p{C}/u.test(this);
 }
 String.prototype.isspace = function () {
-    if (this.length == 0) return false
-    for (let character of this.toString()) {
-        if (character != ' ') {
-            return false
-        }
+    if (this.length === 0) return false;
+    try {
+        return /^\p{White_Space}+$/u.test(s);
+    } catch (error) {
+        return /^\s+$/.test(s);
     }
-    return true
 }
 String.prototype.istitle = function () {
-    if (this.length == 0) return false
-    let allowedCharacters = 'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z'.split(' ')
-    let strings = this.toString().split(' ')
-    for (let string of strings) {
-        string = string.trim()
-        if (string.length == 0) continue
-        if (!allowedCharacters.includes(string[0])) return false
+    let previousCased = false; // Tracks if the previous character was a cased character
+    let isTitle = true;
+    let hasCased = false; // Tracks if the string contains any cased characters
+    for (let i = 0; i < this.length; i++) {
+        let char = this.charAt(i);
+        const isLetter = /[a-zA-Z]/.test(char);
+        if (isLetter) {
+            hasCased = true;
+            if (previousCased) {
+                // Cased character following another cased character
+                if (char !== char.toLowerCase()) {
+                    isTitle = false;
+                    break;
+                }
+            } else {
+                // Cased character following non-cased character
+                if (char !== char.toUpperCase()) {
+                    isTitle = false;
+                    break;
+                }
+            }
+            previousCased = true;
+        } else {
+            previousCased = false;
+        }
     }
-    return true
+    return isTitle && hasCased;
 }
 String.prototype.isupper = function () {
-    if (this.length == 0) return false
-    let notAllowedCharacters = 'a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
-    for (let character of this.toString()) {
-        if (notAllowedCharacters.includes(character)) {
-            return false
-        }
-    }
-    return true
+    return /[A-Z]/.test(this.toString()) && !/[a-z]/.test(this.toString());
 }
 String.prototype.join = function (iterable) {
-    let string = ''
-    for (let item of iterable) {
-        string += (string.length == 0 ? '' : this.toString()) + item.toString()
+    let array;
+    try {
+        array = Array.from(iterable);
+    } catch (e) {
+        throw new Error(`TypeError: iterable parameter must be iterable (e.g., Array)`);
     }
-    return string
+    return array.join(this.toString());
 }
-String.prototype.ljust = function (length, character = ' ') {
-    let nString = this.toString()
-    if (nString.length < length) {
-        let characterCount = length - nString.length
-        nString = nString + character.repeat(characterCount)
-    }
-    return nString
+String.prototype.ljust = function (width, fillchar = ' ') {
+    return this.padEnd(width, fillchar);
 }
 String.prototype.lower = function () {
-    return this.toLowerCase()
+    return this.toLowerCase();
 }
-String.prototype.lstrip = function (characters = ' ') {
-    let nString = this.toString()
-    characters = characters.split('')
-    characters = characters.filter((character, index) => characters.indexOf(character) == index)
-    while (true) {
-        let index = 0
-        let character = nString[index]
-        if (characters.includes(character) && nString.length > 0) {
-            nString = nString.slice(0, index) + nString.slice(index + 1, nString.length)
-        }
-        else {
-            break
-        }
+String.prototype.lstrip = function (chars = ' ') {
+    if (chars === undefined) return this.trimStart();
+    const regex = new RegExp(`^([${chars.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}])+`, 'g');
+    return this.replace(regex, '');
+}
+String.prototype.maketrans = function (fromstr, tostr) {
+    if (fromstr.length !== tostr.length) {
+        throw new Error(`requires the replacement strings to have the same length`);
     }
-    return nString
+    let translation_map = {};
+    for (let i = 0; i < fromstr.length; i++) {
+        translation_map[fromstr[i]] = tostr[i];
+    }
+    return translation_map;
 }
-String.prototype.maketrans = function () {
-    return
+String.prototype.partition = function (sep) {
+    let index = this.indexOf(sep);
+    if (index === -1) {
+        return [this.toString(), '', ''];
+    }
+    const head = this.substring(0, index);
+    const tail = this.substring(index + sep.length);
+    return [head, sep, tail];
 }
 String.prototype.remove = function (...substrings) {
-    let nString = this.toString()
-    for (let substring of substrings) {
-        nString = nString.replaceAll(substring, '')
-    }
-    return nString
+    let targets = Array.isArray(substrings) ? substrings : [substrings];
+    // escape special regex characters in the target strings.
+    targets = targets.map(target => 
+        target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    );
+    const regex = new RegExp(targets.join('|'), 'g');
+    return this.replace(regex, '');
 }
 String.prototype.removeprefix = function (prefix) {
-    let string = this.toString()
-    if (string.indexOf(prefix) == 0) {
-        string = string.slice(prefix.length, string.length)
+    const str = this.toString();
+    if (str.startsWith(prefix)) {
+        return str.slice(prefix.length);
     }
-    return string
+    return str;
+}
+String.prototype.removesuffix = function (suffix) {
+    const str = this.toString();
+    if (str.endsWith(suffix)) {
+        return str.slice(0, str.length - suffix.length);
+    }
+    return str;
 }
 String.prototype.reverse = function () {
-    let nString = ""
-    let string = this.toString()
-    for (let i = string.length - 1; i >= 0; i--) {
-        nString += string[i]
+    return this.split('').reverse().join('');
+}
+String.prototype.rfind = function (sub, start = 0, end = this.length) {
+    const str = this.slice(start, end);
+    let index = str.lastIndexOf(sub);
+    return (index === -1) ? -1 : index + start;
+}
+String.prototype.rindex = function (sub, start = 0, end = this.length) {
+    let index = this.rfind(sub, start, end);
+    if (index === -1) {
+        throw new Error(`ValueError: substring not found`);
     }
-    return nString
+    return index;
 }
-String.prototype.rfind = function (value, start = 0, end = this.length) {
-    let string = this.slice(start, end)
-    let index = string.lastIndexOf(value)
-    return index == -1 ? index : index + start
+String.prototype.rjust = function (width, fillchar = ' ') {
+    return this.padStart(width, fillchar);
 }
-String.prototype.rindex = function (value, start = 0, end = this.length) {
-    let string = this.slice(start, end)
-    let index = string.lastIndexOf(value)
-    return index == -1 ? index : index + start
-}
-String.prototype.rjust = function (length, character = ' ') {
-    let nString = this.toString()
-    if (nString.length < length) {
-        let characterCount = length - nString.length
-        nString = character.repeat(characterCount) + nString
+String.prototype.rpartition = function (sep) {
+    let index = this.lastIndexOf(sep);
+    if (index === -1) {
+        return ['', '', this.toString()];
     }
-    return nString
+    const head = this.substring(0, index);
+    const tail = this.substring(index + sep.length);
+    return [head, sep, tail];
 }
-String.prototype.rpartition = function (value) {
-    let string = this.toString()
-    let tuple = [string, '', '']
-    let index = string.lastIndexOf(value)
-    if (index != -1) {
-        tuple[0] = string.slice(0, index)
-        tuple[1] = string.slice(index, index + value.length)
-        tuple[2] = string.slice(index + value.length, string.length)
+String.prototype.rsplit = function (sep, maxsplit = -1) {
+    const str = this.toString();
+    if (maxsplit === -1) return this.split(sep);
+    let parts = sep === null || sep === undefined ? str.trim().split(/\s+/) : str.split(sep);
+    if (parts.length <= maxsplit + 1) {
+        return parts;
     }
-    return tuple
+    let parts_first = parts.slice(0, parts.length - maxsplit);
+    let parts_last = parts.slice(parts.length - maxsplit);
+    return [parts_first.join(sep === null || sep === undefined ? ' ' : sep)].concat(parts_last);
 }
-String.prototype.rsplit = function () {
-    return
-}
-String.prototype.rstrip = function (characters = ' ') {
-    let nString = this.toString()
-    characters = characters.split('')
-    characters = characters.filter((character, index) => characters.indexOf(character) == index)
-    while (true) {
-        let index = nString.length - 1
-        let character = nString[index]
-        if (characters.includes(character)) {
-            nString = nString.slice(0, index) + nString.slice(index + 1, nString.length)
-        }
-        else {
-            break
-        }
-    }
-    return nString
+String.prototype.rstrip = function (chars = ' ') {
+    if (chars === undefined) return this.trimEnd();
+    const regex = new RegExp(`([${chars.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}])+$`, 'g');
+    return this.replace(regex, '');
 }
 String.prototype.size = function () {
-    return this.length
+    return this.length;
 }
-String.prototype.splitlines = function (keeplinebreaks = false) {
-    let lines = this.split(/\r?\n/)
-    if (keeplinebreaks) {
-        lines = lines.map((line, index) => line + (index == lines.length - 1 ? '' : '\n'))
+String.prototype.splitlines = function (keepends = false) {
+    if (this.length === 0) return [];
+    const str = this.toString();
+    const regex = /(\r\n|\r|\n)/g;
+    let parts = str.split(regex);
+    if (keepends) {
+        return parts.filter(line => line.length > 0);
+    } else {
+        return parts.filter(line => !regex.test(line) && line.length > 0);
     }
-    return lines
 }
-String.prototype.startswith = function (value, start = 0, end = this.length) {
-    let string = this.slice(start, end)
-    return string.indexOf(value) == 0
+String.prototype.startswith = function (prefix, start = 0, end = this.length) {
+    const str = this.slice(start, end);
+    return str.startsWith(prefix);
 }
-String.prototype.strip = function (characters = ' ') {
-    let nString = this.toString()
-    characters = characters.split('')
-    characters = characters.filter((character, index) => characters.indexOf(character) == index)
-    let side = true
-    while (true) {
-        let index = side ? 0 : nString.length - 1
-        let character = nString[index]
-        if (characters.includes(character) && nString.length > 0) {
-            nString = nString.slice(0, index) + nString.slice(index + 1, nString.length)
-        }
-        else {
-            if (side) {
-                side = false
-            } else {
-                break
-            }
-        }
-    }
-    return nString
+String.prototype.strip = function (chars = ' ') {
+    if (chars === undefined) return this.trim();
+    const regex = new RegExp(`[${chars.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}]`, 'g');
+    let stripped = ''
+    stripped = this.replace(new RegExp(`^${regex.source}+`), ''); // remove leading
+    return stripped.replace(new RegExp(`${regex.source}+$`), ''); // remove trailing
 }
 String.prototype.swapcase = function () {
-    let nString = ''
-    let uppercaseCharacters = 'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z'.split(' ')
-    for (let character of this.toString()) {
-        if (uppercaseCharacters.includes(character)) {
-            nString += character.toLowerCase()
+    return this.replace(/./g, char => {
+        if (char === char.toUpperCase()) {
+            return char.toLowerCase();
         } else {
-            nString += character.toUpperCase()
+            return char.toUpperCase();
         }
-    }
-    return nString
+    });
 }
 String.prototype.title = function () {
-    let nStrings = []
-    let alphaCharacters = 'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
-    let numericCharacters = '0 1 2 3 4 5 6 7 8 9'.split(' ')
-    for (let string of this.split(' ')) {
-        let nString = ''
-        let upperCased = false
-        for (let character of string.split('')) {
-            if (alphaCharacters.includes(character) && !upperCased) {
-                character = character.toUpperCase()
-                upperCased = true
-            }
-            if (numericCharacters.includes(character)) {
-                upperCased = false
-            }
-            nString += character
-        }
-        nStrings.push(nString)
-    }
-    return nStrings.join(' ')
+    return this.toLowerCase().split(' ').map(word => {
+        if (word.length === 0) return '';
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
 }
-String.prototype.translate = function () {
-    return
+String.prototype.translate = function (table) {
+    let str = "";
+    for (let char of this) {
+        str += table.hasOwnProperty(char) ? table[char] : char;
+    }
+    return str;
 }
 String.prototype.upper = function () {
-    return this.toUpperCase()
+    return this.toUpperCase();
 }
-String.prototype.zfill = function (len) {
-    let nString = this.toString()
-    if (nString.length < len) {
-        let count = len - nString.length
-        nString = '0'.repeat(count) + nString
-    }
-    return nString
+String.prototype.zfill = function (width) {
+    return this.padStart(width, '0');
 }
 //__________________________________________________________________________________________________________________________________________________//
 class util {
@@ -488,23 +451,37 @@ class util {
 
     // 
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_DEGREES_LATITUDE = "(?<decimal_degrees>(-|\+)?([0-9]|[0-8][0-9])(\.\d+)?)"
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT1 = "(?<decimal_degrees>(-|\\+)?([0-8]\\d)(\\.\\d+)?)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_DEGREES_LONGITUDE = "(?<decimal_degrees>(-|\+)?([0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(\.\d+)?)"
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT2 = "(?<decimal_degrees>(-|\\+)?([0-8]?\\d)(\\.\\d+)?)(°|\\*)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_MINUTES = "(?<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))"
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT1 = "(?<decimal_degrees>(-|\\+)?(0\\d\\d|1[0-7]\\d)(\\.\\d+)?)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE = "(?<degrees>[0-8][0-9])"
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT2 = "(?<decimal_degrees>(-|\\+)?(\\d\\d?|0\\d\\d|1[0-7]\\d)(\\.\\d+)?)(°|\\*)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE = "(?<degrees>0[0-9][0-9]|1[0-7][0-9])"
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1 = "(?<degrees>[0-8]\\d)"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2 = "(?<degrees>[0-8]?\\d)(°|\\*)"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1 = "(?<degrees>0\\d\\d|1[0-7]\\d)"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2 = "(?<degrees>\\d\\d?|0\\d\\d|1[0-7]\\d)(°|\\*)"
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE = "(?<direction>N|S)"
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE = "(?<direction>E|W)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES = "(?<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
+    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1 = "(?<decimal_minutes>(0\\d|[1-5]\\d)\\.\\d\\d)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_SECONDS = "(?<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)"
+    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2 = "(?<decimal_minutes>(0?\\d|[1-5]\\d)\\.\\d+)'"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1 = "(?<minutes>0\\d|[1-5]\\d)"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2 = "(?<minutes>0?\\d|[1-5]\\d)'"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1 = "(?<seconds>(0\\d|[1-5]\\d)(\\.\\d+)?)"
+    /** @readonly @type {string} */
+    static GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2 = "(?<seconds>(0?\\d|[1-5]\\d)(\\.\\d+)?)\""
     // 
     /** @readonly @type {string} */
     static HASH_MD5 = 'md5'
@@ -569,10 +546,12 @@ class util {
     /** @readonly @type {string} */
     static TIMESTAMP_PATTERN_SECOND = "(?<second>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_MILLISECOND = "(?P<millisecond>\d\d\d)?"
+    static TIMESTAMP_PATTERN_MILLISECOND = "(?<millisecond>\\d\\d\\d)?"
     /** @readonly @type {string} */
     static TIMESTAMP_PATTERN_ZONE = "(?<zone>[A-I]|[K-Z])?"
 
+    /** @readonly @type {string} */
+    static TIMESTAMP_OPTION_DICTIONARY = 'dictionary'
     /** @readonly @type {string} */
     static TIMESTAMP_OPTION_MILLISECONDS = 'milliseconds'
     /** @readonly @type {string} */
@@ -679,11 +658,15 @@ class util {
      * spherical   = (r, theta, phi)
      */
 
+    /** @param {string|number} value @param {string} pattern @returns {boolean} */
+    static ispattern(value, pattern) {
+        return new RegExp(pattern).test(`${value}`)
+    }
     /** @param {any} value @param {string} types @returns {boolean} */
     static istype(value, types) {
         function istype(value, type) {
             function toBinary(value, type) {
-                if (new RegExp("^(0|1)+$").test(value)) {
+                if (util.ispattern(value, /^(0|1)+$/)) {
                     return value
                 }
                 else if (type.startswith('address-ipv4') || type.startswith('address-internet_protocol_v4')) {
@@ -777,7 +760,7 @@ class util {
                 }
             }
             if (type == 'address-ipv4-mask' || type == 'address-internet_protocol_v4-mask') {
-                return istype(value, 'address-ipv4-netmask') || istype(value, 'address-ipv4-subnetmask') || istype(value, 'address-ipv4-wildcardmask')
+                return istype(value, 'address-ipv4-networkmask') || istype(value, 'address-ipv4-wildcardmask')
             }
             if (type == 'address-ipv4-multicast' || type == 'address-internet_protocol_v4-multicast') {
                 if (istype(value, 'address-ipv4')) {
@@ -786,14 +769,7 @@ class util {
                 }
             }
             if (type == 'address-ipv4-netmask' || type == 'address-internet_protocol_v4-netmask') {
-                if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
-                    if (value.includes('0')) {
-                        return value.indexOf('0') > value.lastIndexOf('1')
-                    } else {
-                        return value == '11111111111111111111111111111111'
-                    }
-                }
+                return istype(value, 'address-ipv4-networkmask')
             }
             if (type == 'address-ipv4-networkmask' || type == 'address-internet_protocol_v4-networkmask') {
                 if (istype(value, 'address-ipv4')) {
@@ -807,32 +783,18 @@ class util {
             }
             if (type == 'address-ipv4-prefix-length' || type == 'address-internet_protocol_v4-prefix-length') {
                 if (istype(value, 'number') || istype(value, 'string-number')) {
-                    return new RegExp(/^(0?[0-9]|1[0-9]|2[0-9]|3[1-2])$/).test(value)
+                    return util.ispattern(value, /^(0?[0-9]|1[0-9]|2[0-9]|3[1-2])$/)
                 }
             }
             if (type == 'address-ipv4-subnetmask' || type == 'address-internet_protocol_v4-subnetmask') {
-                if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
-                    if (value.includes('0')) {
-                        return value.indexOf('0') > value.lastIndexOf('1')
-                    } else {
-                        return value == '11111111111111111111111111111111'
-                    }
-                }
+                return istype(value, 'address-ipv4-networkmask')
             }
             if (type == 'address-ipv4-subnetworkmask' || type == 'address-internet_protocol_v4-subnetworkmask') {
-                if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
-                    if (value.includes('0')) {
-                        return value.indexOf('0') > value.lastIndexOf('1')
-                    } else {
-                        return value == '11111111111111111111111111111111'
-                    }
-                }
+                return istype(value, 'address-ipv4-networkmask')
             }
             if (type == 'address-ipv4-unicast' || type == 'address-internet_protocol_v4-unicast') {
                 if (istype(value, 'address-ipv4')) {
-                    return !(istype(value, 'address-ipv4-broadcast') || istype(value, 'address-ipv4-dummy') || istype(value, 'address-ipv4-mask') || istype(value, 'address-ipv4-multicast') || istype(value, 'address-ipv4-unspecified'))
+                    return !(istype(value, 'address-ipv4-broadcast') || istype(value, 'address-ipv4-multicast'))
                 }
             }
             if (type == 'address-ipv4-unspecified' || type == 'address-internet_protocol_v4-unspecified') {
@@ -864,7 +826,7 @@ class util {
                             }
                             return true
                         } else if (value.includes('::')) {
-                            return new RegExp("^(:|[0-9]|[A-F]|[a-f])+$").test(value) && value.length <= 39
+                            return util.ispattern(value, /^(:|[0-9]|[A-F]|[a-f])+$/) && value.length <= 39
                         }
                     }
                 }
@@ -943,7 +905,7 @@ class util {
             }
             if (type == 'address-ipv6-unicast' || type == 'address-internet_protocol_v6-unicast') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    return istype(value, 'address-ipv6-global') || istype(value, 'address-ipv6-local')
                 }
             }
             if (type == 'address-ipv6-unspecified' || type == 'address-internet_protocol_v6-unspecified') {
@@ -1084,12 +1046,12 @@ class util {
             }
             if (type == 'base64') {
                 if (istype(value, 'string')) {
-                    return new RegExp("^(\+|/|[0-9]|=|[A-Z]|[a-z])+$").test(value)
+                    return util.ispattern(value, /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/)
                 }
             }
             if (type == 'binary') {
                 if (istype(value, 'string')) {
-                    return new RegExp("^(0|1)+$").test(value)
+                    return util.ispattern(value, /^(0|1)+$/)
                 }
             }
             if (type == 'boolean') {
@@ -1115,7 +1077,7 @@ class util {
             }
             if (type == 'character') {
                 if (istype(value, 'string')) {
-                    return new RegExp("^([A-Z]|[a-z])$").test(value)
+                    return util.ispattern(value, /^([A-Z]|[a-z])$/)
                 }
             }
             if (type == 'coordinates-geographic') {
@@ -1157,18 +1119,24 @@ class util {
                 }
             }
             if (type == 'coordinates-geographic-latitude-ddd') {
-                if (istype(value, 'string') || istype(value, 'number')) {
-                    return new RegExp(/^(-|\+)?((0)?[0-9]|[1-8][0-9])(\.[0-9]+)?$/).test(`${value}`) || new RegExp("^-?(90)(\.[0]+)?$").test(value)
+                if (istype(value, 'number') || istype(value, 'string-number')) {
+                    return 0 <= Math.abs(Number(value)) && Math.abs(Number(value)) <= 90
+                }
+                if (istype(value, 'string')) {
+                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT2}`
+                    return util.ispattern(value, `^${pattern}$`)
                 }
             }
             if (type == 'coordinates-geographic-latitude-ddm') {
                 if (istype(value, 'string')) {
-                    return new RegExp(/^([0-8][0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9])[NS]$/).test(value) || new RegExp("^(90)(00)\.(00)[NS]$").test(value)
+                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+                    return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$`)
                 }
             }
             if (type == 'coordinates-geographic-latitude-dms') {
                 if (istype(value, 'string')) {
-                    return new RegExp(/^([0-8][0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])[NS]$/).test(value) || new RegExp("^(90)(00)(00)[NS]$").test(value)
+                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+                    return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$`)
                 }
             }
             if (type == 'coordinates-geographic-longitude') {
@@ -1177,32 +1145,38 @@ class util {
                 }
             }
             if (type == 'coordinates-geographic-longitude-ddd') {
-                if (istype(value, 'string') || istype(value, 'number')) {
-                    return new RegExp(/^(-|\+)?((00)?[0-9]|(0)?[1-9][0-9]|1[0-7][0-9])(\.[0-9]+)?$/).test(`${value}`) || new RegExp("^-?(180)(\.[0]+)?$").test(value)
+                if (istype(value, 'number') || istype(value, 'string-number')) {
+                    return 0 <= Math.abs(Number(value)) && Math.abs(Number(value)) <= 180
+                }
+                if (istype(value, 'string')) {
+                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT2}`
+                    return util.ispattern(value, `^${pattern}$`)
                 }
             }
             if (type == 'coordinates-geographic-longitude-ddm') {
                 if (istype(value, 'string')) {
-                    return new RegExp(/^(0[0-9][0-9]|1[0-7][0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9])[EW]$/).test(value) || new RegExp("^(180)(00)\.(00)[EW]$").test(value)
+                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+                    return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$`)
                 }
             }
             if (type == 'coordinates-geographic-longitude-dms') {
                 if (istype(value, 'string')) {
-                    return new RegExp(/^(0[0-9][0-9]|1[0-7][0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])[EW]$/).test(value) || new RegExp("^(180)(00)(00)[EW]$").test(value)
+                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+                    return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$`)
                 }
             }
             if (type == 'date') {
                 return value instanceof Date
             }
             if (type == 'decimal') {
-                return istype(value, 'number')
+                return istype(value, 'number') || istype(value, 'string-number')
             }
             if (type == 'element') {
                 return value instanceof Element || value instanceof AppElement
             }
             if (type == 'hexadecimal') {
                 if (istype(value, 'string')) {
-                    return new RegExp("^([0-9]|[A-F]|[a-f])+$").test(value)
+                    return util.ispattern(value, /^([0-9]|[A-F]|[a-f])+$/)
                 }
             }
             if (type == 'html') {
@@ -1219,7 +1193,7 @@ class util {
             }
             if (type == 'identifier') {
                 if (istype(value, 'string')) {
-                    return new RegExp("^([0-9]|[A-Z]|[a-z]|_)+$").test(value)
+                    return util.ispattern(value, /^([0-9]|[A-Z]|[a-z]|_)+$/)
                 }
             }
             if (type == 'number') {
@@ -1242,7 +1216,7 @@ class util {
             }
             if (type == 'octal') {
                 if (istype(value, 'string')) {
-                    return new RegExp("^[0-7]+$").test(value)
+                    return util.ispattern(value, /^[0-7]+$/)
                 }
             }
             if (type == 'port') {
@@ -1297,12 +1271,12 @@ class util {
             }
             if (type == 'string-number-float') {
                 if (istype(value, 'string')) {
-                    return new RegExp(/^(-|\+)?\d+\.\d+$/).test(value)
+                    return util.ispattern(value, /^(-|\+)?\d+\.\d+$/)
                 }
             }
             if (type == 'string-number-integer') {
                 if (istype(value, 'string')) {
-                    return new RegExp(/^(-|\+)?\d+$/).test(value)
+                    return util.ispattern(value, /^(-|\+)?\d+$/)
                 }
             }
             if (type == 'string-object') {
@@ -1326,7 +1300,6 @@ class util {
                 if (istype(value, 'string')) {
                     let pattern = ""
                     if (value.includes('-')) {
-                        print(`"DepreciationError: name=timestamp (legacy) value=YYYY-MM-DDTHH:MM:SS`)
                         if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
                         if (len(value) == 7 || len(value) == 8)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}`
                         if (len(value) == 10 || len(value) == 11) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}`
@@ -1344,34 +1317,32 @@ class util {
                         if (len(value) == 15 || len(value) == 16) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}`
                         if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
                     }
-                    return new RegExp(`^${pattern}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                    return util.ispattern(value, `^${pattern}${util.TIMESTAMP_PATTERN_ZONE}$`)
                 }
             }
             if (type == 'timestamp-date') {
                 if (istype(value, 'string')) {
                     if (value.includes('-')) {
-                        console.warn(`"DepreciationError: name=timestamp (legacy) value=YYYY-MM-DD`)
-                        return new RegExp(`^${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`)
                     }
                     else {
-                        return new RegExp(`^${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`)
                     }
                 }
             }
             if (type == 'timestamp-time') {
                 if (istype(value, 'string')) {
                     if (value.includes('-')) {
-                        console.warn(`"DepreciationError: name=timestamp (legacy) value=HH:MM:SS`)
-                        return new RegExp(`^${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`)
                     }
                     else {
-                        return new RegExp(`^${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`).test(value)
+                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`)
                     }
                 }
             }
             if (type == 'timestamp-zone') {
                 if (istype(value, 'string')) {
-                    return new RegExp(util.TIMESTAMP_PATTERN_ZONE).test(value)
+                    return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_ZONE}$`)
                 }
             }
             if (type.slice(-2, type.length) == '[]') {
@@ -1427,70 +1398,62 @@ class util {
         return !valid
     }
     // a
-    /** @param {number|string} value @returns {string} */
+    /** @param {address|number} value @returns {binary} */
     static address_binary(value) {
-        if (!util.istype(value, 'number|string')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=number|string`)
         if (util.istype(value, 'address&binary')) {
             return value
         }
         if (util.istype(value, 'number|string-number')) {
             return util.address_prefix_length_to_mask(value)
         }
-        else if (util.istype(value, 'address-ipv4')) {
+        else if (util.istype(value, 'address-internet_protocol_v4')) {
             return util.address_ipv4(value)
         }
-        else if (util.istype(value, 'address-ipv6')) {
+        else if (util.istype(value, 'address-internet_protocol_v6')) {
             return util.address_ipv6(value)
         }
-        else if (util.istype(value, 'address-mac')) {
+        else if (util.istype(value, 'address-media_access_control')) {
             return util.address_mac(value)
         }
         else {
-            return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address|number|string-number`)
+            throw new Error(`TypeError: require type address or number`)
         }
     }
-    /** @param {string} address @param {number|string} netmask @returns {string} */
-    static address_broadcast(address, netmask) {
-        if (!util.istype(address, 'address-ipv4')) return console.error(`TypeError: variable-name=address variable-value=${address} variable-type=${typeof address} type=address-ipv4`)
-        address = util.address_binary(address)
-        if (!util.istype(netmask, 'address-ipv4-netmask|number|string-number')) return console.error(`TypeError: variable-name=netmask variable-value=${netmask} variable-type=${typeof netmask} type=address-ipv4-netmask|number|string-number`)
-        netmask = util.address_binary(netmask)
-        let prefix_length = util.address_mask_to_prefix_length(netmask)
-        return address.slice(0, prefix_length).ljust(32, '1')
-    }
-    /** @param {number|string} value @returns {string} */
+    /** @param {address} value @returns {number} */
     static address_decimal(value) {
         return util.bin2dec(util.address_binary(value))
     }
-    /** @param {any} value @returns {string|null} */
-    static address_family(value) {
+    /** @param {address} value @param {boolean} short @returns {string} */
+    static address_family(value, short = false) {
         if (util.istype(value, 'address-internet_protocol_v4')) {
-            return 'internet_protocol_v4'
+            return short ? 'ipv4' : 'internet_protocol_v4'
         }
         if (util.istype(value, 'address-internet_protocol_v6')) {
-            return 'internet_protocol_v6'
+            return short ? 'ipv6' : 'internet_protocol_v6'
         }
         if (util.istype(value, 'address-media_access_control')) {
-            return 'media_access_control'
+            return short ? 'mac' : 'media_access_control'
         }
-        return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address`)
+        throw new Error(`TypeError: require type address`)
     }
-    /** @param {number|string} value @returns {string} */
+    /** @param {address} value @returns {hexadecimal} */
     static address_hexadecimal(value) {
         return util.bin2hex(util.address_binary(value))
     }
-    /** @param {string} value @returns {string} */
+    /** @param {address} value @returns {address} */
     static address_ip_to_mac_multicast(value) {
         if (util.istype(value, 'address-ipv4')) {
             return util.address_ipv4_to_mac_multicast(value)
         }
-        if (util.istype(value, 'address-ipv6')) {
+        else if (util.istype(value, 'address-ipv6')) {
             return util.address_ipv6_to_mac_multicast(value)
         }
-        return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ip`)
+        else {
+            throw new Error(`TypeError: require type address-ipv4 or address-ipv6`)
+        }
     }
-    /** @param {string|null} value @returns {string} */
-    static address_ipv4(value = null) {
+    /** @deprecated @param {string|null} value @returns {string} */
+    static __address_ipv4(value = null) {
         let output = ''
         if (value == null) {
             for (let i = 0; i < 4; i++) {
@@ -1507,50 +1470,97 @@ class util {
         }
         return output
     }
-    /** @param {string} address @param {number|string} netmask @returns {string} */
-    static address_ipv4_broadcast(address, netmask) {
-        if (!util.istype(address, 'address-ipv4')) return console.error(`TypeError: variable-name=address variable-value=${address} variable-type=${typeof address} type=address-ipv4`)
-        address = util.address_binary(address)
-        if (!util.istype(netmask, 'address-ipv4-netmask|number|string-number')) return console.error(`TypeError: variable-name=netmask variable-value=${netmask} variable-type=${typeof netmask} type=address-ipv4-netmask|number|string-number`)
-        netmask = util.address_binary(netmask)
-        let prefix_length = util.address_mask_to_prefix_length(netmask)
-        return address.slice(0, prefix_length).ljust(32, '1')
-    }
-    /** @param {string} address @param {number|string} netmask @returns {string} */
-    static address_ipv4_network_identifier(address, netmask) {
-        if (!util.istype(address, 'address-ipv4')) return console.error(`TypeError: variable-name=address variable-value=${address} variable-type=${typeof address} type=address-ipv4`)
-        address = util.address_binary(address)
-        if (!util.istype(netmask, 'address-ipv4-netmask|number|string-number')) return console.error(`TypeError: variable-name=netmask variable-value=${netmask} variable-type=${typeof netmask} type=address-ipv4-netmask|number|string-number`)
-        netmask = util.address_binary(netmask)
-        let prefix_length = util.address_mask_to_prefix_length(netmask)
-        return address.slice(0, prefix_length).ljust(32, '0')
-    }
-    /** @param {string} value @returns {string} */
-    static address_ipv4_to_ipv6_4to6(value) {
-        if (!util.istype(value, 'address-ipv4')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv4`)
-        value = util.address_binary(value)
-        return '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111' + value
-    }
-    /** @param {string} value @returns {string} */
-    static address_ipv4_to_ipv6_6to4(value) {
-        if (!util.istype(value, 'address-ipv4')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv4`)
-        value = util.address_binary(value)
-        return '0010000000000010' + value + '00000000000000000000000000000000000000000000000000000000000000000000000000000000'
-    }
-    /** @param {string} value @returns {string} */
-    static address_ipv4_to_ipv6_mapped(value) {
-        if (!util.istype(value, 'address-ipv4')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv4`)
-        value = util.address_binary(value)
-        return '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111' + value
-    }
-    /** @param {string} value @returns {string} */
-    static address_ipv4_to_mac_multicast(value) {
-        if (!util.istype(value, 'address-ipv4')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv4`)
-        value = util.address_binary(value)
-        return util.hex2bin('01005E') + '0' + value.slice(9, 32)
-    }
     /** @param {string|null} value @returns {string} */
-    static address_ipv6(value = null) {
+    static address_ipv4(value = null) {
+        /** @returns {void} */
+        function generate() {
+            // generate a random number and convert to 8-bit binary for each octet
+            let binary = ''
+            for (let i = 0; i < 4; i++) {
+                binary += util.dec2bin(util.random(0, 255), 8)
+            }
+            return binary
+        }
+        /** @param {string} text @returns {string} */
+        function toBinary(text) {
+            // convert each number to 8-bit binary string (octet)
+            let binary = '';
+            for (let octet of text.split('.')) {
+                binary += util.dec2bin(Number(octet), 8)
+            }
+            return binary
+        }
+        /** @param {string} binary @returns {string} */
+        function toText(binary) {
+            // convert each 8-bit binary string to number (octet)
+            let octets = [];
+            for (let i = 0; i < 32; i += 8) {
+                let octet = binary.substring(i, i + 8)
+                octets.push(util.bin2dec(octet))
+            }
+            return octets.join(".")
+        }
+        // generate random IPv6 binary
+        if (value === null) {
+            return generate()
+        // text to binary
+        } else if (value.includes('.')) {
+            if (value.split('.').length != 4) {
+                throw new Error(`Error: invalid IPv4 address (requires 4 octets)`)
+            }
+            return toBinary(value)
+        // binary to text
+        } else {
+            if (value.length != 32) {
+                throw new Error(`Error: invalid IPv4 address (improper length)`)
+            }
+            return toText(value)
+        }
+    }
+    /** @param {address} address @param {address|number} netmask @returns {address} */
+    static address_ipv4_broadcast(address, netmask) {
+        let binary_address = util.address_binary(address)
+        let binary_netmask = util.address_binary(netmask)
+        let prefix_length = util.address_mask_to_prefix_length(binary_netmask)
+        return binary_address.slice(0, prefix_length).ljust(32, '1')
+    }
+    /** @param {address} address @param {address|number} netmask @returns {address} */
+    static address_ipv4_network_identifier(address, netmask) {
+        let binary_address = util.address_binary(address)
+        let binary_netmask = util.address_binary(netmask)
+        let prefix_length = util.address_mask_to_prefix_length(binary_netmask)
+        return binary_address.slice(0, prefix_length).ljust(32, '0')
+    }
+    /** @param {address} value @returns {address} */
+    static address_ipv4_to_ipv6_4to6(value) {
+        let binary = util.address_binary(value)
+        return '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111' + binary
+    }
+    /** @param {address} value @returns {address} */
+    static address_ipv4_to_ipv6_6to4(value) {
+        let binary = util.address_binary(value)
+        return '0010000000000010' + binary + '00000000000000000000000000000000000000000000000000000000000000000000000000000000'
+    }
+    /** @param {address} value @returns {address} */
+    static address_ipv4_to_ipv6_mapped(value) {
+        let binary = util.address_binary(value)
+        return '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111' + binary
+    }
+    /** @param {address} value @returns {address} */
+    static address_ipv4_to_mac_multicast(value) {
+        let binary = util.address_binary(value)
+        return util.hex2bin('01005E') + '0' + binary.slice(9, 32)
+    }
+    /** @param {address} address @returns {string} */
+    static address_ipv4_to_ptr(address) {
+        let text = util.address_string(address)
+        let digits = text.split('.')
+        digits = digits.reverse()
+        let ptr_prefix = digits.join(".")
+        return `${ptr_prefix}.in-addr.arpa`
+    }
+    /** @deprecated @param {string|null} value @returns {string} */
+    static __address_ipv6(value = null) {
         let output = ''
         if (value == undefined) {
             for (let i = 0; i < 8; i++) {
@@ -1604,49 +1614,184 @@ class util {
         }
         return output
     }
-    /** @param {string} value @returns {string} */
-    static address_ipv6_local_link_to_mac(value) {
-        if (!util.istype(value, 'address-ipv6-local-link')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv6-local-link`)
-        value = util.address_binary(value)
-        let universal_local_bit = value[70] == '0' ? '1' : '0'
-        return value.slice(64, 70) + universal_local_bit + value.slice(71, 88) + value.slice(104, 128)
-    }
-    /** @param {string} value @returns {string} */
-    static address_ipv6_to_ipv4(value) {
-        if (!util.istype(value, 'address-ipv6')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv6`)
-        value = util.address_binary(value)
-        if (util.istype(value, 'address-ipv6-4to6')) {
-            return value.slice(96, 128)
-        }
-        if (util.istype(value, 'address-ipv6-6to4')) {
-            return value.slice(16, 48)
-        }
-        return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv6-4to6|address-ipv6-6to4`)
-    }
-    /** @param {string} value @returns {string} */
-    static address_ipv6_to_mac(value) {
-        if (!util.istype(value, 'address-ipv6')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv6`)
-        value = util.address_binary(value)
-        if (util.istype(value, 'address-ipv6-local-link')) {
-            return util.address_ipv6_local_link_to_mac(value)
-        }
-        if (util.istype(value, 'address-ipv6-multicast')) {
-            return util.address_ipv6_to_mac_multicast(value)
-        }
-    }
-    /** @param {string} value @returns {string} */
-    static address_ipv6_to_mac_multicast(value) {
-        value = util.address_binary(value)
-        return util.hex2bin('3333') + value.slice(96, 128)
-    }
-    /** @param {string} value @param {string} network_identifier @param {string} subnetmask @returns {string} */
-    static address_is_ipv4_broadcast(value, network_identifier, subnetmask) {
-        value = util.address_binary(value)
-        if (value == util.address_ipv4('255.255.255.255')) return true
-        return value == util.address_ipv4_broadcast(network_identifier, subnetmask)
-    }
     /** @param {string|null} value @returns {string} */
-    static address_mac(value = null) {
+    static address_ipv6(value = null) {
+        /** @returns {void} */
+        function generate() {
+            // generate a random number and convert to 16-bit binary for each hextet
+            let binary = '';
+            for (let i = 0; i < 8; i++) {
+                binary += util.dec2bin(util.random(0, 65535), 16)
+            }
+            return binary;
+        }
+        /** @param {string} text @returns {string} */
+        function toBinary(text) {
+            let isCompressed = text.includes('::') || text.split(':').some(h => h.length < 4)
+            let hextets
+            if (isCompressed) {
+                hextets = util.address_ipv6_uncompress(text).split(':')
+            } else {
+                hextets = text.split(':')
+            }
+            // convert each 4-digit hexadecimal string to 16-bit binary string (hextet)
+            let binary = '';
+            for (let hextet of hextets) {
+                binary += util.hex2bin(hextet)
+            }
+            return binary
+        }
+        /** @param {string} binary @returns {string} */
+        function toText(binary) {
+            // convert each 16-bit binary string to 4-digit hexadecimal string (hextet)
+            let hextets = [];
+            for (let i = 0; i < 128; i += 16) {
+                let hextet = binary.substring(i, i + 16)
+                hextets.push(util.bin2hex(hextet))
+            }
+            let text = hextets.join(":")
+            return util.address_ipv6_compress(text)
+        }
+        // generate random IPv6 binary
+        if (value === null) {
+            return generate();
+        // text to binary
+        } else if (value.includes(':')) {
+            return toBinary(value);
+        // binary to text
+        } else {
+            if (value.length != 128) {
+                throw new Error(`Error: invalid IPv6 address (improper length)`)
+            }
+            return toText(value);
+        }
+    }
+    /** @param {string} value @returns {string} */
+    static address_ipv6_expand(text) {
+        return util.address_ipv6_uncompress(text)
+    }
+    /** @param {string} text @returns {string} */
+    static address_ipv6_compress(text) {
+        if (!text.includes(':')) {
+            throw new Error("Error: invalid IPv6 address");
+        }
+        // ensure address is fully expanded
+        text = util.address_ipv6_uncompress(text)
+        // remove all zero expansion block hextets and insert the double colon notation
+        if (text.startsWith('0000:')) {
+            text = text.replaceAll('0000:', '')
+            text = '::' + text
+        }
+        else if (text.endsWith(':0000')) {
+            text = text.replaceAll(':0000', '')
+            text = text + '::'
+        }
+        else if (text.includes('0000')) {
+            let index = text.indexOf('0000')
+            text = text.replaceAll('0000:', '')
+            text = text.slice(0, index) + ':' + text.slice(index)
+        }
+        // strip leading zeros in each hextet
+        let hextets = text.split(':')
+        hextets.map((hextet) => {
+            if (hextet.length == 0) {
+                return ''
+            }
+            return parseInt(hextet, 16).toString(16)
+        })
+        return hextets.join(':')
+    }
+    /** @param {string} text @returns {string} */
+    static address_ipv6_uncompress(text) {
+        if (!text.includes(':')) {
+            throw new Error("Error: invalid IPv6 address (missing colon)");
+        }
+        if (text.split('::').length > 2) {
+            throw new Error("Error: invalid IPv6 address (more than one '::')");
+        }
+        // address is already fully expanded
+        if (!text.includes('::')) {
+            let hextets = text.split(':')
+            if (hextets.length !== 8) {
+                throw new Error("Error: invalid IPv6 address (requires 8 hextets)");
+            }
+            // pad hextets to 4 hexadecimal digits
+            return hextets.map(hextet => hextet.padStart(4, '0')).join(':')
+        }
+        let parts = text.split('::')
+        // process left and right parts of the '::'
+        // pad existing hextets to 4 hexadecimal digits
+        // .filter(Boolean) handles empty strings resulting from '::' at the start or end
+        let hextets_lt = parts[0].split(':').filter(Boolean).map(hextet => hextet.padStart(4, '0'))
+        let hextets_rt = parts[1].split(':').filter(Boolean).map(hextet => hextet.padStart(4, '0'))
+        // calculate the number of zero blocks to insert
+        let num_existing_hextets = hextets_lt.length + hextets_rt.length;
+        let num_zeros_to_insert = 8 - num_existing_hextets;
+        if (num_zeros_to_insert < 0) {
+            throw new Error("Error: invalid IPv6 address (too many hextets after compression)")
+        }
+        // create the zero expansion block
+        let expansion_blocks = Array(num_zeros_to_insert).fill('0000')
+        let hextets = hextets_lt.concat(expansion_blocks).concat(hextets_rt)
+        return hextets.join(':')
+    }
+    /** @param {address} value @returns {address} */
+    static address_ipv6_local_link_to_mac(value) {
+        let binary = util.address_binary(value)
+        let universal_local_bit = binary[70] == '0' ? '1' : '0'
+        return binary.slice(64, 70) + universal_local_bit + binary.slice(71, 88) + binary.slice(104, 128)
+    }
+    /** @param {address} value @returns {address} */
+    static address_ipv6_to_ipv4(value) {
+        let binary = util.address_binary(value)
+        if (util.istype(binary, 'address-ipv6-4to6')) {
+            return binary.slice(96, 128)
+        }
+        else if (util.istype(binary, 'address-ipv6-6to4')) {
+            return binary.slice(16, 48)
+        }
+        else {
+            throw new Error(`TypeError: require type address-ipv6-4to6 or address-ipv6-6to4`)
+        }
+    }
+    /** @param {address} value @returns {address} */
+    static address_ipv6_to_mac(value) {
+        let binary = util.address_binary(value)
+        if (util.istype(binary, 'address-ipv6-local-link')) {
+            return util.address_ipv6_local_link_to_mac(binary)
+        }
+        else if (util.istype(binary, 'address-ipv6-multicast')) {
+            return util.address_ipv6_to_mac_multicast(binary)
+        }
+        else {
+            throw new Error(`TypeError: require type address-ipv6-local-link or address-ipv6-multicast`)
+        }
+    }
+    /** @param {address} value @returns {address} */
+    static address_ipv6_to_mac_multicast(value) {
+        let binary = util.address_binary(value)
+        return util.hex2bin('3333') + binary.slice(96, 128)
+    }
+    /** @param {address} address @returns {string} */
+    static address_ipv6_to_ptr(address) {
+        let text_compressed = util.address_string(address)
+        let text_expanded = util.address_ipv6_uncompress(text_compressed)
+        let hexadecimal = text_expanded.replace(':', '')
+        let digits = hexadecimal.split('')
+        digits = digits.reverse()
+        let ptr_prefix = digits.join(".")
+        return `${ptr_prefix}.ip6.arpa`
+    }
+    /** @param {address} value @param {address} network_identifier @param {address|number} subnetmask @returns {boolean} */
+    static address_is_ipv4_broadcast(value, network_identifier, subnetmask) {
+        let binary = util.address_binary(value)
+        if (binary == util.address_ipv4('255.255.255.255')) {
+            return true
+        }
+        return binary == util.address_ipv4_broadcast(network_identifier, subnetmask)
+    }
+    /** @deprecated @param {string|null} value @returns {string} */
+    static __address_mac(value = null) {
         let output = ''
         if (value == undefined) {
             for (let i = 0; i < 6; i++) {
@@ -1663,66 +1808,106 @@ class util {
         }
         return output
     }
-    /** @param {string} address @param {string} network_prefix @returns {string} */
+    /** @deprecated @param {string|null} value @returns {string} */
+    static address_mac(value = null) {
+        /** @returns {void} */
+        function generate() {
+            // generate a random number and convert to 8-bit binary for each octet
+            let binary = ''
+            for (let i = 0; i < 6; i++) {
+                binary += util.dec2bin(util.random(0, 255), 8)
+            }
+            return binary
+        }
+        /** @param {string} text @returns {string} */
+        function toBinary(text) {
+            // convert each 2-digit hexadecimal string to 8-bit binary string (octet)
+            let binary = '';
+            for (let octet of text.split('-')) {
+                binary += util.hex2bin(octet)
+            }
+            return binary
+        }
+        /** @param {string} binary @returns {string} */
+        function toText(binary) {
+            // convert each 8-bit binary string to 2-digit hexadecimal string (octet)
+            let octets = []
+            for (let i = 0; i < 48; i += 8) {
+                let octet = binary.substring(i, i + 8)
+                octets.push(util.bin2hex(octet))
+            }
+            return octets.join("-")
+        }
+        // generate random IPv6 binary
+        if (value === null) {
+            return generate()
+        // text to binary
+        } else if (value.includes('-')) {
+            if (value.split('-').length != 6) {
+                throw new Error(`Error: invalid MAC address (requires 6 octets)`)
+            }
+            return toBinary(value)
+        // binary to text
+        } else {
+            if (value.length != 48) {
+                throw new Error(`Error: invalid MAC address (improper length)`)
+            }
+            return toText(value)
+        }
+    }
+    /** @param {address} address @param {binary} network_prefix @returns {address} */
     static address_mac_to_ipv6_local_link(address, network_prefix) {
-        if (!util.istype(address, 'address-mac')) return console.error(`TypeError: variable-name=address variable-value=${address} variable-type=${typeof address} type=address-mac`)
-        if (!util.istype(network_prefix, 'binary')) return console.error(`TypeError: variable-name=network_prefix variable-value=${network_prefix} variable-type=${typeof network_prefix} type=binary`)
-        if (network_prefix.length != 64) return console.error(`StringLengthError: variable-name=network_prefix variable-length=${network_prefix.length} length=eq64`)
-        address = util.address_binary(address)
-        let interface_identifier = address.slice(0, 24) + util.hex2bin('fffe') + address.slice(24, 48)
+        if (network_prefix.length != 64) {
+            throw new Error(`StringLengthError: network_prefix requires 64 characters`)
+        }
+        let binary = util.address_binary(address)
+        let interface_identifier = binary.slice(0, 24) + util.hex2bin('fffe') + binary.slice(24, 48)
         let universal_local_bit = (interface_identifier[7] == '0' ? '1' : '0')
         interface_identifier = interface_identifier.slice(0, 6) + universal_local_bit + interface_identifier.slice(7, 64)
         return network_prefix + interface_identifier
     }
-    /** @param {string} value @returns {number} */
+    /** @param {address|number} value @returns {number} */
+    static address_mask_to_address_count(value) {
+        let prefix_length = util.address_mask_to_prefix_length(value)
+        return 2 ** (32 - prefix_length)
+    }
+    /** @param {address|number} value @returns {number} */
     static address_mask_to_prefix_length(value) {
-        // netmask|subnetmask: 11110000..., wildcardmask: 00001111...
-        if (!util.istype(value, 'address-ipv4-mask')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv4-mask`)
-        value = util.address_binary(value)
-        if (value.count('1') == 32 || value.count('0') == 32) {
+        let binary = util.address_binary(value)
+        if (binary.count('1') == 32 || binary.count('0') == 32) {
             return 32
         } else {
-            let character = value.find('0') > value.rfind('1') ? '1' : '0'
-            return value.count(character)
+            let character = binary.find('0') > binary.rfind('1') ? '1' : '0'
+            return binary.count(character)
         }
     }
-    /** @param {string} value @returns {string} */
+    /** @param {address|number} value @returns {address} */
     static address_mask_to_wildcardmask(value) {
-        if (!util.istype(value, 'address-ipv4-mask')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address-ipv4-mask`)
-        value = util.address_binary(value)
-        let prefix_length = value.count('1')
+        let binary = util.address_binary(value)
+        let prefix_length = binary.count('1')
         return ''.ljust(prefix_length, '0') + ''.ljust(32 - prefix_length, '1')
     }
-    /** @param {string} address @param {number|string} netmask @returns {string} */
-    static address_network_identifier(address, netmask) {
-        if (!util.istype(address, 'address-ipv4')) return console.error(`TypeError: variable-name=address variable-value=${address} variable-type=${typeof address} type=address-ipv4`)
-        address = util.address_binary(address)
-        if (!util.istype(netmask, 'address-ipv4-netmask|number|string-number')) return console.error(`TypeError: variable-name=netmask variable-value=${netmask} variable-type=${typeof netmask} type=address-ipv4-netmask|number|string-number`)
-        let prefix_length = util.istype(netmask, 'number') ? netmask : util.address_mask_to_prefix_length(netmask)
-        return address.slice(0, prefix_length).ljust(32, '0')
-    }
-    /** @param {number|string} prefix_length @returns {string} */
+    /** @param {number} prefix_length @returns {address} */
     static address_prefix_length_to_mask(prefix_length) {
-        if (!util.istype(prefix_length, 'number|string-number')) return console.error(`TypeError: variable-name=prefix_length variable-value=${prefix_length} variable-type=${typeof prefix_length} type=number|string-number`)
         prefix_length = Number(prefix_length)
         return '1'.repeat(prefix_length) + '0'.repeat(32 - prefix_length)
     }
-    /** @param {number|string} prefix_length @returns {string} */
+    /** @param {number} prefix_length @returns {address} */
     static address_prefix_length_to_wildcardmask(prefix_length) {
-        if (!util.istype(prefix_length, 'number|string-number')) return console.error(`TypeError: variable-name=prefix_length variable-value=${prefix_length} variable-type=${typeof prefix_length} type=number|string-number`)
         prefix_length = Number(prefix_length)
         return '0'.repeat(prefix_length) + '1'.repeat(32 - prefix_length)
     }
-    /** @param {number|string} prefix_length @returns {number} */
+    /** @param {number} prefix_length @returns {number} */
     static address_prefix_length_to_address_count(prefix_length) {
-        if (!util.istype(prefix_length, 'number|string-number')) return console.error(`TypeError: variable-name=prefix_length variable-value=${prefix_length} variable-type=${typeof prefix_length} type=number|string-number`)
         prefix_length = Number(prefix_length)
         return 2 ** (32 - prefix_length)
     }
-    /** @param {number|string} value @returns {string} */
+    /** @param {address|number} value @returns {address|string} */
     static address_string(value) {
-        if (!util.istype(value, 'number|string')) return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=number|string`)
-        if (util.istype(value, 'binary')) {
+        if (util.istype(value, 'address') && !util.istype(value, 'binary')) {
+            return value
+        }
+        else if (util.istype(value, 'address') && util.istype(value, 'binary')) {
             if (util.istype(value, 'address-internet_protocol_v4')) {
                 return util.address_ipv4(value)
             }
@@ -1731,30 +1916,24 @@ class util {
             }
             else if (util.istype(value, 'address-media_access_control')) {
                 return util.address_mac(value)
-            } else {
-                return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address`)
             }
-        }
-        else if (util.istype(value, 'address')) {
-            return value
         }
         else if (util.istype(value, 'number|string-number')) {
             return util.address_ipv4(util.address_prefix_length_to_mask(value))
         }
         else {
-            return console.error(`TypeError: variable-name=value variable-value=${value} variable-type=${typeof value} type=address|number|string-number`)
+            throw new Error(`TypeError: require type address or number`)
         }
     }
-    /** @param {string} network_identifier @param {number|string} netmask @param {number|string} subnets @returns {string[]} */
+    /** @param {address} network_identifier @param {address|number} netmask @param {number} subnets @returns {string[]} */
     static address_subnetting(network_identifier, netmask, subnets) {
-        if (!util.istype(network_identifier, 'address-ipv4')) return console.error(`TypeError: variable-name=network_identifier variable-value=${network_identifier} variable-type=${typeof network_identifier} type=address-ipv4`)
-        network_identifier = util.address_binary(network_identifier)
-        if (!util.istype(netmask, 'address-ipv4-netmask|number|string-number')) return console.error(`TypeError: variable-name=netmask variable-value=${netmask} variable-type=${typeof netmask} type=address-ipv4-netmask|number|string-number`)
         netmask = util.address_binary(netmask)
-        if (!util.istype(subnets, 'number|string-number')) return console.error(`TypeError: variable-name=subnets variable-value=${subnets} variable-type=${typeof subnets} type=number|string-number`)
         subnets = Number(subnets)
         // 
-        network_identifier = util.address_network_identifier(network_identifier, netmask)
+        network_identifier = util.address_ipv4_network_identifier(
+            util.address_binary(network_identifier),
+            netmask
+        )
         // 
         let network_mask_prefix_length = netmask.indexOf('0')
         let network_extension_length = null
@@ -1779,29 +1958,16 @@ class util {
         }
         return [subnetmask, network_identifiers]
     }
-    /** @param {string} value @returns {string|null} */
-    static address_type(value) {
-        if (util.istype(value, 'address-ipv4')) {
-            return 'ipv4'
-        }
-        if (util.istype(value, 'address-ipv6')) {
-            return 'ipv6'
-        }
-        if (util.istype(value, 'address-mac')) {
-            return 'mac'
-        }
-        return null
-    }
-    /** @param {string} value @returns {string} */
+    /** @param {address|number} value @returns {address} */
     static address_wildcardmask_to_mask(value) {
-        value = util.address_binary(value)
-        let prefix_length = value.count('0')
+        let binary = util.address_binary(value)
+        let prefix_length = binary.count('0')
         return ''.ljust(prefix_length, '1') + ''.ljust(32 - prefix_length, '0')
     }
-    /** @param {string} value @returns {number} */
+    /** @param {address|number} value @returns {number} */
     static address_wildcardmask_to_prefix_length(value) {
-        value = util.address_binary(value)
-        return value.count('0')
+        let binary = util.address_binary(value)
+        return binary.count('0')
     }
     /** @param {number} n @param {{ index:number, result:number }} results  @returns {number} */
     static algorithm_fibonacci(n, results = {}) {
@@ -2132,7 +2298,7 @@ class util {
         return [x, y, z]
     }
     // d
-    /** @param {number} degrees @returns {number}  */
+    /** @param {number} degrees @returns {number} */
     static degrees_to_radians(degrees) {
         return degrees * util.DEGREES_TO_RADIANS
     }
@@ -2547,104 +2713,202 @@ class util {
     }
     // g
 
-    /** @param {string[]} point @returns {string[]} */
-    static geographic_ddd_to_ddm(point) {
+    /** @param {...string} point @returns {string[]} */
+    static geographic_ddd_to_ddm(...point) {
+        point = point.length == 1 ? point[0] : Array.from(point)
         if (!util.istype(point, 'coordinates-geographic-ddd')) {
-            throw new Error(`ValueError: variable-name=point variable-value=${point} >>> Invalid Format`)
+            throw new Error(`ValueError: invalid geographic coordinate format`)
         }
-        return ''
-    }
-    /** @param {string[]} point @returns {string[]} */
-    static geographic_ddd_to_dms(point) {
-        if (!util.istype(point, 'coordinates-geographic-ddd')) {
-            throw new Error(`ValueError: variable-name=point variable-value=${point} >>> Invalid Format`)
-        }
-        let degrees, minutes, seconds, direction
+        let direction, degrees, minutes, seconds, decimal_minutes
         point = [Number(point[0]), Number(point[1])]
-        degrees = `${Math.floor(Math.abs(point[0]))}`
-        minutes = `${Math.floor((Math.abs(point[0]) - degrees) * 60)}`
-        seconds = `${Math.round((Math.abs(point[0]) - degrees - minutes / 60) * 3600)}`
-        if (seconds == '60') {
-            seconds = '0'
-            minutes = `${Number(minutes) + 1}`
-        }
-        if (minutes == 60) {
-            minutes = '0'
-            degrees = `${Number(degrees) + 1}`
-        }
         direction = point[0] >= 0 ? 'N' : 'S'
-        let latitude = `${degrees.rjust(2, '0')}${minutes.rjust(2, '0')}${seconds.rjust(2, '0')}${direction}`
-        degrees = `${Math.floor(Math.abs(point[1]))}`
-        minutes = `${Math.floor((Math.abs(point[1]) - degrees) * 60)}`
-        seconds = `${Math.round((Math.abs(point[1]) - degrees - minutes / 60) * 3600)}`
-        if (seconds == '60') {
-            seconds = '0'
-            minutes = `${Number(minutes) + 1}`
+        degrees = Math.floor(Math.abs(point[0]))
+        minutes = Math.floor((Math.abs(point[0]) - degrees) * 60)
+        seconds = Math.round((Math.abs(point[0]) - degrees - minutes / 60) * 3600)
+        if (seconds == 60) {
+            seconds = 0
+            minutes += 1
         }
         if (minutes == 60) {
-            minutes = '0'
-            degrees = `${Number(degrees) + 1}`
+            minutes = 0
+            degrees += 1
         }
+        degrees = `${degrees}`
+        decimal_minutes = `${(minutes + seconds/60).toFixed(2)}`
+        let latitude = `${degrees.rjust(2, '0')}${decimal_minutes.rjust(5, '0')}${direction}`
         direction = point[1] >= 0 ? 'E' : 'W'
+        degrees = Math.floor(Math.abs(point[1]))
+        minutes = Math.floor((Math.abs(point[1]) - degrees) * 60)
+        seconds = Math.round((Math.abs(point[1]) - degrees - minutes / 60) * 3600)
+        if (seconds == 60) {
+            seconds = 0
+            minutes += 1
+        }
+        if (minutes == 60) {
+            minutes = 0
+            degrees += 1
+        }
+        degrees = `${degrees}`
+        decimal_minutes = `${(minutes + seconds/60).toFixed(2)}`
+        let longitude = `${degrees.rjust(3, '0')}${decimal_minutes.rjust(5, '0')}${direction}`
+        return [latitude, longitude]
+    }
+    /** @param {...string} point @returns {string[]} */
+    static geographic_ddd_to_dms(...point) {
+        point = point.length == 1 ? point[0] : Array.from(point)
+        if (!util.istype(point, 'coordinates-geographic-ddd')) {
+            throw new Error(`ValueError: invalid geographic coordinate format`)
+        }
+        let direction, degrees, minutes, seconds
+        point = [Number(point[0]), Number(point[1])]
+        direction = point[0] >= 0 ? 'N' : 'S'
+        degrees = Math.floor(Math.abs(point[0]))
+        minutes = Math.floor((Math.abs(point[0]) - degrees) * 60)
+        seconds = Math.round((Math.abs(point[0]) - degrees - minutes / 60) * 3600)
+        if (seconds == 60) {
+            seconds = 0
+            minutes += 1
+        }
+        if (minutes == 60) {
+            minutes = 0
+            degrees += 1
+        }
+        degrees = `${degrees}`
+        minutes = `${minutes}`
+        seconds = `${seconds}`
+        let latitude = `${degrees.rjust(2, '0')}${minutes.rjust(2, '0')}${seconds.rjust(2, '0')}${direction}`
+        direction = point[1] >= 0 ? 'E' : 'W'
+        degrees = Math.floor(Math.abs(point[1]))
+        minutes = Math.floor((Math.abs(point[1]) - degrees) * 60)
+        seconds = Math.round((Math.abs(point[1]) - degrees - minutes / 60) * 3600)
+        if (seconds == 60) {
+            seconds = 0
+            minutes += 1
+        }
+        if (minutes == 60) {
+            minutes = 0
+            degrees += 1
+        }
+        degrees = `${degrees}`
+        minutes = `${minutes}`
+        seconds = `${seconds}`
         let longitude = `${degrees.rjust(3, '0')}${minutes.rjust(2, '0')}${seconds.rjust(2, '0')}${direction}`
         return [latitude, longitude]
     }
-    /** @param {string[]} point @returns {string[]} */
-    static geographic_ddm_to_ddd(point) {
+    /** @param {...string} point @returns {string[]} */
+    static geographic_ddm_to_ddd(...point) {
+        point = point.length == 1 ? point[0] : Array.from(point)
         if (!util.istype(point, 'coordinates-geographic-ddm')) {
-            throw new Error(`ValueError: variable-name=point variable-value=${point} >>> Invalid Format`)
+            throw new Error(`ValueError: invalid geographic coordinate format`)
         }
-        return ''
-    }
-    /** @param {string[]} point @returns {string[]} */
-    static geographic_ddm_to_dms(point) {
-        if (!util.istype(point, 'coordinates-geographic-ddm')) {
-            throw new Error(`ValueError: variable-name=point variable-value=${point} >>> Invalid Format`)
-        }
-        return ''
-    }
-    /** @param {string[]} point @returns {string[]} */
-    static geographic_dms_to_ddd(point) {
-        if (!util.istype(point, 'coordinates-geographic-dms')) {
-            throw new Error(`ValueError: variable-name=point variable-value=${point} >>> Invalid Format`)
-        }
-        let degrees, minutes, seconds, direction
-        let decimal_degrees
-        degrees = Number(point[0].slice(0, 2))
-        minutes = Number(point[0].slice(2, 4))
-        seconds = Number(point[0].slice(4, 6))
-        direction = point[0].slice(-1)
-        decimal_degrees = degrees + minutes/60 + seconds/3600
+        let direction, degrees, minutes, decimal_degrees
+        let pattern, match
+        pattern = !(point[0].includes('°') || point[0].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+        pattern = (point[0][0] == 'N' || point[0][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`
+        match = point[0].match(pattern)
+        direction = match.groups["direction"]
+        degrees = Number(match.groups["degrees"])
+        minutes = Number(match.groups['decimal_minutes'])
+        decimal_degrees = (degrees + minutes/60).toFixed(6)
         decimal_degrees *= direction == 'N' ? 1 : -1
         let latitude = `${decimal_degrees}`
-        degrees = Number(point[1].slice(0, 3))
-        minutes = Number(point[1].slice(3, 5))
-        seconds = Number(point[1].slice(5, 7))
-        direction = point[1].slice(-1)
-        decimal_degrees = degrees + minutes/60 + seconds/3600
+        pattern = !(point[1].includes('°') || point[1].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+        pattern = (point[1][0] == 'N' || point[1][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
+        match = point[1].match(pattern)
+        direction = match.groups["direction"]
+        degrees = Number(match.groups["degrees"])
+        minutes = Number(match.groups['decimal_minutes'])
+        decimal_degrees = (degrees + minutes/60).toFixed(6)
         decimal_degrees *= direction == 'E' ? 1 : -1
         let longitude = `${decimal_degrees}`
         return [latitude, longitude]
     }
-    /** @param {string[]} point @returns {string[]} */
-    static geographic_dms_to_ddm(point) {
-        if (!util.istype(point, 'coordinates-geographic-dms')) {
-            throw new Error(`ValueError: variable-name=point variable-value=${point} >>> Invalid Format`)
+    /** @param {...string} point @returns {string[]} */
+    static geographic_ddm_to_dms(...point) {
+        point = point.length == 1 ? point[0] : Array.from(point)
+        if (!util.istype(point, 'coordinates-geographic-ddm')) {
+            throw new Error(`ValueError: invalid geographic coordinate format`)
         }
-        let degrees, minutes, seconds, direction
-        let decimal_minutes
-        degrees = Number(point[0].slice(0, 2))
-        minutes = Number(point[0].slice(2, 4))
-        seconds = Number(point[0].slice(4, 6))
-        direction = point[0].slice(-1)
-        decimal_minutes = minutes + seconds/60
-        let latitude = `${degrees.rjust(2, '0')}${decimal_minutes.toFixed(2).rjust(5, '0')}${direction}`
-        degrees = Number(point[1].slice(0, 3))
-        minutes = Number(point[1].slice(3, 5))
-        seconds = Number(point[1].slice(5, 7))
-        direction = point[1].slice(-1)
-        decimal_minutes = minutes + seconds/60
-        let longitude = `${degrees.rjust(3, '0')}${decimal_minutes.toFixed(2).rjust(5, '0')}${direction}`
+        let direction, degrees, minutes, decimal_degrees
+        let pattern, match
+        pattern = !(point[0].includes('°') || point[0].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+        pattern = (point[0][0] == 'N' || point[0][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`
+        match = point[0].match(pattern)
+        direction = match.groups["direction"]
+        degrees = Number(match.groups["degrees"])
+        minutes = Number(match.groups['decimal_minutes'])
+        decimal_degrees = (degrees + minutes/60)
+        decimal_degrees *= direction == 'N' ? 1 : -1
+        let latitude = `${decimal_degrees}`
+        pattern = !(point[1].includes('°') || point[1].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+        pattern = (point[1][0] == 'N' || point[1][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
+        match = point[1].match(pattern)
+        direction = match.groups["direction"]
+        degrees = Number(match.groups["degrees"])
+        minutes = Number(match.groups['decimal_minutes'])
+        decimal_degrees = (degrees + minutes/60)
+        decimal_degrees *= direction == 'E' ? 1 : -1
+        let longitude = `${decimal_degrees}`
+        return util.geographic_ddd_to_dms([latitude, longitude])
+    }
+    /** @param {...string} point @returns {string[]} */
+    static geographic_dms_to_ddd(...point) {
+        point = point.length == 1 ? point[0] : Array.from(point)
+        if (!util.istype(point, 'coordinates-geographic-dms')) {
+            throw new Error(`ValueError: invalid geographic coordinate format`)
+        }
+        let degrees, minutes, seconds, direction, decimal_degrees
+        let pattern, match
+        pattern = !(point[0].includes('°') || point[0].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+        pattern = (point[0][0] == 'N' || point[0][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`
+        match = point[0].match(pattern)
+        direction = match.groups["direction"]
+        degrees = Number(match.groups["degrees"])
+        minutes = Number(match.groups["minutes"])
+        seconds = Number(match.groups["seconds"])
+        decimal_degrees = (degrees + minutes/60 + seconds/3600).toFixed(6)
+        decimal_degrees *= direction == 'N' ? 1 : -1
+        let latitude = `${decimal_degrees}`
+        pattern = !(point[1].includes('°') || point[1].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+        pattern = (point[1][0] == 'N' || point[1][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
+        match = point[1].match(pattern)
+        direction = match.groups["direction"]
+        degrees = Number(match.groups["degrees"])
+        minutes = Number(match.groups["minutes"])
+        seconds = Number(match.groups["seconds"])
+        decimal_degrees = (degrees + minutes/60 + seconds/3600).toFixed(6)
+        decimal_degrees *= direction == 'E' ? 1 : -1
+        let longitude = `${decimal_degrees}`
+        return [latitude, longitude]
+    }
+    /** @param {...string} point @returns {string[]} */
+    static geographic_dms_to_ddm(...point) {
+        point = point.length == 1 ? point[0] : Array.from(point)
+        if (!util.istype(point, 'coordinates-geographic-dms')) {
+            throw new Error(`ValueError: invalid geographic coordinate format`)
+        }
+        let degrees, minutes, seconds, direction, decimal_minutes
+        let pattern, match
+        pattern = !(point[0].includes('°') || point[0].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+        pattern = (point[0][0] == 'N' || point[0][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`
+        match = point[0].match(pattern)
+        direction = match.groups["direction"]
+        degrees = Number(match.groups["degrees"])
+        minutes = Number(match.groups["minutes"])
+        seconds = Number(match.groups["seconds"])
+        degrees = `${degrees}`
+        decimal_minutes = `${(minutes + seconds/60).toFixed(2)}`
+        let latitude = `${degrees.rjust(2, '0')}${decimal_minutes.rjust(5, '0')}${direction}`
+        pattern = !(point[1].includes('°') || point[1].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+        pattern = (point[1][0] == 'N' || point[1][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
+        match = point[1].match(pattern)
+        direction = match.groups["direction"]
+        degrees = Number(match.groups["degrees"])
+        minutes = Number(match.groups["minutes"])
+        seconds = Number(match.groups["seconds"])
+        degrees = `${degrees}`
+        decimal_minutes = `${(minutes + seconds/60).toFixed(2)}`
+        let longitude = `${degrees.rjust(3, '0')}${decimal_minutes.rjust(5, '0')}${direction}`
         return [latitude, longitude]
     }
     /** @param {number[]} point1 @param {number[]} point2 @returns {number} */
@@ -3027,15 +3291,16 @@ class util {
     }
     /** @param {number} number @returns {number} */
     static mathematics_round(number, placement = 1) {
-        let [number_whole, number_rational] = `${Number(number)}`.split('.')
+        let multiplier = 10**placement
         if (placement > 0) {
-            let v = number / 10**placement
-            number = util.round(util.round(v, 1) * 10**placement, 1)
+            number = util.round(number / multiplier, 1) * multiplier
+            // correct floating point precision errors when handling large numbers
+            number = Math.round(number)
         }
-        else if (placement < 0 && number_rational.length > -placement) {
+        else if (placement < 0) {
             number = util.round(number, -placement)
-            number = util.mathematics_simplify(number)
         }
+        number = util.mathematics_simplify(number)
         return number
     }
     /** @param {number} number  @returns {number} */
@@ -3106,6 +3371,14 @@ class util {
     // o
 
     // p
+    /** @param {string} string @param {number} width @param {string} align @param {string} fillChar @returns {string} */
+    static pad(string, width, align = 'left', fillChar = ' ') {
+        return util.string_pad(string, width, align, fillChar)
+    }
+    /** @param {string} string @param {number} width @param {string} align @param {string} fillChar @returns {string} */
+    static pad_block(string, width, align = 'left', fillChar = ' ') {
+        return util.string_pad_block(string, width, align, fillChar)
+    }
     /** @param {string} path @param {string} option @returns {Object|string} */
     static path_info(path = null, option = null) {
         if (!path && window) {
@@ -3244,7 +3517,7 @@ class util {
     }
     /** @param {string|RegExp} pattern @param {string} value @returns {boolean} */
     static regular_expression_match(pattern, value) {
-        return new RegExp(pattern).test(value)
+        return util.ispattern(value, pattern)
     }
     /** @param {string} string @returns {string} */
     static rgb2hex(value) {
@@ -3305,9 +3578,9 @@ class util {
         }
         return `#${hexadecimal}`
     }
-    /** @param {number} number @param {number} nDigits @returns {number} */
-    static round(number, nDigits) {
-        let multiplier = Math.pow(10, nDigits)
+    /** @param {number} number @param {number} ndigits @returns {number} */
+    static round(number, ndigits) {
+        let multiplier = Math.pow(10, ndigits)
         return Math.round(number * multiplier) / multiplier
     }
     // s
@@ -3462,6 +3735,34 @@ class util {
         let n = numbers.length
         let mean = util.statistics_mean(numbers)
         return util.statistics_sum(numbers.map((value) => (value - mean) ** 2)) / (n - 1)
+    }
+    /** @param {string} string @param {number} width @param {string} align @param {string} fillChar @returns {string} */
+    static string_pad(string, width, align = 'left', fillChar = ' ') {
+        if (string.length >= width) return string
+        let padding_length = width - string.length
+        switch (align.toLowerCase()) {
+            case 'right':
+                return fillChar.repeat(padding_length) + string
+            case 'center':
+                return fillChar.repeat(Math.floor(padding_length / 2)) + string + fillChar.repeat(Math.ceil(padding_length / 2))
+            case 'left':
+            default:
+                return string + fillChar.repeat(padding_length)
+        }
+    }
+    /** @param {string} string @param {number} width @param {string} align @param {string} fillChar @returns {string} */
+    static string_pad_block(string, width, align = 'left', fillChar = ' ') {
+        let padding_length = (width - string.length % width) % width
+        if (padding_length == 0) return string
+        switch (align.toLowerCase()) {
+            case 'right':
+                return fillChar.repeat(padding_length) + string
+            case 'center':
+                return fillChar.repeat(Math.floor(padding_length / 2)) + string + fillChar.repeat(Math.ceil(padding_length / 2))
+            case 'left':
+            default:
+                return string + fillChar.repeat(padding_length)
+        }
     }
     /** @param {array|boolean|number|object|string} value @returns {string} */
     static string_conversion_encode(value) {
@@ -3713,6 +4014,18 @@ class util {
             if (option == null) {
                 return date
             }
+            if (option.lower() == util.TIMESTAMP_OPTION_DICTIONARY) {
+                return {
+                    "year"       : date.getFullYear(),
+                    "month"      : date.getMonth()+1,
+                    "day"        : date.getDate(),
+                    "hour"       : date.getHours(),
+                    "minute"     : date.getMinutes(),
+                    "second"     : date.getSeconds(),
+                    "millisecond": date.getMilliseconds(),
+                    "zone"       : 'Z'
+                }
+            }
             if (option.lower() == util.TIMESTAMP_OPTION_MILLISECONDS) {
                 return date.getTime() + offset
             }
@@ -3733,11 +4046,16 @@ class util {
                 return `${year}${month}${dayOfMonth}T${hours}${minutes}${seconds}Z`
             }
         }
+        /** @param {string} value @returns {boolean} */
+        function isOption(value) {
+            let option = value.lower()
+            return option == util.TIMESTAMP_OPTION_DICTIONARY || option == util.TIMESTAMP_OPTION_MILLISECONDS || option == util.TIMESTAMP_OPTION_OBJECT || option == util.TIMESTAMP_OPTION_SECONDS || option == util.TIMESTAMP_OPTION_STRING
+        }
         /** @param {string} value @returns {{string:string}} */
         function getString(value) {
             let pattern = ""
             if (value.includes('-')) {
-                print(`"DepreciationError: name=timestamp (legacy) value=YYYY-MM-DDTHH:MM:SS`)
+                // print(`DepreciationError: legacy timestamp format "YYYY-MM-DDTHH:MM:SS" depreciated`)
                 if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
                 if (len(value) == 7 || len(value) == 8)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}`
                 if (len(value) == 10 || len(value) == 11) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}`
@@ -3761,7 +4079,7 @@ class util {
         let date = new Date()
         let offset = (new Date().getTimezoneOffset() * 60)
         if (value == null) {
-            return convert(date, util.TIMESTAMP_OPTION_SECONDS)
+            return convert(date, convert_to ? convert_to : util.TIMESTAMP_OPTION_SECONDS)
         }
         else if (util.istype(value, 'date')) {
             return convert(value, convert_to)
@@ -3776,18 +4094,19 @@ class util {
             return convert(date, convert_to)
         }
         else if (util.istype(value, 'string')) {
-            if (value.lower() == util.TIMESTAMP_OPTION_MILLISECONDS || value.lower() == util.TIMESTAMP_OPTION_OBJECT || value.lower() == util.TIMESTAMP_OPTION_SECONDS || value.lower() == util.TIMESTAMP_OPTION_STRING) {
+            if (isOption(value)) {
                 return convert(date, value)
             }
             else if (getString(value)) {
                 let groups = getString(value)
-                let year = Number(groups["year"])
-                let month = "month" in groups ? Number(groups["month"]) : 1
-                let day = "day" in groups ? Number(groups["day"]) : 1
-                let hour = "hour" in groups ? Number(groups["hour"]) : 0
-                let minute = "minute" in groups ? Number(groups["minute"]) : 0
-                let second = "second" in groups ? Number(groups["second"]) : 0
-                let zone = "zone" in groups ? groups["zone"] : 'Z'
+                let year        = "year"        in groups ? Number(groups["year"])        : 1970
+                let month       = "month"       in groups ? Number(groups["month"])       : 1
+                let day         = "day"         in groups ? Number(groups["day"])         : 1
+                let hour        = "hour"        in groups ? Number(groups["hour"])        : 0
+                let minute      = "minute"      in groups ? Number(groups["minute"])      : 0
+                let second      = "second"      in groups ? Number(groups["second"])      : 0
+                let millisecond = "millisecond" in groups ? Number(groups["millisecond"]) : 0
+                let zone           = groups["zone"]          ? groups["zone"]                : 'Z'
                 let zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[zone]
                 date.setFullYear(year)
                 date.setMonth(month - 1)
@@ -3820,6 +4139,14 @@ class util {
     static timestamp_day(timestamp) {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getDate().toString().rjust(2, '0')
+    }
+    /** @param {Date|number|string} timestamp @returns {nuumber} */
+    static timestamp_day_of_year(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        let first_day_of_year = new Date(timestamp.getFullYear(), 0, 0)
+        let diffierence = timestamp - first_day_of_year
+        let day = 1000 * 60 * 60 * 24
+        return Math.floor(diffierence / day)
     }
     /** @param {Date|number|string} timestamp1 @param {Date|number|string} timestamp2 @param {boolean} short @returns {string} */
     static timestamp_difference(timestamp1, timestamp2 = util.timestamp(util.TIMESTAMP_OPTION_SECONDS), short = true) {
@@ -3874,6 +4201,30 @@ class util {
     static timestamp_hour(timestamp) {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getHours().toString().rjust(2, '0')
+    }
+    /** @param {Date|number|string} timestamp @returns {nuumber} */
+    static timestamp_julian_date(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        let timezoneOffset = 0
+        return ((timestamp.getTime() - timezoneOffset) / 86400000 + 2440587.5).toFixed(1)
+    }
+    /** @param {Date|number|string} timestamp @returns {nuumber} */
+    static timestamp_julian_day(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        return Math.floor(util.timestamp_julian_date(timestamp))
+    }
+    /** @param {Date|number|string} timestamp @returns {nuumber} */
+    static timestamp_julian_day_of_year(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        let first_day_of_year = new Date(timestamp.getFullYear(), 0, 0)
+        let diffierence = timestamp - first_day_of_year
+        let day = 1000 * 60 * 60 * 24
+        return Math.floor(diffierence / day)
+    }
+    /** @param {Date|number|string} timestamp @returns {string} */
+    static timestamp_millisecond(timestamp) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        return timestamp.getMilliseconds().toString().ljust(3, '0')
     }
     /** @param {Date|number|string} timestamp @returns {string} */
     static timestamp_minute(timestamp) {
@@ -4112,7 +4463,7 @@ class util {
     // w
 
     // x
-    /** @param {string} method @param {Object} headers @param {number|Object|string} body @param {function(XMLHttpRequest): void} oncomplete @param {function(ProgressEvent): void} onprogress @returns {void} */
+    /** @deprecated @param {string} method @param {Object} headers @param {number|Object|string} body @param {function(XMLHttpRequest): void} oncomplete @param {function(ProgressEvent): void} onprogress @returns {void} */
     static xhr(method, url, headers = {}, body = null, oncomplete = (request) => { }, onprogress = (event) => { }) {
         if (!util.istype(method, 'string')) return console.error(`TypeError: `, method)
         if (!util.istype(url, 'string')) return console.error(`TypeError: `, url)
@@ -4204,20 +4555,11 @@ class util {
         }
     }
     // binary
-    static __len__(data, length) {
-        while (true) {
-            if (data.length % length == 0) {
-                break
-            }
-            data = '0' + data
-        }
-        return data
-    }
     /** @param {string} bin @returns {Uint8Array} */
     static bin2byt(bin) {
         if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
         if (bin.length == 0) return new Uint8Array()
-        bin = util.__len__(bin, 8)
+        bin = util.pad_block(bin, 8, 'right', '0')
         let decs = []
         for (let i = 0; i < bin.length; i += 8) {
             decs.push(util.bin2dec(bin.slice(i, i + 8)))
@@ -4238,7 +4580,7 @@ class util {
     /** @param {string} bin @returns {string} */
     static bin2hex(bin) {
         if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
-        bin = util.__len__(bin, 4)
+        bin = util.pad_block(bin, 4, 'right', '0')
         let hex = ''
         for (let i = 0; i < bin.length; i += 4) {
             hex += util.dec2hex(util.bin2dec(bin.slice(i, i + 4)))
@@ -4254,7 +4596,7 @@ class util {
     /** @param {string} bin @param {number} size @returns {string} */
     static bin2str(bin, size = 8) { // 8 bpc
         if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
-        bin = util.__len__(bin, size)
+        bin = util.pad_block(bin, size, 'right', '0')
         let str = ''
         for (let i = 0; i < bin.length; i += size) {
             str += util.dec2cha(util.bin2dec(bin.slice(i, i + size)))
@@ -4269,7 +4611,7 @@ class util {
     /** @param {string} bin @param {number} size @returns {number[]} */
     static bin2decs(bin, size = 8) {
         if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
-        bin = util.__len__(bin, size)
+        bin = util.pad_block(bin, size, 'right', '0')
         let decs = []
         for (let i = 0; i < bin.length; i += size) {
             decs.push(util.bin2dec(bin.slice(i, i + size)))
@@ -4328,7 +4670,7 @@ class util {
         if (byt instanceof ArrayBuffer) byt = new Uint8Array(byt)
         if (!util.istype(byt, 'bytes')) return console.error(`TypeError: `, byt)
         let bin = util.byt2bin(byt)
-        bin = util.__len__(bin, size)
+        bin = util.pad_block(bin, size, 'right', '0')
         let str = ''
         for (let i = 0; i < bin.length; i += size) {
             str += util.bin2cha(bin.slice(i, i + size))
@@ -4420,7 +4762,7 @@ class util {
     /** @param {string} hex @returns {Uint8Array} */
     static hex2byt(hex) {
         if (!util.istype(hex, 'hexadecimal')) return console.error(`TypeError: `, hex)
-        hex = util.__len__(hex, 2)
+        hex = util.pad_block(hex, 2, 'right', '0')
         let decs = []
         for (let i = 0; i < hex.length; i += 2) {
             decs.push(util.hex2dec(hex.slice(i, i + 2)))
@@ -4530,23 +4872,20 @@ class util {
 class array extends Array {
     /** @constructor */
     constructor(...values) {
-        super()
-        for (let value of values) {
-            if (value instanceof Array | array) {
-                this.append(...value)
+        // use Array.prototype.flat() and Array.from for efficient flattening and initialization
+        // this handles nested arrays/collections more robustly than manual loops.
+        let flat_values = values.flatMap(value => {
+            if (value instanceof array || value instanceof Array || value instanceof HTMLCollection || value instanceof NodeList) {
+                return Array.from(value)
             }
-            else if (value instanceof HTMLCollection) {
-                this.append(...value)
-            }
-            else {
-                this.append(value)
-            }
-        }
+            return value
+        })
+        super(...flat_values)
     }
-    /** @param {any[]|bytes|{string:string}|string} data @returns {array} */
+    /** @param {any} data @returns {array} */
     static fromdata(data) {
         let nArray = new array()
-        if (!data) {
+        if (data === null || data === undefined) {
             return nArray
         }
         if (util.istype(data, 'array')) {
@@ -4571,11 +4910,11 @@ class array extends Array {
             nArray = array.fromstring(data)
         }
         else {
-            return console.error(`TypeError: variable-name=data variable-value=${data} variable-type=${typeof data} type=array|bytes-array|bytes-object|object|string-array|string-object|string`)
+            throw new Error(`TypeError: failed to parse data`)
         }
         return nArray
     }
-    /** @param {Object<string, boolean|number|string>} object @param {string} delimiter @returns {array} */
+    /** @param {{string:any}} data @param {string} delimiter @returns {array} */
     static fromobject(data, delimiter = ': ') {
         let nArray = new array()
         for (let [key, value] in enumerate(data)) {
@@ -4586,50 +4925,58 @@ class array extends Array {
     /** @param {string} data @returns {array} */
     static fromstring(data) {
         let nArray = new array()
-        // data = 'value'
-        if (!data.includes(',') && !data.includes(':')) {
-            for (let substring of data.strip(' ,').split(',')) {
-                nArray.append(substring)
+        if (data === null || data === undefined) {
+            return nArray
+        }
+        let trimmed_data = data.strip(' ,:')
+        let hasComma = trimmed_data.includes(',')
+        let hasColon = trimmed_data.includes(':')
+        // data = 'value,value:value,value:value:value,value...'
+        if (hasComma && hasColon) {
+            for (let substring of trimmed_data.split(',')) {
+                nArray.append(new array(substring.strip(' :').split(':')))
             }
         }
         // data = 'value,value,value...'
-        if (data.includes(',') && !data.includes(':')) {
-            for (let substring of data.strip(' ,').split(',')) {
-                nArray.append(substring)
-            }
+        if (hasComma && !hasColon) {
+            nArray.append(...trimmed_data.split(','))
         }
         // data = 'value:value:value...'
-        if (!data.includes(',') && data.includes(':')) {
-            for (let substring of data.strip(' :').split(':')) {
-                nArray.append(substring)
-            }
+        if (!hasComma && hasColon) {
+            nArray.append(...trimmed_data.split(':'))
         }
-        // data = 'value,value:value,value:value:value,value...'
-        if (data.includes(',') && data.includes(':')) {
-            for (let substring of data.strip(' ,').split(',')) {
-                nArray.append(new array(substring.strip(' :').split(':')))
-            }
+        // data = 'value'
+        if (!hasComma && !hasColon) {
+            nArray.append(trimmed_data)
         }
         return nArray
     }
     /** @param {...number} args @returns {Generator<number>} */
     static *generate(...args) {
         let size = args.length
-        let start = size == 1 ? 0 : args[0]
-        let stop = size == 1 ? args[0] : args[1]
-        let step = size == 3 ? args[2] : start < stop ? 1 : -1
-        for (let index = start; start < stop ? index < stop : index > stop; index += step) {
-            yield index
+        let start, stop, step
+        if (size === 1) {
+            [stop, start, step] = [args[0], 0, 1]
+        } else if (size === 2) {
+            [start, stop, step] = [...args, 1]
+        } else if (size === 3) {
+            [start, stop, step] = args
+        } else {
+            throw new Error(`TypeError: expects 1 to 3 arguments`);
+        }
+        if (step > 0) {
+            for (let index = start; index < stop; index += step) {
+                yield index
+            }
+        } else {
+            for (let index = start; index > stop; index += step) {
+                yield index
+            }
         }
     }
     /** @returns {boolean} */
     any() {
-        for (let value of this) {
-            if (value === true) {
-                return true
-            }
-        }
-        return false
+        return this.some(value => !!value)
     }
     /** @param {...any} values @returns {void} */
     append(...values) {
@@ -4637,31 +4984,21 @@ class array extends Array {
     }
     /** @returns {void} */
     clear() {
-        this.splice(0, this.length)
+        this.length = 0
     }
-    /** @param {number} index @param {number} start @param {number} stop */
-    copy(index, start = 0, stop = this.length) {
-        let nArray = new array()
-        for (let i = start; i < stop; i++) {
-            nArray.append(this[i])
-        }
-        return nArray
+    /** @param {number} start @param {number} end @returns {array} */
+    copy(start = 0, end = this.length) {
+        return new array(...this.slice(start, end))
     }
     /** @param {any} value @returns {number} */
     count(value) {
-        let count = 0
-        for (let value_ of this) {
-            if (value_ == value) {
-                count += 1
-            }
-        }
-        return count
+        return this.filter(item => item === value).length
     }
     /** @returns {boolean} */
     empty() {
-        return this.length == 0
+        return this.length === 0
     }
-    /** @returns {Generator<number>} */
+    /** @returns {Generator<number, T>} */
     *enumerate() {
         for (let index = 0; index < this.length; index++) {
             yield [index, this[index]]
@@ -4669,64 +5006,49 @@ class array extends Array {
     }
     /** @param {...any} values @returns {boolean} */
     excludes(...values) {
-        for (let value of values) {
-            if (super.includes(value)) {
-                return false
-            }
-        }
-        return true
+        return values.every(value => !this.includes(value))
     }
-    /** @param {function(value, index, array)} callback @returns {number|null} */
+    /** @param {(value: T, index: number, array: T[]) => void} callback @returns {number} */
     findindex(callback) {
-        for (let [index, value] of this.enumerate()) {
-            if (callback(value, index, this)) {
-                return index
-            }
-        }
-        return null
+        let index = super.findIndex(callback);
+        return index !== -1 ? index : null
     }
-    /** @param {function(value, index, array)} callback @returns {any|null} */
+    /** @param {(value: T, index: number, array: T[]) => void} callback @returns {T|null} */
     findvalue(callback) {
         return this.find(callback)
     }
-    /** @param {number} index @param {any} defaultvalue @returns {any|null} */
+    /** @param {number} index @param {T} defaultvalue @returns {T|null} */
     get(index, defaultvalue = null) {
-        let value = this[index < 0 ? index + this.length : index]
-        if (index < 0) {
-            value = this[index + this.length]
-        } else if (index >= this.length) {
-            value = null
-        } else {
-            value = this[index]
+        let actual_index = index < 0 ? this.length + index : index
+        if (actual_index >= 0 && actual_index < this.length) {
+            return this[actual_index]
         }
-        return value == null ? defaultvalue : value
+        return defaultvalue
     }
-    /** @returns {any} */
-    getFirst() {
+    /** @returns {T|null} */
+    getfirst() {
         return this.get(0)
     }
-    /** @returns {any} */
-    getLast() {
+    /** @returns {T|null} */
+    getlast() {
         return this.get(-1)
     }
-    /** @returns {string} */
+    /** @param {string} mode @returns {string} */
     hash(mode = util.HASH_MD5) {
         let data = util.json_encode(this)
-        if (mode == util.HASH_MD5) {
-            return util.hash_md5(data)
+        try {
+            return util[`hash_${mode.toLowerCase()}`](data)
+        } catch (error) {
+            throw Error(`ValueError: unsupported hash mode: ${mode}`)
         }
-        else {
-            console.error(`ValueError: variable-name=mode variable-value=${mode}`)
-        }
+    }
+    /** @returns {string} */
+    json() {
+        return util.json_encode(this)
     }
     /** @param {...any} values @returns {boolean} */
     includes(...values) {
-        for (let value of values) {
-            if (!super.includes(value)) {
-                return false
-            }
-        }
-        return true
+        return values.every(value => super.includes(value))
     }
     /** @param {any} value @param {number} start @returns {number} */
     index(value, start = 0) {
@@ -4736,55 +5058,53 @@ class array extends Array {
     insert(index, value) {
         this.splice(index, 0, value)
     }
-    /** @param {number} index @returns {void} */
+    /** @param {number} index @returns {T} */
     pop(index = -1) {
-        this.splice(index, 1)
+        let actual_index = index < 0 ? this.length + index : index
+        return this.splice(actual_index, 1)[0]
     }
     /** @returns {number} */
     product() {
-        if (this.length == 0) {
-            return 0
-        }
-        let value = 1
-        for (let number of this) {
-            value *= number
-        }
-        return value
+        if (this.length === 0) return 0
+        return this.reduce((acc, number) => acc * number, 1)
     }
-    /** @param {...number} index @return {any} */
-    random(...index) {
-        let nArray = this.slice(...index)
+    /** @param {...number} index_range @return {any} */
+    random(...index_range) {
+        let nArray = this.slice(...index_range)
         return util.random(nArray)
     }
-    /** @param {...any} values @returns {void} */
-    remove(...values) {
-        this.removevalues(...values)
+    /** @param {T|(value: T, index: number, array: T[]) => void} condition @returns {void} */
+    remove(condition) {
+        let nArray
+        if (!(typeof condition === "functoin")) {
+            nArray = this.filter((v, i, array) => !condition(v, i, array));
+        }
+        else {
+            let value = condition
+            nArray = this.filter(v => v !== value)
+        }
+        this.splice(0, this.length, ...nArray)
     }
     /** @returns {void} */
     removeduplicates() {
-        let nArray = this.filter((item, index) => this.index(item) == index)
-        this.clear()
-        this.append(...nArray)
+        let unique_values = [...new Set(this)]
+        this.splice(0, this.length, ...unique_values)
     }
-    /** @param {...number} values @returns {void} */
-    removeindexes(...values) {
-        let positiveIndexes = values.filter(value => value >= 0)
-        positiveIndexes.sort((a, b) => b - a)
-        let negativeIndexes = values.filter(value => value < 0)
-        negativeIndexes.sort((a, b) => a - b)
-        let indexes = [...positiveIndexes, ...negativeIndexes]
-        for (let index of indexes) {
-            this.pop(index)
+    /** @param {...number} indices @returns {void} */
+    removeindexes(...indices) {
+        let sorted_indices = indices.sort((a, b) => b - a)
+        for (let index of sorted_indices) {
+            let actual_index = index < 0 ? this.length + index : index
+            if (0 <= actual_index && actual_index < arr.length) {
+                this.splice(actual_index, 1)
+            }
         }
     }
     /** @param {...any} values @returns {void} */
     removevalues(...values) {
-        for (let value of values) {
-            let index = this.index(value)
-            if (index != -1) {
-                this.pop(index)
-            }
-        }
+        let values_remove = new Set(values)
+        let nArray = this.filter(item => !values_remove.has(item))
+        this.splice(0, this.length, ...nArray)
     }
     /** @param {number} index @param {any} value @returns {void} */
     replaceindex(index, value) {
@@ -4793,20 +5113,19 @@ class array extends Array {
     /** @param {any} newvalue @param {any} oldvalue @returns {void} */
     replacevalue(oldvalue, newvalue) {
         let index = this.index(oldvalue)
-        if (index != -1) {
-            this.splice(index, 1, newvalue)
+        if (index !== -1) {
+            this.replaceindex(index, newvalue)
         }
     }
-    /** @param {number} newSize @returns {void} */
-    resize(newSize) {
-        let oldSize = this.size()
-        if (oldSize > newSize) {
-            this.splice(newSize, oldSize - newSize)
+    /** @param {number} size @returns {void} */
+    resize(size) {
+        let old_size = this.length
+        if (old_size > size) {
+            this.splice(size, old_size - size)
         }
-        if (oldSize < newSize) {
-            for (let i = 0; i < (newSize - oldSize); i++) {
-                this.append(null)
-            }
+        else if (old_size < size) {
+            let padding = Array(size - old_size).fill(null)
+            this.push(...padding)
         }
     }
     /** @param {number} index @param {any} value @returns {void} */
@@ -4815,13 +5134,11 @@ class array extends Array {
     }
     /** @returns {void} */
     shuffle() {
-        let nArray = new array()
-        do {
-            let index = Math.floor((Math.random() * this.length))
-            nArray.push(this[index])
-            this.splice(index, 1)
-        } while (this.length > 0)
-        this.push(...nArray)
+        // Fisher-Yates shuffle algorithm
+        for (let i = this.length - 1; i > 0; i--) {
+            let j = Math.floor(Math.random() * (i + 1));
+            [this[i], this[j]] = [this[j], this[i]];
+        }
     }
     /** @returns {number} */
     size() {
@@ -4829,307 +5146,11 @@ class array extends Array {
     }
     /** @returns {number} */
     sum() {
-        let value = 0
-        for (let number of this) {
-            value += number
-        }
-        return value
+        return this.reduce((acc, number) => acc + number, 0)
     }
     /** @returns {string} */
     toString() {
         return JSON.stringify(this)
-    }
-    
-}
-class binary extends String {
-    /** @constructor @param {string} data  */
-    constructor(data) {
-        super(data)
-        if (!util.istype(data, 'binary')) {
-            throw new Error('TypeError: binary must be characters of the following 0, 1')
-        }
-    }
-
-    cast(data) {
-
-    }
-
-    /** @returns {bytes} */
-    byt() {
-
-    }
-    /** @returns {string} */
-    cha() {
-
-    }
-    /** @returns {decimal} */
-    dec() {
-
-    }
-    /** @returns {hexadecimal} */
-    hex() {
-
-    }
-    /** @returns {octal} */
-    oct() {
-
-    }
-    /** @param {number} size @returns {string} */
-    str(size = 8) {
-
-    }
-}
-class bytes extends Uint8Array {
-    /** @constructor @param {Int8Array|Uint8Array} data  */
-    constructor(data) {
-        this.data = data
-        if (!util.istype(data, 'bytes')) {
-            throw new Error('TypeError: bytes must be classes of the following Int8Array, Uint8Array')
-        }
-    }
-
-    /** @returns {binary} */
-    bin() {
-
-    }
-    /** @returns {string} */
-    cha() {
-
-    }
-    /** @returns {decimal} */
-    dec() {
-
-    }
-    /** @returns {hexadecimal} */
-    hex() {
-
-    }
-    /** @returns {octal} */
-    oct() {
-
-    }
-    /** @param {number} size @returns {string} */
-    str(size = 8) {
-
-    }
-}
-class decimal extends Number {
-    /** @constructor @param {string} data  */
-    constructor(data) {
-        super(data)
-        if (util.istype(data, 'string-number')) {
-            data = Number(data)
-        }
-        if (!util.istype(data, 'decimal')) {
-            throw new Error('TypeError: decimal must be characters of the following 0, 1, 2, 3, 4, 5, 6, 7, 8, 9')
-        }
-    }
-
-    /** @returns {binary} */
-    bin() {
-
-    }
-    /** @returns {bytes} */
-    byt() {
-
-    }
-    /** @returns {string} */
-    cha() {
-
-    }
-    /** @returns {decimal} */
-    dec() {
-
-    }
-    /** @returns {hexadecimal} */
-    hex() {
-
-    }
-    /** @returns {octal} */
-    oct() {
-
-    }
-    /** @param {number} size @returns {string} */
-    str(size = 8) {
-
-    }
-}
-class entries {
-    /** @constructor @param {Object[]} entries  */
-    constructor(entries = []) {
-        this.entries = new array(entries)
-    }
-    /** @param {...any} values @returns {boolean}  */
-    excludes(...values) {
-        return !this.includes(...values)
-    }
-    /** @param {...any} values @returns {boolean}  */
-    includes(...values) {
-        let filters = object.fromarray(values)
-        for (let entry of this.entries) {
-            for (let [filterKey, filterValue] in enumerate(filters)) {
-                if (entry[filterKey] == filterValue) return true
-            }
-        }
-        return false
-    }
-    /** @param {...any} values @returns {Object[]}  */
-    filter(...values) {
-        return this.filter_and(...values)
-    }
-    /** @param {...any} values @returns {Object[]}  */
-    filter_and(...values) {
-        let filters = object.fromarray(values)
-        let filtered = new array()
-        for (let entry of this.entries) {
-            let matches = 0
-            for (let [filterKey, filterValue] in enumerate(filters)) {
-                if (entry[filterKey] == filterValue) matches += 1
-            }
-            if (matches == filters.count()) filtered.append(entry)
-        }
-        return filtered
-    }
-    /** @param {...any} values @returns {Object[]}  */
-    filter_or(...values) {
-        let filters = object.fromarray(values)
-        let filtered = new array()
-        for (let entry of this.entries) {
-            let matches = 0
-            for (let [filterKey, filterValue] in enumerate(filters)) {
-                if (entry[filterKey] == filterValue) matches += 1
-            }
-            if (matches > 0) {
-                filtered.append(entry)
-            }
-        }
-        return filtered
-    }
-    /** @param {...any} values  */
-    find(...values) {
-        return this.find_and(...values)
-    }
-    /** @param {...any} values @returns {{ index: number, value: any }}  */
-    find_and(...values) {
-        let filters = object.fromarray(values)
-        for (let [index, entry] of this.entries.enumerate()) {
-            let matches = 0
-            for (let [filterKey, filterValue] in enumerate(filters)) {
-                if (entry[filterKey] == filterValue) matches += 1
-            }
-            if (matches == filters.count()) {
-                return { 'index': index, 'value': entry }
-            }
-        }
-    }
-    /** @param {...any} values @returns {{ index: number, value: any }}  */
-    find_or(...values) {
-        let filters = object.fromarray(values)
-        for (let [index, entry] of this.entries.enumerate()) {
-            let matches = 0
-            for (let [filterKey, filterValue] in filters.enumerate()) {
-                if (entry[filterKey] == filterValue) matches += 1
-            }
-            if (matches > 0) return { 'index': index, 'value': entry }
-        }
-    }
-    /** @param {...any} values @returns {null}  */
-    remove(values) {
-        let identifiers = []
-        for (let value of values) {
-            if (util.istype(value, 'string')) {
-                identifiers.push(value)
-            }
-            if (util.istype(value, 'object')) {
-                identifiers.push(value['id'])
-            }
-        }
-        let nEntries = new array()
-        for (let entry of this.entries) {
-            if (!identifiers.includes(entry['id'])) nEntries.append(entry)
-        }
-        this.entries = nEntries
-    }
-    /** @param {...any} values @returns {null}  */
-    remove_filter(...values) {
-        let filtered = this.find(...values)
-        this.remove(filtered)
-    }
-    /** @param {Object} entry @returns {null}  */
-    update(entry) {
-        for (let [index, entry_] of this.entries.enumerate()) {
-            if (entry_['id'] == entry['id']) {
-                this.entries[index] = entry
-            }
-        }
-    }
-}
-class hexadecimal extends String {
-    /** @constructor @param {string} data  */
-    constructor(data) {
-        super(data)
-        if (!util.istype(data, 'hexadecimal')) {
-            throw new Error('TypeError: hexadecimal must be characters of the following 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f, A, B, C, D, E, F')
-        }
-    }
-
-    /** @returns {binary} */
-    bin() {
-
-    }
-    /** @returns {bytes} */
-    byt() {
-
-    }
-    /** @returns {string} */
-    cha() {
-
-    }
-    /** @returns {decimal} */
-    dec() {
-
-    }
-    /** @returns {octal} */
-    oct() {
-
-    }
-    /** @param {number} size @returns {string} */
-    str(size = 8) {
-
-    }
-}
-class octal extends String {
-    /** @constructor @param {string} data  */
-    constructor(data) {
-        super(data)
-        if (!util.istype(data, 'octal')) {
-            throw new Error('TypeError: octal must be characters of the following 0, 1, 2, 3, 4, 5, 6, 7')
-        }
-    }
-
-    /** @returns {binary} */
-    bin() {
-
-    }
-    /** @returns {bytes} */
-    byt() {
-
-    }
-    /** @returns {string} */
-    cha() {
-
-    }
-    /** @returns {decimal} */
-    dec() {
-
-    }
-    /** @returns {hexadecimal} */
-    hex() {
-
-    }
-    /** @param {number} size @returns {string} */
-    str(size = 8) {
-
     }
 }
 class object extends Object {
@@ -5137,20 +5158,18 @@ class object extends Object {
     constructor(...values) {
         super()
         for (let value of values) {
-            if (value instanceof Object | object) {
-                for (let key in value) {
-                    this[key] = value[key]
-                }
+            if (util.istype(value, 'object')) {
+                this.update(value)
             }
             else {
                 this.update(object.fromdata(value))
             }
         }
     }
-    /** @param {any[]|bytes|{string:string}|string} data @returns {object} */
+    /** @param {any} data @returns {object} */
     static fromdata(data) {
         let nObject = new object()
-        if (!data) {
+        if (data === null || data === undefined) {
             return nObject
         }
         if (util.istype(data, 'array')) {
@@ -5172,34 +5191,34 @@ class object extends Object {
             nObject = object.fromstring(data)
         }
         else {
-            return console.error(`TypeError: variable-name=data variable-value=${data} variable-type=${typeof data} type=array|bytes-array|bytes-object|object|string-object|string`)
+            throw new Error(`TypeError: failed to parse data`)
         }
         return nObject
     }
-    /** @param {string[]} data @returns {object} */
+    /** @param {any[]} data @returns {object} */
     static fromarray(data) {
         let nObject = new object()
-        if (!data) {
+        if (data === null || data === undefined) {
             return nObject
         }
         // data = [['key','value'],['key','value']...]
-        if (data.every((item) => util.istype(item, 'array') && item.length == 2)) {
-            for (let index = 0; index < data.length; index++) {
-                nObject[data[index][0]] = data[index][1]
-            }
+        if (data.every((item) => util.istype(item, 'array') && item.length === 2)) {
+            data.forEach(([key, value]) => {
+                nObject[key] = value
+            })
         }
         // data = ['key','value','key','value'...]
-        else if (data.every((item) => util.istype(item, 'number|string')) && data.length % 2 == 0) {
+        else if (data.length % 2 == 0) {
             for (let index = 0; index < data.length; index += 2) {
                 nObject[data[index]] = data[index + 1]
             }
         } else {
-            return console.error(`TypeError: variable-name=data variable-value=${data} variable-type=${typeof data} type=array`)
+            throw new Error(`ValueError: array structure invalid`)
         }
         return nObject
     }
-    /** @param {number[]|string[]} @param {any} value  keys @returns {object} */
-    static fromkeys(keys, value) {
+    /** @param {any[]} keys @param {any} value @returns {object} */
+    static fromkeys(keys, value = null) {
         let nObject = new object()
         for (let key of keys) {
             nObject[key] = value
@@ -5209,37 +5228,50 @@ class object extends Object {
     /** @param {string} data @param {string} delimiterPairs @param {string} delimiterPair @returns {object} */
     static fromstring(data, delimiterPairs = ',', delimiterPair = ':') {
         let nObject = new object()
-        for (let substring of data.strip(` ${delimiterPairs}`).split(delimiterPairs)) {
-            nObject.set(...substring.strip(` ${delimiterPair}`).split(delimiterPair))
+        for (let substring of data.strip(` ${delimiterPairs}${delimiterPair}`).split(delimiterPairs)) {
+            let parts = substring.split(delimiterPair)
+            // ensure there is at least a key and a value, the rest is considered part of the value
+            if (parts.length >= 2) {
+                nObject.set(parts[0], parts[1]);
+            }
+            // handle a single key with no value
+            else if (parts.length === 1 && parts[0]) {
+                nObject.set(parts[0], null)
+            }
         }
         return nObject
     }
-    // custom dynamic
-    /** @param {number|string} key @param {any} value  @returns {void} */
+    /** @param {any} key @param {any} value @returns {void} */
     append(key, value) {
         this[key] = value
     }
     /** @returns {void} */
     clear() {
-        for (let key in this) {
+        for (let key of Object.keys(this)) {
             delete this[key]
         }
     }
     /** @returns {object} */
-    copy() {
-        return new object(this)
+    clone() {
+        return util.clone(this)
     }
-    /** @returns {number} */
-    count() {
-        return this.keys().length
+    /** @returns {object} */
+    copy() {
+        // create a shallow copy
+        return Object.assign(new object(), this)
+    }
+    /** @param {any} value @returns {number} */
+    count(value) {
+        return this.values().filter(item => item === value).length
     }
     /** @returns {boolean} */
     empty() {
-        return this.keys().length == 0
+        return this.size() === 0
     }
+    /** @returns {Generator<[any, any], void, unknown>} */
     *enumerate() {
-        for (let key in this) {
-            yield [key, this[key]]
+        for (let [key, value] of Object.entries(this)) {
+            yield [key, value]
         }
     }
     /** @param {...any} values @returns {boolean} */
@@ -5248,67 +5280,44 @@ class object extends Object {
     }
     /** @param {...any} values @returns {boolean} */
     excludeskeys(...values) {
-        let keys = this.keys()
-        for (let value of values) {
-            if (keys.includes(value)) {
-                return false
-            }
-        }
-        return true
+        return values.every(key => !(key in this))
     }
     /** @param {...any} values @returns {boolean} */
     excludesvalues(...values) {
-        let values_ = this.values()
-        for (let value of values) {
-            if (values_.includes(value)) {
-                return false
-            }
-        }
-        return true
+        let object_values = this.values()
+        return values.every(value => !object_values.includes(value))
     }
-    /** @param {number|string} key @param {any} defaultvalue @returns {any} */
+    /** @param {any} key @param {any} defaultvalue @returns {any} */
     get(key, defaultvalue = null) {
         return key in this ? this[key] : defaultvalue
     }
     /** @param {string} mode @returns {string} */
     hash(mode = util.HASH_MD5) {
         let data = util.json_encode(this)
-        if (mode == util.HASH_MD5) {
-            return util.hash_md5(data)
-        }
-        else {
-            console.error(`ValueError: variable-name=mode variable-value=${mode}`)
+        try {
+            return util[`hash_${mode.toLowerCase()}`](data)
+        } catch (error) {
+            throw Error(`ValueError: unsupported hash mode: ${mode}`)
         }
     }
-    /** @param {...number|string} values @returns {boolean} */
+    /** @param {...any} values @returns {boolean} */
     includes(...values) {
         return this.includeskeys(...values)
     }
-    /** @param {...number|string} values @returns {boolean} */
+    /** @param {...any} values @returns {boolean} */
     includeskeys(...values) {
-        let keys = this.keys()
-        for (let value of values) {
-            if (!keys.includes(value)) {
-                return false
-            }
-        }
-        return true
+        return values.every(key => (key in this))
     }
     /** @param {...any} values @returns {boolean} */
     includesvalues(...values) {
-        let values_ = this.values()
-        for (let value of values) {
-            if (!values_.includes(value)) {
-                return false
-            }
-        }
-        return true
+        let object_values = this.values()
+        return values.every(value => object_values.includes(value))
     }
     /** @param {string} key @returns {boolean} */
     iskey(key) {
-        return this.keys().includes(key)
+        return key in this
     }
-    /** @param {number|string} key @param {string} datatype @returns {boolean} */
+    /** @param {any} key @param {string} datatype @returns {boolean} */
     istype(key, datatype) {
         return util.istype(this.get(key), datatype)
     }
@@ -5318,26 +5327,23 @@ class object extends Object {
     }
     /** @param {string} key @param {any} value @returns {boolean} */
     isvaluein(key, value) {
-        return this.get(key).includes(value)
+        let target = this.get(key)
+        return Array.isArray(target) && target.includes(value)
     }
-    /** @returns {array} */
+    /** @returns {any[]} */
     keys() {
-        let keys = new array()
-        for (let key in this) {
-            keys.append(key)
-        }
-        return keys
+        return new array(...Object.keys(this))
     }
     /** @returns {void} */
     lower() {
-        for (let [key, value] of this.enumerate()) {
-            if (util.istype(key, 'string')) {
+        for (let [key, value] of Object.entries(this)) {
+            if (typeof key === 'string') {
                 delete this[key]
-                this[key.lower()] = value
+                this[key.toLowerCase()] = value
             }
         }
     }
-    /** @param {...number|string} keys @returns {void} */
+    /** @param {...any} keys @returns {void} */
     order(...keys) {
         let cObject = this.copy()
         this.clear()
@@ -5346,96 +5352,107 @@ class object extends Object {
                 this[key] = cObject[key]
             }
         }
+        // retain unlisted keys at the end
+        for (let [key, value] of Object.entries(cObject)) {
+            if (!(key in this)) {
+                this[key] = value
+            }
+        }
     }
-    /** @returns {void} */
-    sort() {
-        let keys = this.keys()
-        keys.sort()
-        for (let key of keys) {
+    /** @param {any} key @param {any} defaultvalue @returns {any} */
+    pop(key, defaultvalue = null) {
+        if (key in this) {
             let value = this[key]
             delete this[key]
-            this[key] = value
+            return value
         }
-        return this
+        return defaultvalue
     }
-    /** @param {number|string} key @param {any} defaultvalue @returns {any} */
-    pop(key, defaultvalue = null) {
-        let value = this[key]
-        delete this[key]
-        return value == null ? defaultvalue : value
-    }
-    /** @param {...number|string} values @returns {void} */
+    /** @param {...any} values @returns {void} */
     remove(...values) {
         return this.removekeys(...values)
     }
-    /** @param {...number|string} values @returns {void} */
-    removekeys(...values) {
-        for (let key in this) {
-            if (values.includes(key)) {
+    /** @param {...any} keys @returns {void} */
+    removekeys(...keys) {
+        for (let key of keys) {
+            if (key in this) {
                 delete this[key]
             }
         }
     }
     /** @param {...any} values @returns {void} */
     removevalues(...values) {
-        for (let key in this) {
-            if (values.includes(this[key])) {
+        let values_remove = new Set(values)
+        for (let [key, value] of Object.entries(this)) {
+            if (values_remove.has(value)) {
                 delete this[key]
             }
         }
     }
-    /** @param {number|string} oldkey @param {number|string} newkey @returns {void} */
+    /** @param {any} oldkey @param {any} newkey @returns {void} */
     replacekey(oldkey, newkey) {
         if (oldkey in this) {
-            let value = this[oldkey]
+            this[newkey] = this[oldkey]
             delete this[oldkey]
-            this[newkey] = value
         }
     }
-    /** @param {any} value @param {any} newvalue @returns {void} */
-    replacevalue(value, newvalue) {
+    /** @param {any} oldvalue @param {any} newvalue @returns {void} */
+    replacevalue(oldvalue, newvalue) {
         for (let key in this) {
-            if (this[key] == value) {
+            if (this[key] === oldvalue) {
                 this[key] = newvalue
             }
         }
     }
-    /** @param {number|string} key @param {any} value @returns {void} */
+    /** @param {any} key @param {any} value @returns {void} */
     set(key, value) {
         this[key] = value
     }
-    /** @param {number|string} key @param {any} defaultvalue @returns {any} */
+    /** @param {any} key @param {any} defaultvalue @returns {any} */
     setdefault(key, defaultvalue = null) {
-        if (key in this) {
-            return this[key]
-        } else {
+        if (!(key in this)) {
             this[key] = defaultvalue
-            return defaultvalue
         }
+        return this[key]
     }
     /** @returns {number} */
     size() {
-        return this.keys().length
+        return Object.keys(this).length
+    }
+    /** @returns {void} */
+    sort() {
+        let keys = this.keys()
+        keys.sort()
+        let temp = {}
+        for (let key of keys) {
+            temp[key] = this[key]
+        }
+        this.clear()
+        for (let key of keys) {
+            this[key] = temp[key]
+        }
     }
     /** @param {number} dimensions @returns {array} */
     toitems(dimensions = 1) {
-        nArray = array()
-        if (dimensions == 1) {
-            for (let [key, value] of this.enumerate()) {
+        let nArray = new array()
+        // [key1,value1,key2,value2]
+        if (dimensions === 1) {
+            for (let [key, value] of Object.entries(this)) {
                 nArray.append(key, value)
             }
         }
-        if (dimensions == 2) {
-            for (let [key, value] of this.enumerate()) {
-                nArray.append(array(key, value))
+        // [[key1,value1],[key2,value2]]
+        if (dimensions === 2) {
+            for (let [key, value] of Object.entries(this)) {
+                nArray.append(new array(key, value))
             }
         }
         return nArray
     }
     /** @param {string} delimiterPairs @param {string} delimiterPair @returns {string} */
     tostring(delimiterPairs = ', ', delimiterPair = ': ') {
-        nArray = array()
-        for (let [key, value] of this.enumerate()) {
+        let nArray = new array()
+        for (let [key, value] of Object.entries(this)) {
             nArray.append(`${key}${delimiterPair}${value}`)
         }
         return nArray.join(delimiterPairs)
@@ -5444,87 +5461,63 @@ class object extends Object {
     toString() {
         return JSON.stringify(this)
     }
-    /** @param {object|Object} other  @returns {object} */
+    /** @param {object} other @returns {object} */
     update(other) {
-        for (let key in other) {
-            this[key] = other[key]
-        }
-        return this
+        Object.assign(this, other)
     }
     /** @returns {void} */
     upper() {
-        for (let [key, value] of this.enumerate()) {
+        for (let [key, value] of Object.entries(this)) {
             if (util.istype(key, 'string')) {
                 delete this[key]
-                this[key.upper()] = value
+                this[key.toUpperCase()] = value
             }
         }
     }
     /** @returns {array} */
     values() {
-        let values = new array()
-        for (let key in this) {
-            values.append(this[key])
-        }
-        return values
-    }
-}
-class string extends String {
-    constructor(data) {
-        super(data)
-    }
-
-    /** @returns {binary} */
-    bin() {
-
-    }
-    /** @returns {bytes} */
-    byt() {
-
-    }
-    /** @returns {string} */
-    cha() {
-
-    }
-    /** @returns {decimal} */
-    dec() {
-
-    }
-    /** @returns {hexadecimal} */
-    hex() {
-
-    }
-    /** @returns {octal} */
-    oct() {
-
+        return new array(...Object.values(this))
     }
 }
 //__________________________________________________________________________________________________________________________________________________//
 class app {
     constructor() {
-
     }
 
     /** @readonly @type {{string:string}} */
-    static CONFIGURATION = {
-        'color-accent': '#aa0000',
-        'color-caution': '#c8c800',
-        'color-default': '#191919',
-        'color-header': '#323232',
-        'color-select': '#4b4b4b',
-        'color-text': '#ffffff',
-        'font-family': 'American Typewriter, serif',
-        'font-size': '100%',
-        'font-weight': 'normal',
-    }
-    /** @readonly @type {{string:string}} */
-    static DIRECTORY = {
-        'root': '/',
-        'images': '/repository/images/',
+    static GLOBAL_VARIABLES = {
+        "apperance_mode": app.APPERANCE_MODE_DARK,
+        "color-accent"  : '#aa0000',
+        "color-default" : '#191919',
+        "color-header"  : '#323232',
+        "color-select"  : '#4b4b4b',
+        "color-text"    : '#ffffff',
+        "repository"    : '/repository',
     }
 
-    /** @type {array} */
-    static childWindows = []
+    /** @readonly @type {string} */
+    static APPERANCE_MODE_DARK = 'dark'
+    /** @readonly @type {string} */
+    static APPERANCE_MODE_LIGHT = 'light'
+    /** @readonly @type {string} */
+    static DEVICE_PHONE = "phone"
+    /** @readonly @type {string} */
+    static DEVICE_COMPUTER = "computer"
+    /** @readonly @type {string} */
+    static ORIENTATION_LANDSCAPE = "LANDSCAPE"
+    /** @readonly @type {string} */
+    static ORIENTATION_PORTRAIT = "PORTRAIT"
+    /** @readonly @type {number} */
+    static MOUSE_BUTTON_LEFT = 0
+    /** @readonly @type {number} */
+    static MOUSE_BUTTON_WHEEL = 1
+    /** @readonly @type {number} */
+    static MOUSE_BUTTON_RIGHT = 2
+    /** @readonly @type {{string:string}} */
+    static EVENT_INTERFACES = { "afterprint": "onAfterPrint", "afterscriptexecute": "onAfterScriptExecute", "appinstalled": "onAppInstalled", "beforeinstallprompt": "onBeforeInstallPrompt", "beforeprint": "onBeforePrint", "beforescriptexecute": "onBeforeScriptExecute", "beforeunload": "onBeforeUnload", "blur": "onBlur", "click": "onClick", "copy": "onCopy", "cut": "onCut", "devicemotion": "onDeviceMotion", "deviceorientation": "onDeviceOrientation", "error": "onError", "focus": "onFocus", "fullscreenchange": "onFullScreenChange", "fullscreenerror": "onFullScreenError", "gamepadconnected": "onGamePadConnected", "gamepaddisonnected": "onGamePadDisonnected", "hashchange": "onHashChange", "input": "onInput", "keydown": "onKeyDown", "keyup": "onKeyUp", "languagechange": "onLanguageChange", "message": "onMessage", "messageerror": "onMessageError", "mousedown": "onMouseDown", "mouseenter": "onMouseEnter", "mouseleave": "onMouseLeave", "mousemove": "onMouseMove", "mouseout": "onMouseOut", "mouseover": "onMouseOver", "mouseup": "onMouseUp", "offline": "onOffline", "online": "onOnline", "pagehide": "onPageHide", "pagereveal": "onPageReveal", "pageshow": "onPageShow", "pageswap": "onPageSwap", "paste": "onPaste", "pointercancel": "onPointerCancel", "pointerdown": "onPointerDown", "pointerlockchange": "onPointerLockChange", "pointerlockerror": "onPointerLockError", "popstate": "onPopState", "prerenderingchange": "onPrerenderingChange", "readystatechange": "onReadyStateChange", "rejectionhandled": "onRejectionHandled", "resize": "onResize", "scroll": "onScroll", "scrollend": "onScrollEnd", "securitypolicyviolation": "onSecurityPolicyViolation", "selectionchange": "onSelectionChange", "storage": "onStorage", "touchend": "onTouchEnd", "touchmove": "onTouchMove", "touchstart": "onTouchStart", "unhandledrejection": "onUnhandledRejection", "visibilitychange": "onVisibilityChange", "wheel": "onWheel" }
+    /** @readonly @type {{string:string}} */
+    static LANGUAGE_CODES = { "ab": "abkhazian", "aa": "afar", "af": "afrikaans", "ak": "akan", "sq": "albanian", "am": "amharic", "ar": "arabic", "an": "aragonese", "hy": "armenian", "as": "assamese", "av": "avaric", "ae": "avestan", "ay": "aymara", "az": "azerbaijani", "bm": "bambara", "ba": "bashkir", "eu": "basque", "be": "belarusian", "bn": "bengali (bangla)", "bh": "bihari", "bi": "bislama", "bs": "bosnian", "br": "breton", "bg": "bulgarian", "my": "burmese", "ca": "catalan", "ch": "chamorro", "ce": "chechen", "ny": "chichewa, chewa, nyanja", "zh": "chinese", "zh-hans": "chinese (simplified)", "zh-hant": "chinese (traditional)", "cv": "chuvash", "kw": "cornish", "co": "corsican", "cr": "cree", "hr": "croatian", "cs": "czech", "da": "danish", "dv": "divehi, dhivehi, maldivian", "nl": "dutch", "dz": "dzongkha", "en": "english", "eo": "esperanto", "et": "estonian", "ee": "ewe", "fo": "faroese", "fj": "fijian", "fi": "finnish", "fr": "french", "ff": "fula, fulah, pulaar, pular", "gl": "galician", "gd": "gaelic (scottish)", "gv": "manx", "ka": "georgian", "de": "german", "el": "greek", "kl": "kalaallisut, greenlandic", "gn": "guarani", "gu": "gujarati", "ht": "haitian creole", "ha": "hausa", "he": "hebrew", "hz": "herero", "hi": "hindi", "ho": "hiri motu", "hu": "hungarian", "is": "icelandic", "io": "ido", "ig": "igbo", "id, in": "indonesian", "ia": "interlingua", "ie": "interlingue", "iu": "inuktitut", "ik": "inupiak", "ga": "irish", "it": "italian", "ja": "japanese", "jv": "javanese", "kn": "kannada", "kr": "kanuri", "ks": "kashmiri", "kk": "kazakh", "km": "khmer", "ki": "kikuyu", "rw": "kinyarwanda (rwanda)", "rn": "kirundi", "ky": "kyrgyz", "kv": "komi", "kg": "kongo", "ko": "korean", "ku": "kurdish", "kj": "kwanyama", "lo": "lao", "la": "latin", "lv": "latvian (lettish)", "li": "limburgish ( limburger)", "ln": "lingala", "lt": "lithuanian", "lu": "luga-katanga", "lg": "luganda, ganda", "lb": "luxembourgish", "mk": "macedonian", "mg": "malagasy", "ms": "malay", "ml": "malayalam", "mt": "maltese", "mi": "maori", "mr": "marathi", "mh": "marshallese", "mo": "moldavian", "mn": "mongolian", "na": "nauru", "nv": "navajo", "ng": "ndonga", "nd": "northern ndebele", "ne": "nepali", "no": "norwegian", "nb": "norwegian bokmål", "nn": "norwegian nynorsk", "ii": "sichuan yi", "oc": "occitan", "oj": "ojibwe", "cu": "old church slavonic, old bulgarian", "or": "oriya", "om": "oromo (afaan oromo)", "os": "ossetian", "pi": "pāli", "ps": "pashto, pushto", "fa": "persian (farsi)", "pl": "polish", "pt": "portuguese", "pa": "punjabi (eastern)", "qu": "quechua", "rm": "romansh", "ro": "romanian", "ru": "russian", "se": "sami", "sm": "samoan", "sg": "sango", "sa": "sanskrit", "sr": "serbian", "sh": "serbo-croatian", "st": "sesotho", "tn": "setswana", "sn": "shona", "sd": "sindhi", "si": "sinhalese", "ss": "swati", "sk": "slovak", "sl": "slovenian", "so": "somali", "nr": "southern ndebele", "es": "spanish", "su": "sundanese", "sw": "swahili (kiswahili)", "sv": "swedish", "tl": "tagalog", "ty": "tahitian", "tg": "tajik", "ta": "tamil", "tt": "tatar", "te": "telugu", "th": "thai", "bo": "tibetan", "ti": "tigrinya", "to": "tonga", "ts": "tsonga", "tr": "turkish", "tk": "turkmen", "tw": "twi", "ug": "uyghur", "uk": "ukrainian", "ur": "urdu", "uz": "uzbek", "ve": "venda", "vi": "vietnamese", "vo": "volapük", "wa": "wallon", "cy": "welsh", "wo": "wolof", "fy": "western frisian", "xh": "xhosa", "yi, ji": "yiddish", "yo": "yoruba", "za": "zhuang, chuang", "zu": "zulu" }
+    
     /** @type {object} */
     static eventListenerInterfaces = {}
     /** @type {string} */
@@ -5535,50 +5528,29 @@ class app {
     static name = ''
     /** @type {object} */
     static options = new object()
-    /** @readonly @type {Dialog} */
+    /** @type {Dialog} */
     static progressDialog
-    /** @readonly @type {string[]} */
+    /** @type {string[]} */
     static progressesRunning = []
     /** @readonly @type {number} */
     static progressTimeout = 3000
     /** @type {boolean} */
     static touchable = true
-
-    /** @readonly @type {string} */
-    static DEVICE_PHONE = 'phone'
-    /** @readonly @type {string} */
-    static DEVICE_COMPUTER = 'computer'
-
-    /** @readonly @type {string} */
-    static COLOR_SCHEME_DARK = 'DARK'
-    /** @readonly @type {string} */
-    static COLOR_SCHEME_LIGHT = 'LIGHT'
-
-    /** @readonly @type {number} */
-    static MOUSE_BUTTON_LEFT = 0
-    /** @readonly @type {number} */
-    static MOUSE_BUTTON_WHEEL = 1
-    /** @readonly @type {number} */
-    static MOUSE_BUTTON_RIGHT = 2
-
-    
-    
-    
-
-    /** @readonly @type {{string:string}} */
-    static EVENT_INTERFACES = { "afterprint": "onAfterPrint", "afterscriptexecute": "onAfterScriptExecute", "appinstalled": "onAppInstalled", "beforeinstallprompt": "onBeforeInstallPrompt", "beforeprint": "onBeforePrint", "beforescriptexecute": "onBeforeScriptExecute", "beforeunload": "onBeforeUnload", "blur": "onBlur", "click": "onClick", "copy": "onCopy", "cut": "onCut", "devicemotion": "onDeviceMotion", "deviceorientation": "onDeviceOrientation", "error": "onError", "focus": "onFocus", "fullscreenchange": "onFullScreenChange", "fullscreenerror": "onFullScreenError", "gamepadconnected": "onGamePadConnected", "gamepaddisonnected": "onGamePadDisonnected", "hashchange": "onHashChange", "input": "onInput", "keydown": "onKeyDown", "keyup": "onKeyUp", "languagechange": "onLanguageChange", "message": "onMessage", "messageerror": "onMessageError", "mousedown": "onMouseDown", "mouseenter": "onMouseEnter", "mouseleave": "onMouseLeave", "mousemove": "onMouseMove", "mouseout": "onMouseOut", "mouseover": "onMouseOver", "mouseup": "onMouseUp", "offline": "onOffline", "online": "onOnline", "pagehide": "onPageHide", "pagereveal": "onPageReveal", "pageshow": "onPageShow", "pageswap": "onPageSwap", "paste": "onPaste", "pointercancel": "onPointerCancel", "pointerdown": "onPointerDown", "pointerlockchange": "onPointerLockChange", "pointerlockerror": "onPointerLockError", "popstate": "onPopState", "prerenderingchange": "onPrerenderingChange", "readystatechange": "onReadyStateChange", "rejectionhandled": "onRejectionHandled", "resize": "onResize", "scroll": "onScroll", "scrollend": "onScrollEnd", "securitypolicyviolation": "onSecurityPolicyViolation", "selectionchange": "onSelectionChange", "storage": "onStorage", "touchend": "onTouchEnd", "touchmove": "onTouchMove", "touchstart": "onTouchStart", "unhandledrejection": "onUnhandledRejection", "visibilitychange": "onVisibilityChange", "wheel": "onWheel" }
-    /** @readonly @type {{string:string}} */
-    static EVENT_INTERFACES_ = { "abort": "onAbort", "afterprint": "onAfterPrint", "animationend": "onAnimationEnd", "animationiteration": "onAnimatiOniteration", "animationstart": "onAnimationStart", "beforeprint": "onBeforePrint", "beforeunload": "onBeforeUnload", "blur": "onBlur", "canplay": "onCanPlay", "canplaythrough": "onCanPlayThrough", "change": "onChange", "click": "onClick", "contextmenu": "onContextMenu", "copy": "onCopy", "cut": "onCut", "dblclick": "onDBLClick", "drag": "onDrag", "dragend": "onDragEnd", "dragenter": "onDragEnter", "dragleave": "onDragLeave", "dragover": "onDragover", "dragstart": "onDragStart", "drop": "onDrop", "durationchange": "onDurationChange", "ended": "onEnded", "error": "onError", "focus": "onFocus", "focusin": "onFocusIn", "focusout": "onFocusOut", "fullscreenchange": "onFullscreenChange", "fullscreenerror": "onFullscreenError", "hashchange": "onHashChange", "input": "onInput", "invalid": "onInvalid", "keydown": "onKeyDown", "keyup": "onKeyUp", "load": "onLoad", "loadeddata": "onLoadedData", "loadedmetadata": "onLoadedMetadata", "loadstart": "onLoadStart", "message": "onMessage", "mousedown": "onMouseDown", "mouseenter": "onMouseEnter", "mouseleave": "onMouseLeave", "mousemove": "onMouseMove", "mouseover": "onMouseOver", "mouseout": "onMouseOut", "mouseup": "onMouseUp", "mousewheel": "onMouseWheel", "offline": "onOffline", "online": "onOnline", "open": "onOpen", "pagehide": "onPageHide", "pageshow": "onPageShow", "paste": "onPaste", "pause": "onPause", "play": "onPlay", "playing": "onPlaying", "popstate": "onPopState", "progress": "onProgress", "ratechange": "onRateChange", "resize": "onResize", "reset": "onReset", "scroll": "onScroll", "search": "onSearch", "seeked": "onSeeked", "seeking": "onSeeking", "select": "onSelect", "show": "onShow", "stalled": "onStalled", "storage": "onStorage", "submit": "onSubmit", "suspend": "onSuspend", "timeupdate": "onTimeUpdate", "toggle": "onToggle", "touchcancel": "onTouchCancel", "touchend": "onTouchEnd", "touchmove": "onTouchMove", "touchstart": "onTouchStart", "transitionend": "onTransitionEnd", "volumechange": "onVolumeChange", "waiting": "onWaiting", "wheel": "onWheel" }
-    /** @readonly @type {{string:string}} */
-    static LANGUAGE_CODES = { "ab": "abkhazian", "aa": "afar", "af": "afrikaans", "ak": "akan", "sq": "albanian", "am": "amharic", "ar": "arabic", "an": "aragonese", "hy": "armenian", "as": "assamese", "av": "avaric", "ae": "avestan", "ay": "aymara", "az": "azerbaijani", "bm": "bambara", "ba": "bashkir", "eu": "basque", "be": "belarusian", "bn": "bengali (bangla)", "bh": "bihari", "bi": "bislama", "bs": "bosnian", "br": "breton", "bg": "bulgarian", "my": "burmese", "ca": "catalan", "ch": "chamorro", "ce": "chechen", "ny": "chichewa, chewa, nyanja", "zh": "chinese", "zh-hans": "chinese (simplified)", "zh-hant": "chinese (traditional)", "cv": "chuvash", "kw": "cornish", "co": "corsican", "cr": "cree", "hr": "croatian", "cs": "czech", "da": "danish", "dv": "divehi, dhivehi, maldivian", "nl": "dutch", "dz": "dzongkha", "en": "english", "eo": "esperanto", "et": "estonian", "ee": "ewe", "fo": "faroese", "fj": "fijian", "fi": "finnish", "fr": "french", "ff": "fula, fulah, pulaar, pular", "gl": "galician", "gd": "gaelic (scottish)", "gv": "manx", "ka": "georgian", "de": "german", "el": "greek", "kl": "kalaallisut, greenlandic", "gn": "guarani", "gu": "gujarati", "ht": "haitian creole", "ha": "hausa", "he": "hebrew", "hz": "herero", "hi": "hindi", "ho": "hiri motu", "hu": "hungarian", "is": "icelandic", "io": "ido", "ig": "igbo", "id, in": "indonesian", "ia": "interlingua", "ie": "interlingue", "iu": "inuktitut", "ik": "inupiak", "ga": "irish", "it": "italian", "ja": "japanese", "jv": "javanese", "kn": "kannada", "kr": "kanuri", "ks": "kashmiri", "kk": "kazakh", "km": "khmer", "ki": "kikuyu", "rw": "kinyarwanda (rwanda)", "rn": "kirundi", "ky": "kyrgyz", "kv": "komi", "kg": "kongo", "ko": "korean", "ku": "kurdish", "kj": "kwanyama", "lo": "lao", "la": "latin", "lv": "latvian (lettish)", "li": "limburgish ( limburger)", "ln": "lingala", "lt": "lithuanian", "lu": "luga-katanga", "lg": "luganda, ganda", "lb": "luxembourgish", "mk": "macedonian", "mg": "malagasy", "ms": "malay", "ml": "malayalam", "mt": "maltese", "mi": "maori", "mr": "marathi", "mh": "marshallese", "mo": "moldavian", "mn": "mongolian", "na": "nauru", "nv": "navajo", "ng": "ndonga", "nd": "northern ndebele", "ne": "nepali", "no": "norwegian", "nb": "norwegian bokmål", "nn": "norwegian nynorsk", "ii": "sichuan yi", "oc": "occitan", "oj": "ojibwe", "cu": "old church slavonic, old bulgarian", "or": "oriya", "om": "oromo (afaan oromo)", "os": "ossetian", "pi": "pāli", "ps": "pashto, pushto", "fa": "persian (farsi)", "pl": "polish", "pt": "portuguese", "pa": "punjabi (eastern)", "qu": "quechua", "rm": "romansh", "ro": "romanian", "ru": "russian", "se": "sami", "sm": "samoan", "sg": "sango", "sa": "sanskrit", "sr": "serbian", "sh": "serbo-croatian", "st": "sesotho", "tn": "setswana", "sn": "shona", "sd": "sindhi", "si": "sinhalese", "ss": "swati", "sk": "slovak", "sl": "slovenian", "so": "somali", "nr": "southern ndebele", "es": "spanish", "su": "sundanese", "sw": "swahili (kiswahili)", "sv": "swedish", "tl": "tagalog", "ty": "tahitian", "tg": "tajik", "ta": "tamil", "tt": "tatar", "te": "telugu", "th": "thai", "bo": "tibetan", "ti": "tigrinya", "to": "tonga", "ts": "tsonga", "tr": "turkish", "tk": "turkmen", "tw": "twi", "ug": "uyghur", "uk": "ukrainian", "ur": "urdu", "uz": "uzbek", "ve": "venda", "vi": "vietnamese", "vo": "volapük", "wa": "wallon", "cy": "welsh", "wo": "wolof", "fy": "western frisian", "xh": "xhosa", "yi, ji": "yiddish", "yo": "yoruba", "za": "zhuang, chuang", "zu": "zulu" }
     
     /** @param {string|{string:string}} options @returns {void} */
     static start(options = null) {
+        app.setAppeatanceMode(app.APPERANCE_MODE_DARK)
         app.options = object.fromdata(options)
         app.identifier = app.options.get('identifier', util.identifier())
         app.name = app.options.get('name', util.path_info(window.location.pathname, 'filename'))
         app.progressDialog = app.createProgressDialog()
         app.progressDialog.setStyle(DialogProgress.STYLE_SPINNER)
+        // insert google fonts icon source
+        let element = document.createElement('link')
+        element.rel = 'preload'
+        element.rel = 'stylesheet'
+        element.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200'
+        document.head.appendChild(element)
         // 
         app.listeners1()
         if (window.document.readyState === 'complete') {
@@ -5830,6 +5802,7 @@ class app {
     }
     /** @private @returns {void} */
     static listeners2() {
+        app.#icons()
         if (app.options.get('input-validation', 'true') == 'true') {
             app.inputValidation()
         }
@@ -6076,10 +6049,187 @@ class app {
             }
         }
     }
-    
 
-
-    // system
+    // Apperance Mode
+    /** @returns {string} */
+    static getAppeatanceMode() {
+        return app.GLOBAL_VARIABLES["apperance_mode"]
+    }
+    /**  @param {string} mode @returns {void} */
+    static setAppeatanceMode(mode) {
+        app.GLOBAL_VARIABLES["apperance_mode"] = mode
+    }
+    // Device
+    /** @returns {number} */
+    static getDeviceMemory() {
+        // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/deviceMemory
+        // returns the approximate amount of device memory in gigabytes.
+        return window.navigator.deviceMemory
+    }
+    /** @returns {number} */
+    static getDevicePixelRatio() {
+        // https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio
+        return window.devicePixelRatio
+    }
+    /** @returns {string} */
+    static getDeviceType() {
+        return app.getWidth() < app.getHeight() ? app.DEVICE_PHONE : app.DEVICE_COMPUTER
+    }
+    /** @param {(charging: boolean) => void} callback @returns {void} */
+    static isDeviceCharging(callback) {
+        window.navigator.getBattery().then((batteryManager) => {
+            callback(batteryManager.charging)
+        })
+    }
+    /** @returns {boolean} */
+    static isDevicePhone() {
+        return app.getWidth() < app.getHeight()
+    }
+    /** @returns {boolean} */
+    static isDeviceComputer() {
+        return app.getWidth() > app.getHeight()
+    }
+    /** @returns {boolean} */
+    static isFullscreen() {
+        return window.screenTop > 0 && window.screenY > 0
+    }
+    /** @returns {boolean} */
+    static isOnline() {
+        return navigator.onLine
+    }
+    /** @returns {boolean} */
+    static isRunningLocal() {
+        return window.location.protocol == 'file:'
+    }
+    /** @returns {boolean} */
+    static isRunningRemote() {
+        return window.location.protocol == 'http:' || window.location.protocol == 'https:'
+    }
+    // Document
+    /** @param {string|{string:string}} values @returns {HTMLScriptElement} */
+    static addScript(attributes) {
+        let script = window.document.createElement('script')
+        for (let [key, value] in enumerate(object.fromdata(attributes))) {
+            script[key] = value
+        }
+        window.document.body.appendChild(script)
+        return script
+    }
+    /** @returns {AppElement} */
+    static body() {
+        return app.element('body')
+    }
+    /** @param {AppElement|Element|string} value @returns {AppElement} */
+    static element(value) {
+        return new AppElement(value)
+    }
+    /** @returns {number} */
+    static getHeight() {
+        let element = app.element('body')
+        return element.getHeight(true)
+    }
+    /** @param {string} selector @param {string} propertyKey @returns {string} */
+    static getStyleProperty(selector, propertyKey) {
+        let element = window.document.querySelector(selector)
+        let styleDeclaration = window.getComputedStyle(element)
+        return styleDeclaration.getPropertyValue(propertyKey)
+    }
+    /** @returns {number} */
+    static getWidth() {
+        let element = app.element('body')
+        return element.getWidth(true)
+    }
+    /** @returns {void} */
+    static hide() {
+        app.element('body').hide()
+    }
+    /** @returns {boolean} */
+    static isTouchEnabled() {
+        return app.touchable
+    }
+    /** @returns {boolean} */
+    static isTouchDisabled() {
+        return !app.touchable
+    }
+    /** @param {string} selector @param {string} propertyKey @param {string|null} propertyValue @param {string} priority @returns {void} */
+    static setStyleProperty(selector, propertyKey, propertyValue, priority = '') {
+        let element = window.document.querySelector(selector)
+        if (element) {
+            /** @type {CSSStyleDeclaration} */
+            let styleDeclaration = element.style
+            styleDeclaration.setProperty(propertyKey, propertyValue, priority)
+        } else {
+            throw new Error(`query selector failed, unabled to find target element`)
+        }
+    }
+    /** @param {boolean} value @returns {boolean} */
+    static setTouchable(value) {
+        app.touchable = value
+        return app.touchable
+    }
+    /** @returns {void} */
+    static show() {
+        app.element('body').show()
+    }
+    // Global Variables
+    /** @param {string} key @returns {any} */
+    static getGlobalVariable(key) {
+        return app.GLOBAL_VARIABLES[key]
+    }
+    /** @param {string} key @returns {void} */
+    static setGlobalVariable(key, value) {
+        app.GLOBAL_VARIABLES[key] = value
+    }
+    // Mouse
+    /** @param {number} button @returns {boolean} */
+    static isMouseButtonActive(button) {
+        return app.mouseButtons[button]
+    }
+    /** @returns {boolean} */
+    static isMouseLeftActive() {
+        return app.mouseButtons[app.MOUSE_BUTTON_LEFT]
+    }
+    /** @returns {boolean} */
+    static isMouseRightActive() {
+        return app.mouseButtons[app.MOUSE_BUTTON_RIGHT]
+    }
+    /** @returns {boolean} */
+    static isMouseWheelActive() {
+        return app.mouseButtons[app.MOUSE_BUTTON_WHEEL]
+    }
+    // Storage
+    /** @param {string} key @param {string} prefix @returns {void} */
+    static clearData(key, prefix = null) {
+        window.localStorage.removeItem(prefix == null ? key : `${prefix}.${key}`)
+    }
+    /** @param {string} key @param {string} defaultvalue @param {string} prefix @returns {number|string|{}|[]} */
+    static getData(key, defaultvalue = '', prefix = null) {
+        let string = window.localStorage.getItem(prefix == null ? key : `${prefix}.${key}`)
+        if (string) {
+            if (util.istype(string, 'string-array|string-object')) {
+                return util.json_decode(string)
+            }
+            if (util.istype(string, 'string-number')) {
+                return Number(string)
+            }
+            return string
+        } else if (defaultvalue) {
+            app.setData(key, defaultvalue, prefix)
+            return defaultvalue
+        }
+    }
+    /** @param {string} key @param {string} prefix @returns {void} */
+    static removeData(key, prefix = null) {
+        window.localStorage.removeItem(prefix == null ? key : `${prefix}.${key}`)
+    }
+    /** @param {string} key @param {string|[]|{}} value @param {string} prefix @returns {void} */
+    static setData(key, value, prefix = null) {
+        if (util.istype(value, 'array|object')) {
+            value = util.json_encode(value)
+        }
+        window.localStorage.setItem(prefix == null ? key : `${prefix}.${key}`, value)
+    }
+    // System
     /** @param {string} types @param {View} instance @param {boolean} withinView @returns {void} */
     static addEventListenerInterface(types, instance, withinView = true) {
         for (let type of types.strip(' |').split('|')) {
@@ -6096,13 +6246,12 @@ class app {
     }
     /** @param {Window} window_ @returns {void} */
     static addWindow(window_) {
-        app.childWindows.append(window_)
     }
     /** @param {any} message @param {string} targetOrigin @param {[]} transfer @returns {void} */
     static broadcast(message, targetOrigin = "*", transfer = null) {
         window.postMessage(message, targetOrigin, transfer)
     }
-    /** */
+    /** @returns {void} */
     static broadcastIntent(action, category, data, type, extras, options) {
     }
     /** @param {string} data @returns {Promise|void} */
@@ -6112,33 +6261,8 @@ class app {
         }
         return console.error('Clipboard API is not available.')
     }
-    /** @deprecated @param {string|null} key @param {any|null} value @returns {{string:string}|string} */
-    static configuration(key = null, value = null) {
-        if (key && value) {
-            app.CONFIGURATION[key] = value
-            if (window.onConfiguration) {
-                window.onConfiguration(key, value)
-            }
-        }
-        else if (key) {
-            if (!key in app.CONFIGURATION) return console.error(`TypeError: `, key)
-            return app.CONFIGURATION[key]
-        }
-        else {
-            return app.CONFIGURATION
-        }
-    }
-    /** */
+    /** @returns {void} */
     static createNotification(title, body, icon) {
-    }
-    /** @param {string|null} key @param {string|null} value @returns {string|void} */
-    static directory(key, value = null) {
-        if (value) {
-            app.DIRECTORY[key] = value
-        } else {
-            if (excludes(key, app.DIRECTORY)) return console.error(`ValueError: variable-name=key variable-value=${key}`)
-            return app.DIRECTORY[key]
-        }
     }
     /** @returns {void} */
     static exit() {
@@ -6174,23 +6298,11 @@ class app {
             }
         }
     }
-    /** @returns {string|null} */
-    static getColorScheme() {
-        if (window.matchMedia) {
-            let query = window.matchMedia('(prefers-color-scheme: dark)')
-            return query.matches ? app.COLOR_SCHEME_DARK : app.COLOR_SCHEME_LIGHT
-        }
-        return null
-    }
-    /** @returns {string} */
-    static getIdentifier() {
-        return app.identifier
-    }
     /** @returns {string} */
     static getLanguage() {
         let languageCode = app.getLanguageCode()
         if (languageCode.includes('-')) {
-            languageCode = languageCode.split('-').getFirst()
+            languageCode = languageCode.split('-').getfirst()
         }
         return app.LANGUAGE_CODES[languageCode]
     }
@@ -6198,28 +6310,15 @@ class app {
     static getLanguageCode() {
         return window.navigator.language
     }
-    /** @returns {string} */
-    static getOrientation() {
-
-    }
-    /** @returns {string} */
-    static getName() {
-        return this.name
-    }
-    /** @param {string} basename @returns {string} */
-    static getPathImages(basename) {
-        let pathInfo = util.path_info(basename)
-        if (!pathInfo['extension']) {
-            basename += '.png'
-        }
-        if (basename.includes(app.directory('images'))) {
-            return basename
-        }
-        return app.directory('images') + basename
-    }
-    /** */
-    static getPermissions() {
-
+    /** @param {(orientation: string) => void} callback @returns {string} */
+    static getOrientation(callback) {
+        let portrait_query = window.matchMedia("(orientation: portrait)")
+        // listen for orientation changes
+        portrait_query.addEventListener("change", (event) => {
+            let orientation = event.matches ? app.ORIENTATION_PORTRAIT : app.ORIENTATION_LANDSCAPE
+            callback(orientation)
+        })
+        return portrait_query.matches ? app.ORIENTATION_PORTRAIT : app.ORIENTATION_LANDSCAPE
     }
     /** @param {(state: string) => void} callback @returns {void} */
     static getPermissionStatus(permission, callback = (state) => { }) {
@@ -6227,106 +6326,9 @@ class app {
             callback(permissionStatus.state)
         })
     }
-    /** @param {Element} element @returns {void} */
-    static inputValidation(element = null) {
-        let replaceable = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;'
-        }
-        let elements = []
-        if (element) {
-            elements.append(element)
-        } else {
-            for (let element of document.getElementsByTagName('input')) {
-                if (includes(element.type, 'email|password|text|url')) {
-                    elements.append(element)
-                }
-            }
-            for (let element of document.getElementsByTagName('textarea')) {
-                elements.append(element)
-            }
-        }
-        for (let index = 0; index < elements.length; index++) {
-            let element = elements[index]
-            if (!element.hasAttribute('maxlength')) {
-                element.setAttribute('maxlength', '100')
-            }
-            if (!element.hasAttribute('autocomplete')) {
-                element.setAttribute('autocomplete', 'off')
-            }
-            element.addEventListener('input', (event) => {
-                for (let key in replaceable) {
-                    event.target.value = event.target.value.replace(key, '')
-                }
-            })
-        }
-    }
-    /** @param {string} type @returns {boolean} */
-    static isEventInterface(type) {
-        for (let [interfaceType, interfaceName] of enumerate(app.EVENT_INTERFACES)) {
-            if (type.lower() == interfaceType.lower() || type.lower() == interfaceName.lower()) {
-                return true
-            }
-        }
-        return false
-    }
-    /** @param {number} button @returns {boolean} */
-    static isMouseButtonActive(button) {
-        return app.mouseButtons[button]
-    }
-    /** @returns {boolean} */
-    static isMouseLeftActive() {
-        return app.mouseButtons[app.MOUSE_BUTTON_LEFT]
-    }
-    /** @returns {boolean} */
-    static isMouseRightActive() {
-        return app.mouseButtons[app.MOUSE_BUTTON_RIGHT]
-    }
-    /** @returns {boolean} */
-    static isMouseWheelActive() {
-        return app.mouseButtons[app.MOUSE_BUTTON_WHEEL]
-    }
-    /** @returns {boolean} */
-    static isOnline() {
-        return navigator.onLine
-    }
-    /** @returns {boolean} */
-    static isRunningLocal() {
-        return window.location.protocol == 'file:'
-    }
-    /** @returns {boolean} */
-    static isRunningRemote() {
-        return window.location.protocol == 'http:' || window.location.protocol == 'https:'
-    }
-    /** @returns {boolean} */
-    static isTouchEnabled() {
-        return app.touchable
-    }
-    /** @returns {boolean} */
-    static isTouchDisabled() {
-        return !app.touchable
-    }
     /** @param {string} path @param {() => void} callback @returns {void} */
     static loadScript(path, callback = () => { }) {
 
-    }
-    /** @param {string} type @param {Event} event @returns {void} */
-    static onEventListenerInterface(type, event) {
-        if (event == null) return
-        if (event.target == window.document) return
-        let element = app.element(event.target)
-        if (app.eventListenerInterfaces[type]) {
-            for (let [instance, withinView] of app.eventListenerInterfaces[type]) {
-                if (withinView) {
-                    if (element.isEqualTo(instance.view, true)) {
-                        instance.onEventListenerInterface(event, element)
-                    }
-                } else {
-                    instance.onEventListenerInterface(event, element)
-                }
-            }
-        }
     }
     /** @param {string|URL} url @param {string} target @param {string} features @returns {Window|null} */
     static open(url, target = null, features = null) {
@@ -6341,102 +6343,19 @@ class app {
         }
         return window.open(url, target, features)
     }
-    /** @param {string} identifier @returns {void} */
-    static progressStart(identifier) {
-        app.progressesRunning.append(identifier)
-        setTimeout(() => {
-            if (app.progressesRunning.includes(identifier)) {
-                app.setTouchable(false)
-                app.progressDialog.setIdentifier(identifier)
-                app.progressDialog.show()
-            }
-        }, app.progressTimeout)
-    }
-    /** @param {string} identifier @returns {void} */
-    static progressStop(identifier = null) {
-        if (identifier) {
-            let index = app.progressesRunning.index(identifier)
-            if (index != -1) {
-                app.progressesRunning.pop(index)
-            }
-            else {
-                console.warn(`KeyError: variable-name=app.progressesRunning key=${identifier}: running progress identifier not found.`)
-            }
-        }
-        else {
-            app.progressesRunning.pop(-1)
-        }
-        if (app.progressesRunning.empty()) {
-            if (app.progressDialog.isVisible()) {
-                app.setTouchable(true)
-                app.progressDialog.dismiss()
-            }
-        }
-    }
-    /** */
-    static sendIntent(packageName, className, action, category, uri, type, extras, options, callback) {
-    }
     /** @param {any} message @param {string} targetOrigin @param {[]} transfer @returns {void} */
     static sendMessage(message, targetOrigin = "*", transfer = null) {
         window.postMessage(message, targetOrigin, transfer)
     }
-    /** */
-    static sendText(text, subject, choose) {
-    }
-    /** @param {number} milliseconds @param {(...args:any) => void} callback @param {...any} args @returns {number} */
-    static setInterval(milliseconds, callback, ...args) {
-        return setInterval(() => callback(...args), milliseconds)
-    }
     /** @param {string} language @returns {void} */
     static setLanguage(language) {
     }
-    /** @param {string} theme @returns {void} */
-    static setTheme(theme) {
-    }
-    /** @param {number} milliseconds @param {(...args:any) => void} callback @param {...any} args @returns {number} */
-    static setTimeout(milliseconds, callback, ...args) {
-        return setTimeout(() => callback(...args), milliseconds)
-    }
-    /** @param {boolean} value @returns {boolean} */
-    static setTouchable(value) {
-        app.touchable = value
-        return app.touchable
-    }
-    /** @returns {void} */
-    static stop() {
-        window.close()
-    }
-    /** */
-    static simulateDrag() {
-    }
-    /** */
-    static simulateKey() {
-    }
-    /** */
-    static simulateScroll() {
-    }
-    /** */
-    static simulateTouch() {
-    }
-    /** @param {app} instance @returns {void} */
-    static sync(instance) {
-        app.DIRECTORY = instance.directory_
-        app.CONFIGURATION = instance.CONFIGURATION
+    
 
-    }
-    /** @param {number} milliseconds @param {function(): void} callback @returns {void} */
-    static wait(milliseconds, callback) {
-        setTimeout(() => {
-            callback()
-        }, milliseconds)
-    }
-
-
-
-    // class
-    /** @param {any} value @param {function(any, any): void} callback @returns {DataBinding} */
-    static createBinding(value = null, callback = null) {
-        return new DataBinding(value, callback)
+    // Initilization Functions
+    /** @param {any} value @param {(any, any) => void} listener @returns {DataBinding} */
+    static createBinding(value = null, listener = null) {
+        return new DataBinding(value, listener)
     }
     /** @returns {void} */
     static createMediaPlayer() {
@@ -6453,19 +6372,6 @@ class app {
     /** @param {AppElement} element @returns {void} */
     static createTextWatcher(element) {
         return 
-        // let element = app.element(event.target)
-        // let rows = 0
-        // let fontsize = 10
-        // let padding = element.style('padding-left').replace('px', '') * 2
-        // let text = element.value()
-        // let width = element.getWidth(false)
-
-        // let chars_per_line = (width - (padding * 2)) / fontsize
-        // text.split('\n').map((line) => {
-        //     rows += Math.ceil(line.length / chars_per_line)
-        // })
-        // element.setProperty('rows', rows)
-        // return rows
     }
     /** @returns {ApplicationProgrammingInterface} */
     static createWebConnection() {
@@ -6475,193 +6381,9 @@ class app {
     static createWebSocket() {
         return
     }
-    /** @param {AppElement|Element|string} value @returns {AppElement} */
-    static element(value) {
-        return new AppElement(value)
-    }
-
-
-
-    // data
-    /** @param {string} key @param {string} prefix @returns {void} */
-    static clearData(key, prefix = null) {
-        window.localStorage.removeItem(prefix == null ? key : `${prefix}.${key}`)
-    }
-    /** @param {string} key @param {string} defaultvalue @param {string} prefix @returns {number|string|{}|[]} */
-    static getData(key, defaultvalue = '', prefix = null) {
-        let string = window.localStorage.getItem(prefix == null ? key : `${prefix}.${key}`)
-        if (string) {
-            if (util.istype(string, 'string-array|string-object')) {
-                return util.json_decode(string)
-            }
-            if (util.istype(string, 'string-number')) {
-                return Number(string)
-            }
-            return string
-        } else if (defaultvalue) {
-            app.setData(key, defaultvalue, prefix)
-            return defaultvalue
-        }
-    }
-    /** @param {string} key @param {string} prefix @returns {void} */
-    static removeData(key, prefix = null) {
-        window.localStorage.removeItem(prefix == null ? key : `${prefix}.${key}`)
-    }
-    /** @param {string} key @param {string|[]|{}} value @param {string} prefix @returns {void} */
-    static setData(key, value, prefix = null) {
-        if (util.istype(value, 'array|object')) {
-            value = util.json_encode(value)
-        }
-        window.localStorage.setItem(prefix == null ? key : `${prefix}.${key}`, value)
-    }
-
-
-
-    // document
-    /** @param {string|{string:string}} values @returns {HTMLScriptElement} */
-    static addScript(attributes) {
-        attributes = object.fromdata(attributes)
-        for (let key in attributes) {
-            if (excludes(key, 'async|charset|defer|id|src|type')) return console.error(`ValueError: variable-name=key variable-value=${key}`)
-        }
-        let script = window.document.createElement('script')
-        for (let [key, value] in enumerate(attributes)) {
-            script[key] = value
-        }
-        window.document.body.appendChild(script)
-        return script
-    }
-    // document styling
-    /** @param {string} selector @param {string} propertyKey @returns {string} */
-    static getStyleProperty(selector, propertyKey) {
-        let element = window.document.querySelector(selector)
-        let styleDeclaration = window.getComputedStyle(element)
-        return styleDeclaration.getPropertyValue(propertyKey)
-    }
-    /** @param {string} selector @param {string} propertyKey @param {string|null} propertyValue @param {string} priority @returns {void} */
-    static setStyleProperty(selector, propertyKey, propertyValue, priority = '') {
-        if (excludes(priority, 'important|undefined|')) return console.error(`ValueError: variable-name=priority variable-value=${priority}`)
-        let element = window.document.querySelector(selector)
-        if (element) {
-            /** @type {CSSStyleDeclaration} */
-            let styleDeclaration = element.style
-            styleDeclaration.setProperty(propertyKey, propertyValue, priority)
-        } else {
-            console.error(`UnsetError: variable-name=selector`)
-        }
-    }
-    // document body
-    /** @returns {AppElement} */
-    static body() {
-        return app.element('body')
-    }
-    /** @param {...AppElement|Element|string} values @returns {boolean} */
-    static containsElement(...values) {
-        return AppElement.hasElement(...values)
-    }
-    /** @returns {number} */
-    static getHeight() {
-        let element = app.element('body')
-        return element.getHeight(true)
-    }
-    /** @returns {number} */
-    static getWidth() {
-        let element = app.element('body')
-        return element.getWidth(true)
-    }
-    /** @returns {void} */
-    static hide() {
-        app.element('body').hide()
-    }
-    /** @returns {void} */
-    static show() {
-        app.element('body').show()
-    }
-
     
 
-    // device
-    /** @returns {number} */
-    static getDeviceMemory() {
-        // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/deviceMemory
-        // returns the approximate amount of device memory in gigabytes.
-        return window.navigator.deviceMemory
-    }
-    /** @returns {number} */
-    static getDevicePixelRatio() {
-        // https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio
-        return window.devicePixelRatio
-    }
-    /** @returns {string} */
-    static getDeviceType() {
-        return app.getWidth() < app.getHeight() ? app.DEVICE_PHONE : app.DEVICE_COMPUTER
-    }
-    /** @param {function(boolean): void} callback @returns {void} */
-    static isDeviceCharging(callback) {
-        window.navigator.getBattery().then((batteryManager) => {
-            callback(batteryManager.charging)
-        })
-    }
-    /** @returns {boolean} */
-    static isDevicePhone() {
-        return app.getWidth() < app.getHeight()
-    }
-    /** @returns {boolean} */
-    static isDeviceComputer() {
-        return app.getWidth() > app.getHeight()
-    }
-    /** @returns {boolean} */
-    static isFullscreen() {
-        return window.screenTop > 0 && window.screenY > 0
-    }
-    /** @param {KeyboardEvent} event @param {string} value @returns {boolean} */
-    static isKey(event, value) {
-        if (!(event instanceof KeyboardEvent)) {
-            return false
-        }
-        for (let key of value.strip(' |').split('|')) {
-            key = key.strip(' ')
-            if (key.lower() == event.code.lower() || key.lower() == event.key.lower()) {
-                return true
-            }
-        }
-        return false
-    }
-
-
-
-    // request
-    /** @param {string} url @param {string} responseType  @returns {ArrayBuffer|Blob|FormData|[]|{}|string}} */
-    static async getFile(url, responseType = '') {
-        let response = await fetch(url)
-        if (!response.ok) {
-            throw new Error(`app.getFile(url=${url}): response.status=${response.status}`)
-        }
-        let responseValue = null
-        if (responseType == '') {
-            responseValue = await response.json()
-        }
-        if (responseType == 'arraybuffer') {
-            responseValue = await response.arrayBuffer()
-        }
-        if (responseType == 'blob') {
-            responseValue = await response.blob()
-        }
-        if (responseType == 'formData') {
-            responseValue = await response.formData()
-        }
-        if (responseType == 'json') {
-            responseValue = await response.json()
-        }
-        if (responseType == 'text') {
-            responseValue = await response.text()
-        }
-        return responseValue
-    }
-
-
-
-    // view
+    // View
     /** @param {{string:string}|string} attributes @returns {View} */
     static createButton(attributes) {
         let view = new Button(attributes)
@@ -6677,8 +6399,13 @@ class app {
         let view = new Canvas(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @deprecated @param {{string:string}|string} attributes @returns {View} */
     static createCheckBox(attributes) {
+        let view = new Checkbox(attributes)
+        return view
+    }
+    /** @param {{string:string}|string} attributes @returns {View} */
+    static createCheckbox(attributes) {
         let view = new Checkbox(attributes)
         return view
     }
@@ -6690,6 +6417,11 @@ class app {
     /** @param {{string:string}|string} attributes @returns {View} */
     static createDrawer(attributes) {
         let view = new Drawer(attributes)
+        return view
+    }
+    /** @param {{string:string}|string} attributes @returns {View} */
+    static createIcon(attributes) {
+        let view = new Icon(attributes)
         return view
     }
     /** @param {{string:string}|string} attributes @returns {View} */
@@ -6829,7 +6561,6 @@ class app {
         let view = new Window(attributes)
         return view
     }
-    // dialog
     /** @param {{string:string}|string} attributes @returns {View} */
     static createDialog(attributes) {
         let view = new Dialog(attributes)
@@ -6855,25 +6586,161 @@ class app {
         let view = new DialogProgress(attributes)
         return view
     }
-    static storage = {
-        key: util.path_info(null, 'filename'),
-        get: (key, value = null, use = false) => {
-            let string = window.localStorage.getItem(use ? app.storage.key + '.' + key : key)
-            if (string) {
-                return string
-            } else if (value) {
-                window.localStorage.setItem(use ? app.storage.key + '.' + key : key, value)
-                return value
+    
+    // Uncategorized
+     /** @param {string} type @param {Event} event @returns {void} */
+    static onEventListenerInterface(type, event) {
+        if (event == null) return
+        if (event.target == window.document) return
+        let element = app.element(event.target)
+        if (app.eventListenerInterfaces[type]) {
+            for (let [instance, withinView] of app.eventListenerInterfaces[type]) {
+                if (withinView) {
+                    if (element.isEqualTo(instance.view, true)) {
+                        instance.onEventListenerInterface(event, element)
+                    }
+                } else {
+                    instance.onEventListenerInterface(event, element)
+                }
             }
-        },
-        set: (key, value, use = false) => {
-            window.localStorage.setItem(use ? app.storage.key + '.' + key : key, value)
-            return util.storage
-        },
-        remove: (key, use = false) => {
-            window.localStorage.removeItem(use ? app.storage.key + '.' + key : key)
-            return util.storage
-        },
+        }
+    }
+    /** @param {string} identifier @returns {void} */
+    static progressStart(identifier) {
+        app.progressesRunning.append(identifier)
+        setTimeout(() => {
+            if (app.progressesRunning.includes(identifier)) {
+                app.setTouchable(false)
+                app.progressDialog.setIdentifier(identifier)
+                app.progressDialog.show()
+            }
+        }, app.progressTimeout)
+    }
+    /** @param {string} identifier @returns {void} */
+    static progressStop(identifier = null) {
+        if (identifier) {
+            let index = app.progressesRunning.index(identifier)
+            if (index != -1) {
+                app.progressesRunning.pop(index)
+            }
+            else {
+                console.warn(`KeyError: variable-name=app.progressesRunning key=${identifier}: running progress identifier not found.`)
+            }
+        }
+        else {
+            app.progressesRunning.pop(-1)
+        }
+        if (app.progressesRunning.empty()) {
+            if (app.progressDialog.isVisible()) {
+                app.setTouchable(true)
+                app.progressDialog.dismiss()
+            }
+        }
+    }
+    /** @returns {string} */
+    static getName() {
+        return app.name
+    }
+    /** @param {string} name @returns {string} */
+    static getIcon(name) {
+        // requires the following in HTML <head>:
+        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        // <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+        if (app.isOnline()) {
+            let size = 48;
+            let color = '#FFFFFF';
+            let canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            let ctx = canvas.getContext('2d');
+            // set font style for the icon
+            // ctx.font = `${size}px Material Icons`;
+            ctx.font = `${size}px Material Symbols Outlined`;
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            // draw the icon onto the canvas
+            ctx.fillText(name, canvas.width / 2, canvas.height / 2);
+            // convert canvas to PNG data URL
+            let dataURL = canvas.toDataURL('image/png');
+            return dataURL
+        }
+        else {
+            return app.directory('images') + name 
+        }
+    }
+    /** @returns {string} */
+    static getIdentifier() {
+        return app.identifier
+    }
+    /** @param {Element} element @returns {void} */
+    static inputValidation(element = null) {
+        let replaceable = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;'
+        }
+        let elements = []
+        if (element) {
+            elements.append(element)
+        } else {
+            for (let element of document.getElementsByTagName('input')) {
+                if (includes(element.type, 'email|password|text|url')) {
+                    elements.append(element)
+                }
+            }
+            for (let element of document.getElementsByTagName('textarea')) {
+                elements.append(element)
+            }
+        }
+        for (let index = 0; index < elements.length; index++) {
+            let element = elements[index]
+            if (!element.hasAttribute('maxlength')) {
+                element.setAttribute('maxlength', '100')
+            }
+            if (!element.hasAttribute('autocomplete')) {
+                element.setAttribute('autocomplete', 'off')
+            }
+            element.addEventListener('input', (event) => {
+                for (let key in replaceable) {
+                    event.target.value = event.target.value.replace(key, '')
+                }
+            })
+        }
+    }
+    /** @param {KeyboardEvent} event @param {string} value @returns {boolean} */
+    static isKey(event, value) {
+        if (!(event instanceof KeyboardEvent)) {
+            return false
+        }
+        for (let key of value.strip(' |').split('|')) {
+            key = key.strip(' ')
+            if (key.lower() == event.code.lower() || key.lower() == event.key.lower()) {
+                return true
+            }
+        }
+        return false
+    }
+    /** @param {string} type @returns {boolean} */
+    static isEventInterface(type) {
+        for (let [interfaceType, interfaceName] of enumerate(app.EVENT_INTERFACES)) {
+            if (type.lower() == interfaceType.lower() || type.lower() == interfaceName.lower()) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /** @returns {void} */
+    static #icons() {
+        for (let element of document.getElementsByTagName('img')) {
+            if (!element.hasAttribute('icon')) continue
+            let icon_name = element.getAttribute('icon')
+            let path = `${app.getGlobalVariable("repository")}/icons/${app.getAppeatanceMode()}`
+            let filename = icon_name.removesuffix('.png')
+            element.src = `${path}/${filename}.png`
+        }
     }
 }
 class AppElement {
@@ -6915,6 +6782,9 @@ class AppElement {
         }
         if (value instanceof AppElement) {
             this.element = value.element
+        }
+        if (value instanceof View) {
+            this.element = value.view.element
         }
 
     }
@@ -6974,14 +6844,7 @@ class AppElement {
     /** @readonly @type {string[]} */
     static propertiesOfPixelValue = ['bottom', 'gap', 'height', 'left', 'marginBottom', 'marginLeft', 'marginRight', 'marginTop', 'max-height', 'max-width', 'paddingBottom', 'paddingLeft', 'paddingRight', 'paddingTop', 'right', 'top', 'width']
     
-    /** @param {AppElement|Element|string} value @returns {Element} */
-    static convertToElement(value) {
-        return new AppElement(value).getElement()
-    }
-    /** @param {AppElement|Element|string} value @returns {AppElement} */
-    static convertToAppElement(value) {
-        return new AppElement(value)
-    }
+    
     /** @param {...AppElement|Element|string} values @returns {boolean} */
     static hasElement(...values) {
         /** @type {string} */
@@ -6999,28 +6862,114 @@ class AppElement {
         }
         return document.getElementById(value) != null
     }
+    /** @param {AppElement|Element|string} value @returns {Element} */
+    static toAppElement(value) {
+        return new AppElement(value)
+    }
+    /** @param {AppElement|Element|string} value @returns {Element} */
+    static toHTMLElement(value) {
+        return new AppElement(value).getElement()
+    }
 
+
+
+    // Properties
+    /** @param {string} value @returns {AppElement|string} */
     accessKey(value = "hh") {
-        // The accesskey attribute specifies a shortcut key to activate/focus an element. (IE=Alt+accesskey, Chrome=Alt+accesskey, Safari=Alt+accessKey, Firefox=Alt+Shift+accesskey)
-        if (value == undefined) return this.element.accessKey
+        if (value === null || value === undefined) return this.element.accessKey
         else this.element.accessKey = value
         return this
     }
-    /** @param {string} type @param {function(Event, AppElement)} listener @param {boolean|{capture: boolean, once: boolean, passive: boolean, signal: AbortSignal}} options @returns {AppElement} */
+    /** @param {boolean} value @returns {AppElement|boolean} */
+    contentEditable(value = null) {
+        if (value === null || value === undefined) return this.element.contentEditable
+        else this.element.contentEditable = value
+        return this
+    }
+    /** @returns {number} */
+    getNodeType() {
+        return this.element.nodeType
+    }
+    /** @param {string} characterCase @returns {string} */
+    getTagName(characterCase = 'upper') {
+        if (characterCase == 'upper') {
+            return this.element.tagName.upper()
+        }
+        else if (characterCase == 'lower') {
+            return this.element.tagName.lower()
+        }
+        return this.element.tagName
+    }
+    /** @param {string|number} value @returns {AppElement|string} */
+    id(value) {
+        if (value === null || value === undefined) return this.element.id
+        if (util.istype(value, 'number')) {
+            let strings = this.element.id.split(delimiter)
+            return strings[index < 0 ? index + strings.length : index]
+        }
+        else if (util.istype(value, 'string')) {
+            this.element.id = value
+        }
+        return this
+    }
+    /** @param {string} value @param {boolean} append @returns {AppElement|string} */
+    innerHTML(value = null, append = false) {
+        if (value === null || value === undefined) return this.element.innerHTML
+        else this.element.innerHTML = append ? this.element.innerHTML + value : value
+        return this
+    }
+    /** @returns {boolean} */
+    isContentEditable() {
+        return this.element.isContentEditable
+    }
+    /** @param {string} value @returns {AppElement|string} */
+    outerHTML(value = null) {
+        if (value === null || value === undefined) return this.element.outerHTML
+        else this.element.outerHTML = value
+        return this
+    }
+    /** @returns {AppElement} */
+    parentElement() {
+        if (this.element.parentElement === null) return null
+        return app.element(this.element.parentElement)
+    }
+    /** @param {any} value @returns {*|AppElement} */
+    something(value = null) {
+        if (value === null || value === undefined) return this.element.something
+        else this.element.something = value
+        return this
+    }
+    /** @param {...string} values @returns {AppElement|string} */
+    src(...values) {
+        if (values.length == 0) return this.element.src
+        else this.element.src = values.join('/')
+        return this
+    }
+    /** @param {string} value @param {boolean} append @returns {AppElement|string} */
+    value(value, append = false) {
+        if (value === null || value === undefined) return this.element.value
+        else this.element.value = append ? this.element.value + value : value
+        return this
+    }
+
+
+
+    // Methods
+    /** @param {string} type @param {(event: Event, element: AppElement) => void} listener @param {boolean|{capture: boolean, once: boolean, passive: boolean, signal: AbortSignal}} options @returns {AppElement} */
     addEventListener(type = null, listener = (e) => { }, options = false) {
         this.element.addEventListener(type, listener, options)
         return this
     }
     /** @param {array} keyframes @param {number|{delay: number, direction: ["normal", "reverse", "alternate", "alternate-reverse"], duration: number, easing: ["linear", "ease", "ease-in", "ease-out", "ease-in-out", "cubic-bezier()"] fill: ["none", "backward", "forward", "both"], iterations: number, pseudoElement: string, rangeEnd: string, rangeStart: string }} options @returns {Animation} */
     animate(keyframes, options) {
-        // https://developer.mozilla.org/en-US/docs/Web/API/Element/animate
         return this.element.animate(keyframes, options)
     }
     /** @param {...AppElement|Element} elements @returns {AppElement} */
     appendChild(...elements) {
         for (let element of elements) {
-            element = AppElement.convertToElement(element)
-            this.element.appendChild(element)
+            this.element.appendChild(
+                AppElement.toHTMLElement(element)
+            )
         }
         return this
     }
@@ -7036,8 +6985,18 @@ class AppElement {
     }
     /** @param {number} index @returns {AppElement|AppElement[]} */
     children(index = null) {
-        // children=collection of an element's child element (excluding text and comment nodes)
-        // childNodes=collection of an element's child nodes (including text and comment nodes)
+        // collection of an element's child element (excluding text and comment nodes)
+        let elements = []
+        for (let i = 0; i < this.element.children.length; i++) {
+            let element = app.element(this.element.children[i])
+            elements.push(element)
+        }
+        if (index == null) return elements
+        return elements[index < 0 ? index + elements.length : index]
+    }
+    /** @param {number} index @returns {AppElement|AppElement[]} */
+    childNodes(index = null) {
+        // collection of an element's child nodes (including text and comment nodes)
         let elements = []
         for (let i = 0; i < this.element.children.length; i++) {
             let element = app.element(this.element.children[i])
@@ -7051,15 +7010,11 @@ class AppElement {
         let element = this.element.cloneNode(deep)
         return app.element(element)
     }
-    /** @param {AppElement|Element} value @returns {boolean} */
-    contains(value) {
-        return this.element.contains(app.element(value).getElement())
-    }
-    /** @param {boolean} value @returns {boolean} */
-    contentEditable(value = null) {
-        if (value == null) return this.element.contentEditable
-        else this.element.contentEditable = value
-        return this
+    /** @param {AppElement|Element|string} otherNode @returns {boolean} */
+    contains(otherNode) {
+        return this.element.contains(
+            AppElement.toHTMLElement(otherNode)
+        )
     }
     /** @param {string} type @param {{ bubbles: boolean; cancelable: boolean; }} @returns {AppElement} */
     dispatchEvent(type, options = { bubbles: true, cancelable: true }) {
@@ -7082,18 +7037,18 @@ class AppElement {
         let DOMRect = this.element.getBoundingClientRect()
         return key == null ? DOMRect : DOMRect[key]
     }
-    /** @param {string} classNames @returns {AppElement[]} */
-    getElementsByClassName(classNames) {
+    /** @param {string} names @returns {AppElement[]} */
+    getElementsByClassName(names) {
         let elements = []
-        for (let element of this.element.getElementsByClassName(classNames)) {
+        for (let element of this.element.getElementsByClassName(names)) {
             elements.append(app.element(element))
         }
         return elements
     }
-    /** @param {string} qualifedName @returns {AppElement[]} */
-    getElementsByTagName(qualifedName) {
+    /** @param {string} tagName @returns {AppElement[]} */
+    getElementsByTagName(tagName) {
         let elements = []
-        for (let element of this.element.getElementsByTagName(qualifedName)) {
+        for (let element of this.element.getElementsByTagName(tagName)) {
             elements.append(app.element(element))
         }
         return elements
@@ -7106,54 +7061,15 @@ class AppElement {
         }
         return elements
     }
-    /** @returns {number} */
-    getNodeType() {
-        // 1=Element, 2=Attr, 3=Text, 4=CDATASection, 5=EntityReference, 6=Entity, 7=ProcessingInstruction, 8=Comment, 9=Document, 10=DocumentType, 11=DocumentFragment, 12=Notation
-        return this.element.nodeType
-    }
-    /** @param {string} characterCase @returns {string} */
-    getTagName(characterCase = 'upper') {
-        if (characterCase == 'upper') {
-            return this.element.tagName.upper()
-        }
-        else if (characterCase == 'lower') {
-            return this.element.tagName.lower()
-        }
-        return this.element.tagName
-    }
-    /** @param {string} key @returns {boolean} */
-    hasAttribute(key) {
-        return this.element.hasAttribute(key)
+    /** @param {string} name @returns {boolean} */
+    hasAttribute(name) {
+        return this.element.hasAttribute(name)
     }
     /** @returns {boolean} */
     hasChildNodes() {
         return this.element.hasChildNodes()
     }
-    /** @param {...string|...number} values @returns {AppElement|string} */
-    id(...values) {
-        if (values.length == 0) {
-            return this.element.id
-        }
-        else {
-            if (util.istype(values[0], 'number')) {
-                let strings = this.element.id.split('.')
-                return strings[values[0] < 0 ? values[0] + strings.length : values[0]]
-            }
-            if (util.istype(values, 'array-string')) {
-                this.element.id = values.join(AppElement.IDENTIFIER_DELIMITER)
-            }
-        }
-        // if (value == null) return this.element.id
-        // this.element.id = value
-        return this
-    }
-    /** @param {string} value @param {boolean} append @returns {AppElement|string} */
-    innerHTML(value = null, append = false) {
-        if (value == null) return this.element.innerHTML
-        else this.element.innerHTML = append ? this.element.innerHTML + value : value
-        return this
-    }
-    /** @param {string} [position="afterbegin"|"afterend"|"beforebegin"|"beforeend"] @param {AppElement|Element|string} value @returns {AppElement} */
+    /** @param {string} position @param {AppElement|Element|string} value @returns {AppElement} */
     insertAdjacent(position, value) {
         if (util.istype(value, 'element')) {
             value = app.element(value)
@@ -7180,28 +7096,11 @@ class AppElement {
         this.element.insertBefore(newElement.getElement(), existingElement.getElement())
         return this
     }
-    /** @returns {boolean} */
-    isContentEditable() {
-        return this.element.isContentEditable
-    }
-    /** @param {AppElement|Element|string} value @returns {boolean} */
-    isSameNode(value) {
-        let element = app.element(value).getElement()
-        return this.element.isSameNode(element)
-    }
-    /** @param {string} value @returns {AppElement|string} */
-    outerHTML(value = null) {
-        if (value == null) return this.element.outerHTML
-        else this.element.outerHTML = value
-        return this
-    }
-    /** @param {number} count @returns {AppElement} */
-    parentElement(count = 1) {
-        let element = this.element
-        for (let i = 0; i < count; i++) {
-            element = element.parentElement
-        }
-        return app.element(element)
+    /** @param {AppElement|Element|string} otherNode @returns {boolean} */
+    isSameNode(otherNode) {
+        return this.element.isSameNode(
+            AppElement.toHTMLElement(otherNode)
+        )
     }
     /** @returns {void} */
     remove() {
@@ -7213,135 +7112,69 @@ class AppElement {
         this.element.removeAttribute(key)
         return this
     }
-    /** @param {...AppElement|Element|string} values @returns {AppElement} */
-    removeChild(...values) {
-        for (let value of values) {
-            let element = app.element(value).getElement()
-            this.element.removeChild(element)
+    /** @param {...AppElement|Element|string} elements @returns {AppElement} */
+    removeChild(...elements) {
+        for (let element of elements) {
+            this.element.removeChild(
+                AppElement.toHTMLElement(element)
+            )
         }
         return this
     }
-    /** @param {string} type @param {function(Event): void} callback @param {boolean|{capture: boolean}} options @returns {AppElement} */
-    removeEventListener(type, callback, options) {
-        this.element.removeEventListener(type, callback, options)
+    /** @param {string} type @param {(event: Event) => void} listener @param {boolean|{capture: boolean}} options @returns {AppElement} */
+    removeEventListener(type, listener, options) {
+        this.element.removeEventListener(type, listener, options)
         return this
     }
     /** @param {AppElement|Element|string} newChild @param {AppElement|Element|string} oldChild @returns {AppElement} */
     replaceChild(newChild, oldChild) {
-        newChild = app.element(newChild).getElement()
-        oldChild = app.element(oldChild).getElement()
-        this.element.replaceChild(newChild, oldChild)
+        this.element.replaceChild(
+            AppElement.toHTMLElement(newChild),
+            AppElement.toHTMLElement(oldChild)
+        )
         return this
     }
-    /** @param {number} x @param {number} y @param {string} @returns {void} */
-    scroll(x, y, behavior = 'smooth') {
-        if (excludes(behavior, 'auto|instant|smooth')) return console.error(`ValueError: variable-name=behavior variable-value=${behavior}`)
+    /** @param {number} xCoord @param {number} yCoord @param {string} behavior @returns {AppElement} */
+    scroll(xCoord, yCoord, behavior = 'smooth') {
         this.element.scroll({
-            'top': y,
-            'left': x,
+            'top': yCoord,
+            'left': xCoord,
             'behavior': behavior
         })
+        return this
     }
-    /** @param {number} x @param {number} y @param {string} @returns {void} */
-    scrollBy(x, y, behavior = 'smooth') {
-        if (excludes(behavior, 'auto|instant|smooth')) return console.error(`ValueError: variable-name=behavior variable-value=${behavior}`)
+    /** @param {number} xCoord @param {number} yCoord @param {string} behavior @returns {AppElement} */
+    scrollBy(xCoord, yCoord, behavior = 'smooth') {
         this.element.scrollBy({
-            'top': y,
-            'left': x,
+            'top': yCoord,
+            'left': xCoord,
             'behavior': behavior
         })
+        return this
     }
     /** @param {boolean|Object} options @returns {AppElement} */
     scrollIntoView(options = { 'behavior': 'smooth', 'block': 'start', 'inline': 'nearest' }) {
-        if (util.istype(options, 'object')) {
-            if ('behavior' in options) {
-                let behavior = options['behavior']
-                if (excludes(behavior, 'auto|instant|smooth')) return console.error(`ValueError: variable-name=options.behavior variable-value=${behavior}`)
-            }
-            if ('block' in options) {
-                let block = options['block']
-                if (excludes(block, 'center|end|start')) return console.error(`ValueError: variable-name=options.block variable-value=${block}`)
-            }
-            if ('inline' in options) {
-                let inline = options['inline']
-                if (excludes(inline, 'center|end|nearest|start')) return console.error(`ValueError: variable-name=options.inline variable-value=${inline}`)
-            }
-        }
         this.element.scrollIntoView(options)
         return this
     }
-    /** @param {number} x @param {number} y @param {string} behavior @returns {void} */
-    scrollTo(x, y, behavior = 'smooth') {
-        if (excludes(behavior, 'auto|instant|smooth')) return console.error(`ValueError: variable-name=behavior variable-value=${behavior}`)
+    /** @param {number} xCoord @param {number} yCoord @param {string} behavior @returns {void} */
+    scrollTo(xCoord, yCoord, behavior = 'smooth') {
         this.element.scrollTo({
-            'top': y,
-            'left': x,
+            'top': yCoord,
+            'left': xCoord,
             'behavior': behavior,
         })
     }
-    /** @returns {void} */
-    select() {
-        this.element.focus()
-        this.element.select()
-    }
-    /** @param {string} key @param {string} value @returns {AppElement} */
-    setAttribute(key, value = '') {
-        this.element.setAttribute(key, value)
+    /** @param {string} name @param {string} value @returns {AppElement} */
+    setAttribute(name, value = '') {
+        this.element.setAttribute(name, value)
         return this
     }
-    /** @param {any} value @returns {*|AppElement} */
-    something(value = null) {
-        if (value == null) return this.element.something
-        else this.element.something = value
-        return this
-    }
-    /** @param {...string} values @returns {AppElement|string} */
-    src(...values) {
-        if (values.length == 0) return this.element.src
-        else this.element.src = values.join('/')
-        return this
-    }
-    /** @param {...string} values @returns {AppElement|string} */
-    _style(...values) {
-        let set = (key, value) => {
-            if (AppElement.propertiesOfPixelValue.includes(key)) {
-                let append = true
-                if (key == 'height' || key == 'width') {
-                    append = !(value == 'auto' || value == 'inherit' || value == 'initial' || value == 'fit-content' || value == 'max-content' || value == 'min-content' || value == 'revert' || value == 'unset')
-                }
-                append = append && !(value.toString().includes('px') || value.toString().includes('%'))
-                value += append ? 'px' : ''
-            }
-            this.element.style[key] = value
-        }
-        if (values.length == 1) {
-            if (values[0].includes(':')) {
-                let object = util.css_decode(values[0])
-                for (let key in object) {
-                    set(key, object[key])
-                }
-            } else {
-                return this.element.style[values[0]]
-            }
-        } else {
-            for (let i = 0; i < values.length; i += 2) {
-                set(values[i], values[i + 1])
-            }
-        }
-        return this
-    }
-    /** @param {string} value @param {boolean} append @returns {AppElement|string} */
-    value(value, append = false) {
-        if (value == null) return this.element.value
-        else this.element.value = append ? this.element.value + value : value
-        return this
-    }
-    
 
 
 
-
-    /** @param {string} type @param {function(Event, AppElement)} listener @param {boolean|{capture: boolean, once: boolean, passive: boolean, signal: AbortSignal}} options @returns {AppElement} */
+    // Methods Custom
+    /** @param {string} type @param {(event: Event, element: AppElement) => void} listener @param {boolean|{capture: boolean, once: boolean, passive: boolean, signal: AbortSignal}} options @returns {AppElement} */
     addListener(type, listener, options = false) {
         if (type == 'lgclick') {
             this.element.addEventListener('touchstart', (event) => {
@@ -7384,12 +7217,12 @@ class AppElement {
         }, options)
         return this
     }
-    /** @param {DataBinding} binding @param {function(AppElement, DataBinding): void} @returns {AppElement} */
-    addDataBindingListener(binding, onchange = (binding, element) => { }) {
+    /** @param {DataBinding} binding @param {(binding: DataBinding, element: AppElement) => void} onchange @returns {AppElement} */
+    addDataBindingListener(binding, onchange) {
         binding.setOnChangeListener((newValue, oldValue) => onchange(binding, this))
         return this
     }
-    /** @param {object} options @param {function(AppElement, MutationObserver, MutationRecord[]): void} listener  @returns {AppElement} */
+    /** @param {object} options @param {(element: AppElement, observer: MutationObserver, list: MutationRecord[]) => void} listener  @returns {AppElement} */
     addMutationObserver(options = { childList: true }, listener) {
         // https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
         let observer = new MutationObserver((mutationList, observer) => {
@@ -7430,24 +7263,48 @@ class AppElement {
     /** @param {string} value @returns {AppElement} */
     class(value) {
         // TODO: more functionality
-        for (let _class_ of array.fromstring(value)) {
+        for (let _class_ of value.strip(' ,').split(',')) {
             this.element.classList.add(_class_)
         }
         return this
     }
     /** @returns {AppElement} */
     clear() {
-        if (this.isTagName('div')) {
-            this.innerHTML('')
-        }
-        if (this.isTagName('input,select')) {
+        if (this.isTagName('button,input,li,meter,option,param,progress,select,textarea')) {
             this.value('')
+        } else {
+            this.innerHTML('')
         }
         return this
     }
     /** @returns {AppElement} */
     copy() {
         return new AppElement(this.element)
+    }
+    /** @param {string} key @returns {AppElement} */
+    delAttribute(key) {
+        this.element.removeAttribute(key)
+        return this
+    }
+    /** @param {string} keys @returns {AppElement} */
+    delAttributes(keys) {
+        for (let attributeKey of keys.strip(' ,').split(',')) {
+            attributeKey = attributeKey.strip(' ')
+            this.removeAttribute(attributeKey)
+        }
+        return this
+    }
+    /** @param {...string} value @returns {AppElement} */
+    delClass(...values) {
+        for (let value of values) {
+            this.element.classList.remove(value)
+        }
+        return this
+    }
+    /** @param {string} type @param {() => void} listener @param {boolean|{capture: boolean}} options @returns {AppElement} */
+    delListener(type, listener, options) {
+        this.element.removeEventListener(type, listener, options)
+        return this
     }
     /** @returns {void} */
     disableContextMenu() {
@@ -7463,20 +7320,20 @@ class AppElement {
     }
     /** @returns {boolean} */
     equals(value) {
-        return this.element == AppElement.convertToElement(value)
+        return this.element == AppElement.toHTMLElement(value)
     }
-    /** @param {string|string[]} value @returns {{ string: string|null }} */
-    getAttributes(value) {
+    /** @param {string|string[]} keys @returns {{string:string|null}} */
+    getAttributes(keys) {
         let attributes = new object()
-        if (util.istype(value, 'string')) {
-            for (let attributeKey of value.strip(' ,').split(',')) {
+        if (util.istype(keys, 'string')) {
+            for (let attributeKey of keys.strip(' ,').split(',')) {
                 attributeKey = attributeKey.strip(' ')
                 let attributeValue = this.getAttribute(attributeKey)
                 attributes.set(attributeKey, attributeValue)
             }
         }
-        if (util.istype(value, 'array-string')) {
-            for (let attributeKey of value) {
+        if (util.istype(keys, 'array-string')) {
+            for (let attributeKey of keys) {
                 let attributeValue = this.getAttribute(attributeKey)
                 attributes.set(attributeKey, attributeValue)
             }
@@ -7498,11 +7355,11 @@ class AppElement {
         return found.length == 0 ? null : found[0]
     }
     /** @param {string} attributeKey @param {string} attributeValue @returns {AppElement[]} */
-    getElementsByAttribute(attributeKey, attributeValue) {
+    getElementsByAttribute(attributeKey, attributeValue = '') {
         let found = []
         function find(element, found = []) {
             for (let child of element.children) {
-                if (child.getAttribute(attributeKey) == attributeValue) {
+                if (child.hasAttribute(attributeKey) && child.getAttribute(attributeKey) == attributeValue) {
                     found.append(app.element(child))
                 }
                 find(child, found)
@@ -7650,6 +7507,10 @@ class AppElement {
         }
         return true
     }
+    /** @param {string} token @returns {boolean} */
+    hasClass(token) {
+        return this.element.classList.contains(token)
+    }
     /** @returns {AppElement} */
     hide() {
         let styles = getComputedStyle(this.element)
@@ -7701,6 +7562,10 @@ class AppElement {
             element = element.parentElement
         }
         return false
+    }
+    /** @param {string} token @returns {boolean} */
+    isClass(token) {
+        return this.element.classList.contains(token)
     }
     /** @param {AppElement|Element} element @param {boolean} includeChildren  @returns {boolean} */
     isEqualTo(element, includeChildren = true) {
@@ -7789,13 +7654,9 @@ class AppElement {
         let DOMRect = this.getBoundingClientRect()
         return key == null ? DOMRect : DOMRect[key]
     }
-    /** @param {string} keys @returns {AppElement} */
+    /** @deprecated @param {string} keys @returns {AppElement} */
     removeAttributes(keys) {
-        for (let attributeKey of keys.strip(' ,').split(',')) {
-            attributeKey = attributeKey.strip(' ')
-            this.removeAttribute(attributeKey)
-        }
-        return this
+        return this.delAttributes(keys)
     }
     /** @param {number} index @returns {AppElement} */
     removeChildAt(index) {
@@ -7811,17 +7672,13 @@ class AppElement {
         }
         return this
     }
-    /** @param {...string} value @returns {AppElement} */
+    /** @deprecated @param {...string} value @returns {AppElement} */
     removeClass(...values) {
-        for (let value of values) {
-            this.element.classList.remove(value)
-        }
-        return this
+        return this.delClass(...values)
     }
-    /** @param {string} type @param {function(Event): void} callback @param {boolean|{capture: boolean}} options @returns {AppElement} */
-    removeListener(type, callback, options) {
-        this.element.removeEventListener(type, callback, options)
-        return this
+    /** @deprecated @param {string} type @param {() => void} listener @param {boolean|{capture: boolean}} options @returns {AppElement} */
+    removeListener(type, listener, options) {
+        return this.delListener(type, listener, options)
     }
     /** @param {number} index @param {AppElement|Element|string} newChild @returns {AppElement} */
     replaceChildAt(index, newChild) {
@@ -7851,18 +7708,26 @@ class AppElement {
         this.element.scrollTop = 0
         return this
     }
-    /** @param {function(AppElement): void} callback @returns {AppElement} */
-    self(callback) {
-        callback(this)
-        return this
+    /** @returns {void} */
+    select() {
+        this.element.focus()
+        this.element.select()
+    }
+    /** @returns {AppElement} */
+    sendToBack() {
+        return this.style('z-index', 0)
+    }
+    /** @returns {AppElement} */
+    sendToFront() {
+        return this.style('z-index', 100)
     }
     /** @param {string|{string:string}} value @returns {AppElement} */
     setAttributes(value) {
         if (util.istype(value, 'string')) {
             for (let entry of value.strip(' ;').split(';')) {
                 let attribute = entry.split(':')
-                let attributeKey = attribute.getFirst().strip(' ')
-                let attributeValue = attribute.getLast().strip(' ')
+                let attributeKey = attribute.getfirst().strip(' ')
+                let attributeValue = attribute.getlast().strip(' ')
                 this.setAttribute(attributeKey, attributeValue)
             }
         }
@@ -7902,11 +7767,11 @@ class AppElement {
         function convertContents(content, index, variable = 0, oldContent = '$', newContent = '') {
             if (content.slice(index, index + 'color-accent'.length) == 'color-accent') {
                 oldContent += 'color-accent'
-                newContent = app.configuration('color-accent')
+                newContent = app.getGlobalVariable("color-accent")
             }
             if (content.slice(index, index + 'color-header'.length) == 'color-header') {
                 oldContent += 'color-header'
-                newContent = app.configuration('color-header')
+                newContent = app.getGlobalVariable("color-header")
             }
             if (content[index] == '0') {
                 oldContent += content[index]
@@ -8053,13 +7918,17 @@ class AppElement {
         }
         return this
     }
+    /** @param {boolean} disabled @returns {void} */
+    setPropertyDisabled(disabled) {
+        this.setProperty('disabled', disabled)
+    }
     /** @param {string|{string:string}} value @returns {AppElement} */
     setProperties(value) {
         if (util.istype(value, 'string')) {
             for (let entry of value.strip(' ;').split(';')) {
                 let property = entry.split(':')
-                let propertyKey = property.getFirst().strip(' ')
-                let propertyValue = property.getLast().strip(' ')
+                let propertyKey = property.getfirst().strip(' ')
+                let propertyValue = property.getlast().strip(' ')
                 this.setProperty(propertyKey, propertyValue)
             }
         }
@@ -8080,8 +7949,8 @@ class AppElement {
         if (util.istype(value, 'string')) {
             for (let entry of value.strip(' ;').split(';')) {
                 let property = entry.split(':')
-                let propertyKey = property.getFirst().strip(' ')
-                let propertyValue = property.getLast().strip(' ')
+                let propertyKey = property.getfirst().strip(' ')
+                let propertyValue = property.getlast().strip(' ')
                 this.setStyleProperty(propertyKey, propertyValue)
             }
         }
@@ -8129,39 +7998,16 @@ class AppElement {
     }
     /** @param {string} value @param {boolean} append @returns {AppElement|string} */
     text(value = null, append = false) {
-        if (this.isTagName('input,select')) {
+        if (this.isTagName('input,li,meter,option,param,progress,select,textarea')) {
             return this.value(value, append)
         } else {
             return this.innerHTML(value, append)
         }
     }
-    /** @param {function(AppElement): void} callback @param {number} milliseconds @returns {AppElement} */
-    timeout(callback, milliseconds) {
-        setTimeout(() => callback(this), milliseconds)
-        return this
-    }
-    /** @returns {AppElement} */
-    toBack() {
-        return this.style('z-index', 0)
-    }
-    /** @returns {AppElement} */
-    toFront() {
-        return this.style('z-index', 100)
-    }
     /** @param {string} value @returns {AppElement|string} */
     view(value = null) {
         if (value == null) return this.element.getAttribute('view')
         else this.element.setAttribute('view', value)
-        return this
-    }
-    /** @param {function(AppElement): void} callback @param {number} milliseconds @returns {AppElement} */
-    wait(callback, milliseconds) {
-        setTimeout(() => callback(this), milliseconds)
-        return this
-    }
-    /** @param {function(AppElement): void} callback @returns {AppElement} */
-    with(callback) {
-        callback(this)
         return this
     }
     /** @param {string} key  @param {string} value @returns {string} */
@@ -8188,21 +8034,21 @@ class AppElement {
 class ApplicationProgrammingInterface {
     constructor() {
         // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
-        /** @type {function(ProgressEvent): void} */
+        /** @type {(event: ProgressEvent) => void} */
         this.onAbortListener = ApplicationProgrammingInterface.onAbortListener
-        /** @type {function(ProgressEvent): void} */
+        /** @type {(event: ProgressEvent) => void} */
         this.onErrorListener = ApplicationProgrammingInterface.onErrorListener
-        /** @type {function(ProgressEvent): void} */
+        /** @type {(event: ProgressEvent) => void} */
         this.onLoadListener = ApplicationProgrammingInterface.onLoadListener
-        /** @type {function(ProgressEvent): void} */
+        /** @type {(event: ProgressEvent) => void} */
         this.onLoadEndListener = ApplicationProgrammingInterface.onLoadEndListener
-        /** @type {function(ProgressEvent): void} */
+        /** @type {(event: ProgressEvent) => void} */
         this.onLoadStartListener = ApplicationProgrammingInterface.onLoadStartListener
-        /** @type {function(ProgressEvent): void} */
+        /** @type {(event: ProgressEvent) => void} */
         this.onProgressListener = ApplicationProgrammingInterface.onProgressListener
-        /** @type {function(Event): void} */
+        /** @type {(event: Event) => void} */
         this.onReadyStateChangeListener = ApplicationProgrammingInterface.onReadyStateChangeListener
-        /** @type {function(any): void} */
+        /** @type {(event: any) => void} */
         this.onResponseListener = ApplicationProgrammingInterface.onResponseListener
         /** @type {XMLHttpRequest} */
         this.request = null
@@ -8277,21 +8123,21 @@ class ApplicationProgrammingInterface {
     /** @readonly @type {string} */
     static RESPONSE_TYPE_TEXT = "text"
 
-    /** @type {function(ProgressEvent): void} */
+    /** @type {(event: ProgressEvent) => void} */
     static onAbortListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
+    /** @type {(event: ProgressEvent) => void} */
     static onErrorListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
+    /** @type {(event: ProgressEvent) => void} */
     static onLoadListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
+    /** @type {(event: ProgressEvent) => void} */
     static onLoadEndListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
+    /** @type {(event: ProgressEvent) => void} */
     static onLoadStartListener = (event) => { }
-    /** @type {function(ProgressEvent): void} */
+    /** @type {(event: ProgressEvent) => void} */
     static onProgressListener = (event) => { }
-    /** @type {function(Event): void} */
+    /** @type {(event: Event) => void} */
     static onReadyStateChangeListener = (event) => { }
-    /** @type {function(any): void} */
+    /** @type {(event: any) => void} */
     static onResponseListener = (data) => { }
 
     /** @returns {void} */
@@ -8353,42 +8199,42 @@ class ApplicationProgrammingInterface {
         this.requestMimeType = value
         return this
     }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    /** @param {Listener} listener @returns {ApplicationProgrammingInterface} */
     onabort(listener) {
         this.onAbortListener = listener
         return this
     }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    /** @param {Listener} listener @returns {ApplicationProgrammingInterface} */
     onerror(listener) {
         this.onErrorListener = listener
         return this
     }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    /** @param {Listener} listener @returns {ApplicationProgrammingInterface} */
     onload(listener) {
         this.onLoadListener = listener
         return this
     }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    /** @param {Listener} listener @returns {ApplicationProgrammingInterface} */
     onloadend(listener) {
         this.onLoadEndListener = listener
         return this
     }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    /** @param {Listener} listener @returns {ApplicationProgrammingInterface} */
     onloadstart(listener) {
         this.onLoadStartListener = listener
         return this
     }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    /** @param {Listener} listener @returns {ApplicationProgrammingInterface} */
     onprogress(listener) {
         this.onProgressListener = listener
         return this
     }
-    /** @param {function(ProgressEvent): void} listener @returns {ApplicationProgrammingInterface} */
+    /** @param {Listener} listener @returns {ApplicationProgrammingInterface} */
     onreadystatechange(listener) {
         this.onReadyStateChangeListener = listener
         return this
     }
-    /** @param {function(any): void} listener @returns {ApplicationProgrammingInterface} */
+    /** @param {Listener} listener @returns {ApplicationProgrammingInterface} */
     onresponse(listener) {
         this.onResponseListener = listener
         return this
@@ -8499,35 +8345,35 @@ class ApplicationProgrammingInterface {
         this.requestRoute = route[0] == '/' ? route : `/${route}`
         return this
     }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    /** @param {Listener} listener @returns {void} */
     setOnAbortListener(listener) {
         this.onAbortListener = listener
     }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    /** @param {Listener} listener @returns {void} */
     setOnErrorListener(listener) {
         this.onErrorListener = listener
     }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    /** @param {Listener} listener @returns {void} */
     setOnLoadListener(listener) {
         this.onLoadListener = listener
     }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    /** @param {Listener} listener @returns {void} */
     setOnLoadEndListener(listener) {
         this.onLoadEndListener = listener
     }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    /** @param {Listener} listener @returns {void} */
     setOnLoadStartListener(listener) {
         this.onLoadStartListener = listener
     }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    /** @param {Listener} listener @returns {void} */
     setOnProgressListener(listener) {
         this.onProgressListener = listener
     }
-    /** @param {function(ProgressEvent): void} listener @returns {void} */
+    /** @param {Listener} listener @returns {void} */
     setOnReadyStateChangeListener(listener) {
         this.onReadyStateChangeListener = listener
     }
-    /** @param {function(any): void} listener @returns {void} */
+    /** @param {Listener} listener @returns {void} */
     setOnResponseListener(listener) {
         this.onResponseListener = listener
     }
@@ -8630,19 +8476,18 @@ class DataBinding {
     One-way-to-source: binding is the reverse of one-way binding. Changes to the data consumer automatically update the data provider but not the other way around.
     One-time: binding is where changes to the data provider do not automatically update the data consumer. This approach is useful when only a snapshot of the data is needed, and the data is static.
     */
-    /** @param {any} value @param {function(any, any): void} listener @returns {void} */
+    /** @param {any} value @param {(newvalue: any, oldvalue: any) => void} listener @returns {void} */
     constructor(value, listener = null) {
         /** @type {any} */
         this.value_ = value
-        /** @type {onChangeListener[]} */
+        /** @type {Listener[]} */
         this.onChangeListeners = []
-        if (listener) {
-            this.setOnChangeListener(listener)
-        }
+        // 
+        this.setOnChangeListener(listener)
     }
 
-    /** @typedef {function(any, any): void} onChangeListener */
-    static onChangeListener = (newValue, oldValue) => { }
+    /** @type {(newvalue: any, oldvalue: any) => void} */
+    static onChangeListener = (newvalue, oldvalue) => { }
 
     /** @param {...any} values @returns {any} */
     append(...values) {
@@ -8666,14 +8511,15 @@ class DataBinding {
     }
     /** @param {...any} values @returns {any} */
     remove(...values) {
-        return this.#onSet(() => this.value_.remove(...values))
+        return this.#onSet(() => this.value_.removevalues(...values))
     }
     /** @param {any} value @returns {any} */
     set(value) {
         return this.#onSet(() => this.value_ = value)
     }
-    /** @param {onChangeListener} listener  */
+    /** @param {Listener} listener @returns {void} */
     setOnChangeListener(listener) {
+        if (listener === null || listener === undefined) return
         this.onChangeListeners.push(listener)
     }
     /** @param {any} condition @param {any} value @returns {boolean} */
@@ -8696,6 +8542,7 @@ class DataBinding {
     setLT(condition, value) {
         return this.#onCondition(this.value_ > condition, value)
     }
+    /** @param {...number} values @returns {any} */
     slice(...values) {
         return this.#onSet(() => this.value_ = this.value_.slice(...values))
     }
@@ -8719,199 +8566,18 @@ class DataBinding {
         }
         return results
     }
-    /** @param {function(): void} assignment @returns {any} */
+    /** @param {()} assignment @returns {any} */
     #onSet(assignment) {
-        let oldValue = util.clone(this.value_)
+        let oldvalue = util.clone(this.value_)
         assignment()
-        let newValue = this.value_
+        let newvalue = this.value_
         for (let listener of this.onChangeListeners) {
-            listener(newValue, oldValue)
+            listener(newvalue, oldvalue)
         }
-        return newValue
+        return newvalue
     }
 }
-class Timestamp {
-    constructor() {
 
-    }
-
-    static MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    static DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-    /** @param {Date|number|string} date1 @param {Date|number|string} date2 @returns {boolean} */
-    static isSameDay(date1, date2 = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
-        date1 = util.timestamp(date1, util.TIMESTAMP_OPTION_OBJECT)
-        date2 = util.timestamp(date2, util.TIMESTAMP_OPTION_OBJECT)
-        return date1.getFullYear() == date2.getFullYear() && date1.getMonth() == date2.getMonth() && date1.getDate() == date2.getDate()
-    }
-
-    /** @param {Date|number|string} date @returns {string} */
-    static getDate(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
-        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
-        let year = date.getFullYear().toString()
-        let month = (date.getMonth() + 1).toString().rjust(2, '0')
-        let dayOfMonth = date.getDate().toString().rjust(2, '0')
-        return `${year}-${month}-${dayOfMonth}`
-    }
-    /** @param {Date|number|string} date @param {boolean} short @returns {string} */
-    static getDateTime(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT), short = false) {
-        return `${Timestamp.getDate(date)} ${Timestamp.getTime(date, short)}`
-    }
-    /** @param {Date|number|string} date @param {boolean} short @returns {string} */
-    static getDayOfWeek(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT), short = false) {
-        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
-        let dayOfWeek = Timestamp.DAYS_OF_WEEK[date.getDay()]
-        if (short) {
-            return dayOfWeek.slice(0, 3)
-        } else {
-            return dayOfWeek
-        }
-    }
-    /** @param {Date|number|string} timestamp1 @param {Date|number|string} timestamp2 @param {boolean} short @returns {string} */
-    static getDifference(timestamp1, timestamp2 = util.timestamp(util.TIMESTAMP_OPTION_SECONDS), short = true) {
-        timestamp1 = util.timestamp(timestamp1, util.TIMESTAMP_OPTION_SECONDS)
-        timestamp2 = util.timestamp(timestamp2, util.TIMESTAMP_OPTION_SECONDS)
-        let difference = Math.abs(timestamp2 - timestamp1)
-        if (difference == 0) return 'Now'
-        if (difference <= 1) return short ? '1sec': '1 second'
-        if (difference <= 2) return short ? '2sec' : '2 seconds'
-        if (difference <= 3) return short ? '3sec' : '3 seconds'
-        if (difference <= 4) return short ? '4sec' : '4 seconds'
-        if (difference <= 5) return short ? '5sec' : '5 seconds'
-        if (difference <= 10) return short ? '10sec' : '10 seconds'
-        if (difference <= 20) return short ? '20sec' : '20 seconds'
-        if (difference <= 30) return short ? '30sec' : '30 seconds'
-        if (difference <= 60) return short ? '1min' : '1 minute'
-        if (difference <= 120) return short ? '2min' : '2 minutes'
-        if (difference <= 180) return short ? '3min' : '3 minutes'
-        if (difference <= 240) return short ? '4min' : '4 minutes'
-        if (difference <= 300) return short ? '5min' : '5 minutes'
-        if (difference <= 600) return short ? '10min' : '10 minutes'
-        if (difference <= 1200) return short ? '20min' : '20 minutes'
-        if (difference <= 1800) return short ? '30min' : '30 minutes'
-        if (difference <= 3600) return short ? '1h' : '1 hour'
-        if (difference <= 7200) return short ? '2h' : '2 hours'
-        if (difference <= 10800) return short ? '3h' : '3 hours'
-        if (difference <= 14400) return short ? '4h' : '4 hours'
-        if (difference <= 18000) return short ? '5h' : '5 hours'
-        if (difference <= 21600) return short ? '6h' : '6 hours'
-        if (difference <= 43200) return short ? '12h' : '12 hours'
-        if (difference <= 86400) return short ? '1d' : '1 day'
-        if (difference <= 172800) return short ? '2d' : '2 days'
-        if (difference <= 259200) return short ? '3d' : '3 days'
-        if (difference <= 345600) return short ? '4d' : '4 days'
-        if (difference <= 432000) return short ? '5d' : '5 days'
-        if (difference <= 864000) return short ? '10d' : '10 days'
-        if (difference <= 1728000) return short ? '20d' : '20 days'
-        if (difference <= 2592000) return short ? '1mo' : '1 month' // 30 days
-        if (difference <= 5184000) return short ? '2mo' : '2 months'
-        if (difference <= 7776000) return short ? '3mo' : '3 months'
-        if (difference <= 10368000) return short ? '4mo' : '4 months'
-        if (difference <= 12960000) return short ? '5mo' : '5 months'
-        if (difference <= 15552000) return short ? '6mo' : '6 months'
-        if (difference <= 31536000) return short ? '1yr' : '1 year'
-        if (difference <= 63072000) return short ? '2yr' : '2 years'
-        if (difference <= 94608000) return short ? '3yr' : '3 years'
-        if (difference <= 126144000) return short ? '4yr' : '4 years'
-        if (difference <= 157680000) return short ? '5yr' : '5 years'
-        if (difference <= 315360000) return short ? '10yr' : '10 years'
-    }
-    /** @param {Date|number|string} date @returns {string} */
-    static getHours(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
-        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
-        return date.getHours().toString().rjust(2, '0')
-    }
-    /** @param {Date|number|string} date @returns {string} */
-    static getMinutes(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
-        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
-        return date.getMinutes().toString().rjust(2, '0')
-    }
-    /** @param {Date|number|string} date @param {boolean} short @returns {string} */
-    static getMonth(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT), short = false) {
-        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
-        let month = Timestamp.MONTHS[date.getMonth()]
-        if (short) {
-            return month.slice(0, 3)
-        } else {
-            return month
-        }
-    }
-    /** @param {Date|number|string} date @returns {string} */
-    static getSeconds(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
-        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
-        return date.getSeconds().toString().rjust(2, '0')
-    }
-    /** @param {Date|number|string} date @param {boolean} short @returns {string} */
-    static getTime(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT), short = false) {
-        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
-        let hours = date.getHours().toString().rjust(2, '0')
-        let minutes = date.getMinutes().toString().rjust(2, '0')
-        let seconds = date.getSeconds().toString().rjust(2, '0')
-        let milliseconds = date.getMilliseconds().toString().ljust(3, '0')
-        if (short) {
-            return `${hours}:${minutes}:${seconds}`
-        } else {
-            return `${hours}:${minutes}:${seconds}.${milliseconds}`
-        }
-    }
-    /** @param {Date|number|string} date @returns {string} */
-    static getYear(date = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
-        date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
-        return date.getFullYear().toString()
-    }
-}
-class Viewer {
-    constructor() {
-        /** @type {string} */
-        this.classname = null
-        /** @type {array} */
-        this.views = new array()
-        /** @type {AppElement} */
-        this.viewSelector = null
-        /** @type {AppElement} */
-        this.title = null
-        /** @type {number} */
-        this.previousIndex = null
-        this.onLoad()
-    }
-
-    /** @param {Event} event @returns {void} */
-    onLoad(event) {
-        app.directory('images', 'file:///c:/projects/.repository/images/')
-        this.viewSelector = app.element('viewSelector').style('position: relative; left: 50%; padding: 10px 0; transform: translateX(-50%);')
-        this.title = app.element('title').style('font-size: 150%; padding: 10px 0; text-align: center; width: 100%;')
-    }
-    /**  @param {InputEvent} event @param {AppElement} element @returns {void} */
-    onInput(event, element) {
-        if (element.getIdentifier() == this.viewSelector.getIdentifier()) {
-            let currentIndex = this.viewSelector.value()
-            if (this.previousIndex) {
-                app.body().removeChild(this.views[this.previousIndex].getView())
-            }
-            app.body().appendChild(this.views[currentIndex].getView())
-            this.previousIndex = currentIndex
-        }
-    }
-    /** @param {AppElement} view @returns {void} */
-    addView(view) {
-        if (!this.classname) {
-            this.classname = view.constructor.name
-            this.title.text(this.classname)
-            window.document.title = this.classname
-        }
-        this.views.append(view)
-        let size = this.views.size()
-        this.viewSelector.innerHTML(`<option value="${size-1}">${this.classname}.${size}</option>`, true)
-        if (size == 1) {
-            this.viewSelector.value(size - 1).dispatchEvent('input')
-        }
-        view.setIdentifier(`${this.classname.lower()}${size}`)
-    }
-    /** @param {number} index @returns {void} */
-    setView(index) {
-        this.viewSelector.value(index).dispatchEvent('input')
-    }
-}
 //__________________________________________________________________________________________________________________________________________________//
 class View {
     /** @constructor */
@@ -8922,9 +8588,10 @@ class View {
         this.tag = ''
     }
 
-    /** @type {function(Event, AppElement): void} */
+    /** @type {(event: Event, element: AppElement) => void} */
     static onEventListenerInterface = (event, element) => { }
-    /** @typedef {function(View): null} Listener */
+    
+    /** @type {Listener} */
     static onListener = (...args) => { }
 
     /** @param {AppElement} element @returns {number[]} */
@@ -8954,14 +8621,9 @@ class View {
     getElementByIdentifier(identifier) {
         return this.view.getElementByIdentifier(identifier)
     }
-    /** @returns {string} */
+    /** @deprecated @returns {string} */
     getId(index) {
-        if (index) {
-            return this.view.id(index)
-        }
-        else {
-            return this.view.id()
-        }
+        return this.view.getIdentifier(index)
     }
     /** @param {number} index @returns {string} */
     getIdentifier(index = null) {
@@ -8985,7 +8647,7 @@ class View {
     }
     /** @returns {boolean} */
     isVisible() {
-        return app.containsElement(this.view.getIdentifier()) && this.view.isVisible()
+        return app.body().contains(this.view) && this.view.isVisible()
     }
     /** @param {AppElement} element  @returns {boolean} */
     isWithinView(element) {
@@ -9012,15 +8674,43 @@ class View {
             // }
         }
     }
-    /** @param {string} id @returns {void} */
+    /** @param {AppElement} element @param {AppElement|string} value @returns {AppElement} */
+    setBody(element, value) {
+        if (util.istype(value, 'number|string')) {
+            element.innerHTML(value)
+        }
+        if (util.istype(value, 'element')) {
+            element.clear()
+            element.appendChild(...app.element(value).children())
+        }
+        return element
+    }
+    /** @deprecated @param {string} id @returns {void} */
     setId(id) {
-        this.view.id(id)
+        this.view.setIdentifier(id)
     }
     /** @param {string} identifier @returns {void} */
     setIdentifier(identifier) {
         this.view.setIdentifier(identifier)
     }
-    /** @param {AppElement} element @param {AppElement|string} value @param {boolean} wait @returns {AppElement} */
+    /** @param {AppElement} element @param {AppElement|string} value @returns {AppElement} */
+    setElement(element, value) {
+        element.outerHTML(app.element(value).outerHTML())
+        return element
+    }
+    /** @param {AppElement} element @param {AppElement|string} name @returns {AppElement} */
+    setIcon(element, name) {
+        element.src(app.getIcon(name))
+        return element
+    }
+    /** @param {AppElement} element @param {AppElement|string} name @returns {AppElement} */
+    setIcon(element, name) {
+        let path = `${app.getGlobalVariable("repository")}/icons/${app.getAppeatanceMode()}`
+        let filename = name.removesuffix('.png')
+        element.src(`${path}/${filename}.png`)
+        return element
+    }
+    /** @deprecated @param {AppElement} element @param {AppElement|string} value @param {boolean} wait @returns {AppElement} */
     setImage(element, value, wait = false) {
         if (util.istype(value, 'string')) {
             if (wait && app.isRunningRemote()) {
@@ -9042,7 +8732,6 @@ class View {
     }
     /** @param {AppElement} element @param {AppElement|number|string} value @returns {AppElement} */
     setText(element, value) {
-        element.innerHTML('')
         if (value == null) {
             element.hide()
             return element
@@ -9051,6 +8740,7 @@ class View {
             element.innerHTML(value)
         }
         if (util.istype(value, 'element')) {
+            element.innerHTML('')
             element.appendChild(...app.element(value).children())
         }
         if (!element.isVisible()) {
@@ -9058,8 +8748,11 @@ class View {
         }
         return element
     }
-    /** @param {AppElement} view */
+    /** @param {AppElement|string} view */
     setView(view) {
+        if (util.istype(view, 'string')) {
+            view = app.element(view)
+        }
         if (view.attribute('view') == this.getClassName() && view.childrenLength() == 0) {
             let instance = new this.constructor()
             view.appendChild(...instance.view.children())
@@ -9095,23 +8788,23 @@ class Dialog extends View {
         this.canceledOnTouchOutside = false
         /** @type {string[]} */
         this.instances = []
-        /** @type {function(Dialog): void } */
+        /** @type {Listener} */
         this.onCancelListener = Dialog.onCancelListener
-        /** @type {function(Dialog): void } */
+        /** @type {Listener} */
         this.onDismissListener = Dialog.onDismissListener
-        /** @type {function(Dialog, AppElement): void } */
+        /** @type {Listener} */
         this.onInputListener = Dialog.onInputListener
-        /** @type {function(Dialog, number, boolean): void } */
+        /** @type {Listener} */
         this.onItemSelectedListener = Dialog.onItemSelectedListener
-        /** @type {function(Dialog, Event): void } */
+        /** @type {Listener} */
         this.onKeyListener = Dialog.onKeyListener
-        /** @type {function(Dialog): void } */
+        /** @type {Listener} */
         this.onNegativeButtonClickListener = Dialog.onButtonClickListener
-        /** @type {function(Dialog): void } */
+        /** @type {Listener} */
         this.onNeutralButtonClickListener = Dialog.onButtonClickListener
-        /** @type {function(Dialog): void } */
+        /** @type {Listener} */
         this.onPositiveButtonClickListener = Dialog.onButtonClickListener
-        /** @type {function(Dialog): void } */
+        /** @type {Listener} */
         this.onShowListener = Dialog.onShowListener
         /** @type {string} */
         this.style = Dialog.STYLE_DEFAULT
@@ -9156,19 +8849,19 @@ class Dialog extends View {
     /** @readonly @type {string} */
     static BUTTON_TEXT_POSITIVE = 'OK'
 
-    /** @type {function(Dialog): void } */
+    /** @type {(dialog: Dialog) => void} */
     static onButtonClickListener = (dialog) => { }
-    /** @type {function(Dialog): void } */
+    /** @type {(dialog: Dialog) => void} */
     static onCancelListener = (dialog) => { }
-    /** @type {function(Dialog): void } */
+    /** @type {(dialog: Dialog) => void} */
     static onDismissListener = (dialog) => { }
-    /** @type {function(Dialog, AppElement): void } */
-    static onInputListener = (dialog, eleemnt) => { }
-    /** @type {function(Dialog, number, boolean): void } */
+    /** @type {(dialog: Dialog, element: AppElement) => void} */
+    static onInputListener = (dialog, element) => { }
+    /** @type {(dialog: Dialog, position: number, isChecked: boolean) => void} */
     static onItemSelectedListener = (dialog, position, isChecked) => { }
-    /** @type {function(Dialog, KeyboardEvent): void } */
+    /** @type {(dialog: Dialog, event: KeyboardEvent) => void} */
     static onKeyListener = (dialog, event) => { }
-    /** @type {function(Dialog): void } */
+    /** @type {(dialog: Dialog) => void} */
     static onShowListener = (dialog) => { }
 
 
@@ -9343,11 +9036,11 @@ class Dialog extends View {
             height = viewport.getHeight() - 10
         }
         this.height = height
-        this.view.style('height', height)
+        this.view.setStyleProperty('height', height)
     }
-    /** @param {AppElement|number|string} icon @returns {void} */
+    /** @param {string} icon @returns {void} */
     setIcon(icon) {
-        super.setImage(this.#getIcon(), icon).show()
+        super.setIcon(this.#getIcon(), icon).show()
     }
     /** @param {AppElement|number|string} message @returns {void} */
     setMessage(message) {
@@ -9364,6 +9057,7 @@ class Dialog extends View {
         this.view.setAttribute('style', this.style)
         items = array.fromdata(items)
         checkedItems = util.istype(checkedItems, 'string') ? checkedItems.split(',') : checkedItems
+        this.#getBody().clear()
         for (let itemData of items) {
             let [title, value] = ['', '']
             if (util.istype(itemData, 'array-string')) {
@@ -9373,7 +9067,7 @@ class Dialog extends View {
                 [title, value] = [itemData, itemData]
             }
             let item = app.element('div').appendChild(
-                app.element('input').view('checkbox').attribute(`type: checkbox; value: ${value};`),
+                app.element('input').attribute(`type: checkbox; icon: check; value: ${value};`),
                 app.element('div').text(title)
             )
             if (value != null && checkedItems.includes(value)) {
@@ -9393,6 +9087,7 @@ class Dialog extends View {
         this.view.setAttribute('style', this.style)
         items = array.fromdata(items)
         checkedItems = util.istype(checkedItems, 'string') ? checkedItems.split(',') : checkedItems
+        this.#getBody().clear()
         for (let itemData of items) {
             let [title, value] = ['', '']
             if (util.istype(itemData, 'array-string')) {
@@ -9402,7 +9097,7 @@ class Dialog extends View {
                 [title, value] = [itemData, itemData]
             }
             let item = app.element('div').appendChild(
-                app.element('input').view('checkbox').attribute(`type: checkbox; value: ${value};`),
+                app.element('input').attribute(`type: checkbox; icon: check; value: ${value};`),
                 app.element('div').text(title)
             )
             if (value != null && checkedItems.includes(value)) {
@@ -9475,6 +9170,7 @@ class Dialog extends View {
         // checkedItem: string = value
         this.style = Dialog.STYLE_SINGLECHOICE
         this.view.setAttribute('style', this.style)
+        this.#getBody().clear()
         for (let itemData of array.fromdata(items)) {
             let [title, value] = ['', '']
             if (util.istype(itemData, 'array-string')) {
@@ -9512,7 +9208,7 @@ class Dialog extends View {
         else {
             width = Number(width)
         }
-        this.view.style('width', width)
+        this.view.setStyleProperty('width', width)
     }
     /** @param {number} delay @returns {void} */
     show(delay = 10) {
@@ -9840,16 +9536,16 @@ class Calender extends View {
         /** @type {Date} */
         this.selectedDate = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)
         /** @type {string} */
-        this.selectedDateColor = app.configuration('color-accent')
+        this.selectedDateColor = app.getGlobalVariable("color-accent")
         /** @type {string} */
         this.selectedWeekColor = 'transparent'
         /** @type {Date} */
         this.maxDate = null
         /** @type {Date} */
         this.minDate = null
-        /** @type {function(Calender, Date)} */
+        /** @type {Listener} */
         this.onDateChangeListener = Calender.onDateChangeListener
-        /** @type {function(Calender, AppElement)} */
+        /** @type {Listener} */
         this.onSetupDateListener = Calender.onSetDate
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
@@ -9918,26 +9614,27 @@ class Calender extends View {
     /** @readonly @type {string[]} */
     static MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
-    /** @type {function(Calender, Date): void} */
+    /** @type {(calendar: Calender, date: Date) => void} */
     static onDateChangeListener = (calender, date) => { }
-    /** @type {function(Calender, AppElement): void} */
+    /** @type {(calendar: Calender, element: AppElement) => void} */
     static onSetDate = (calender, element) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        if (element.id() == this.#getMonthBackward().id()) {
+        if (element.isEqualTo(this.#getMonthBackward())) {
             this.date.setMonth(this.date.getMonth() - 1)
             return this.#setDates()
         }
-        if (element.id() == this.#getMonthForward().id()) {
+        if (element.isEqualTo(this.#getMonthForward())) {
             this.date.setMonth(this.date.getMonth() + 1)
             return this.#setDates()
         }
+        /** @type {AppElement} */
         for (let date of this.#getDates().children()) {
-            date.children(0).style('border-color', '')
-            if (date.id() == element.id() || element.isChildOf(date)) {
+            date.children(0).setStyleProperty('border-color', '')
+            if (element.isEqualTo(date)) {
                 this.selectedDate = date.something()
-                date.children(0).style('border-color', this.selectedDateColor)
+                date.children(0).setStyleProperty('border-color', this.selectedDateColor)
                 this.onDateChangeListener(this, date.something())
             }
         }
@@ -10095,7 +9792,7 @@ class Calender extends View {
             let inMonth = date.getMonth() == firstDayOfMonth.getMonth()
             let isTodayDate = Calender.isSameDay(date, todayDate)
             let isSelectDate = Calender.isSameDay(date, this.selectedDate)
-            element.style('opacity', inMonth ? 1 : 0.5)
+            element.setStyleProperty('opacity', inMonth ? 1 : 0.5)
             element.something(new Date(date))
             element.innerHTML(
                 app.element('div').
@@ -10125,24 +9822,24 @@ class Canvas extends View {
 class Checkbox extends View {
     constructor(attributes = {}) {
         super()
-        /** @type {function(Checkbox, boolean): void } */
+        /** @type {Listener} */
         this.onCheckChangeListener = Checkbox.onCheckChangeListener
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
             app.element('div').appendChild(),
-            app.element('input').view('checkbox').attribute('type: checkbox')
+            app.element('input').attribute('type: checkbox; icon: check')
         )
         app.addEventListenerInterface('click', this, true)
         super.setAttributes(attributes)
         // 
     }
 
-    /** @type {function(Checkbox, boolean): void } */
+    /** @type {(checkbox: Checkbox, checked: boolean) => void } */
     static onCheckChangeListener = (checkbox, checked) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        if (element.id() == this.#getInput().id()) {
+        if (element.isEqualTo(this.#getInput())) {
             this.onCheckChangeListener(this, this.isChecked())
         }
     }
@@ -10195,6 +9892,70 @@ class Checkbox extends View {
         return this.view.children(0)
     }
 }
+class Icon extends View {
+    constructor(attributes = {}) {
+        super()
+        /** @type {string} */
+        this.type = Icon.TYPE_PLAIN
+        /** @type {Listener} */
+        this.onClickListener = Icon.onClickListener
+        // 
+        super.view = app.element('img').view(super.getClassName())
+        app.addEventListenerInterface('click', this, true)
+        super.setAttributes(attributes)
+        // 
+    }
+
+    /** @readonly @type {string} */
+    static TYPE_BUTTON = "button"
+    /** @readonly @type {string} */
+    static TYPE_PLAIN = "plain"
+
+    // place interfaces here ...
+    /** @type {(icon: Icon) => void} */
+    static onClickListener = (icon) => { }
+
+    /** @param {Event} event @param {AppElement} element @returns {void} */
+    onEventListenerInterface(event, element) {
+        if (event.type == 'click') {
+            this.onClickListener(this)
+        }
+    }
+
+    /** @returns {boolean} */
+    isEnabled(enabled) {
+        return !this.view.hasAttribute('disabled')
+    }
+    /** @returns {string} */
+    getSource() {
+        return this.view.src()
+    }
+    /** @param {string} source @returns {void} */
+    setSoruce(source) {
+        this.view.src(source)
+    }
+    /** @returns {string} */
+    getType() {
+        return this.type
+    }
+    /** @param {boolean} enabled @returns {void} */
+    setEnabled(enabled) {
+        this.view.setPropertyDisabled(!enabled)
+    }
+    /** @param {string} icon @returns {void} */
+    setIcon(icon) {
+        super.setIcon(this.view, icon)
+    }
+    /** @param {Listener} listener */
+    setOnClickListener(listener) {
+        this.onClickListener = listener
+    }
+    /** @param {string} type @returns {void} */
+    setType(type) {
+        this.type = type
+        this.view.setAttribute('type', this.type)
+    }
+}
 class Item extends View {
     constructor(attributes = {}) {
         super()
@@ -10240,7 +10001,7 @@ class Item extends View {
     }
     /** @returns {number} */
     getOrder() {
-        for (let [order, element] of enumerate(this.getView().parentElement().children())) {
+        for (let [order, element] of enumerate(this.getView().parent().children())) {
             if (element.isEqualTo(this.getView())) {
                 return order
             }
@@ -10249,7 +10010,7 @@ class Item extends View {
     }
     /** @returns {number|null} */
     getPosition() {
-        let parent = this.view.parentElement()
+        let parent = this.view.parent()
         let children = new array(parent.children())
         for (let [position, element] of children.enumerate()) {
             if (element.isEqualTo(this.getView())) {
@@ -10272,8 +10033,7 @@ class Item extends View {
     }
     /** @returns {boolean} */
     isChecked() {
-        let icon = this.#getIcon()
-        return icon.getProperty('checked')
+        return this.#getIcon().getProperty('checked')
     }
     /** @returns {boolean} */
     isCheckable() {
@@ -10286,7 +10046,7 @@ class Item extends View {
     }
     /** @param {number} order @returns {boolean} */
     isOrder(order) {
-        for (let [index, element] of enumerate(this.getView().parentElement().children())) {
+        for (let [index, element] of enumerate(this.getView().parent().children())) {
             if (element.isEqualTo(this.getView())) {
                 return index == order
             }
@@ -10309,16 +10069,16 @@ class Item extends View {
         if (!this.isCheckable()) {
             this.setCheckable(true)
         }
-        let icon = this.#getIcon()
-        icon.setProperty('checked', checked)
+        this.#getIcon().setProperty('checked', checked)
     }
     /** @param {boolean} checkable @returns {void} */
     setCheckable(checkable) {
         if (checkable) {
-            let view = app.element('input').view('checkbox').attribute('type: checkbox')
-            super.setImage(this.#getIcon(), view)
+            let view = app.element('input').attribute('type: checkbox; icon: check')
+            super.setElement(this.#getIcon(), view).show()
         } else {
-            super.setImage(this.#getIcon(), '').hide()
+            let view = app.element('img').view('icon')
+            super.setElement(this.#getIcon(), view).hide()
         }
     }
     /** @param {boolean} enabled @returns {void} */
@@ -10329,10 +10089,10 @@ class Item extends View {
     /** @param {string} icon @returns {void} */
     setIcon(icon) {
         if (icon instanceof Checkbox) {
-            super.setImage(this.#getIcon(), icon.getView()).show()
+            super.setElement(this.#getIcon(), icon.getView()).show()
         }
         else {
-            super.setImage(this.#getIcon(), icon).show()
+            super.setIcon(this.#getIcon(), icon).show()
         }
     }
     /** @param {PopupMenu} menu @returns {void} */
@@ -10347,7 +10107,8 @@ class Item extends View {
     }
     /** @param {boolean} visible */
     setVisible(visible) {
-        this.view.style('visibility', visible ? 'visible' : 'hidden')
+        let visibility = visible ? 'visible' : 'hidden'
+        this.view.setStyleProperty('visibility', visibility)
     }
     /** @returns {AppElement} */
     #getBody() {
@@ -10399,7 +10160,7 @@ class List extends View {
         this.isCheckableSingleChoice = false
         /** @type {Item[]} */
         this.items = new array()
-        /** @type {function(List, Item): void} */
+        /** @type {Listener} */
         this.onItemClickListener = List.onItemClickListener
         // 
         super.view = app.element('div').view(super.getClassName())
@@ -10408,7 +10169,7 @@ class List extends View {
         // 
     }
 
-    /** @type {function(List, Item): void} */
+    /** @type {(list: List, item: Item) => void} */
     static onItemClickListener = (list, item) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -10427,7 +10188,7 @@ class List extends View {
     }
 
     /** @param {string[]|string} data @returns {Item} */
-    addItem(data) {
+    addItem(data = ['','','']) {
         let [title, body, icon] = array.fromdata(data)
         let item = new Item()
         item.setTitle(title)
@@ -10481,7 +10242,7 @@ class List extends View {
     }
     /** @param {Item} item @returns {Item} */
     removeItem(item) {
-        this.items.remove(item)
+        this.items.removevalues(item)
         this.view.removeChild(item.getView())
         return item
     }
@@ -10509,16 +10270,16 @@ class Menu extends List {
     constructor(attributes = {}) {
         super()
         /** @type {string} */
-        this.colorSelect = app.configuration('color-select')
+        this.colorSelect = app.getGlobalVariable("color-select")
         /** @type {boolean} */
         this.groupDividerEnabled = true
-        /** @type {function(Menu, Item): void} */
+        /** @type {Listener} */
         this.onMenuItemClickListener = Menu.onMenuItemClickListener
         // 
         // 
     }
 
-    /** @type {function(Menu, Item): void} */
+    /** @type {(menu: Menu, item: Item) => void} */
     static onMenuItemClickListener = (menu, item) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -10582,7 +10343,7 @@ class MenuBar extends List {
         super()
         /** @type {boolean} */
         this.groupDividerEnabled = true
-        /** @type {function(MenuBar, Item): void} */
+        /** @type {Listener} */
         this.onMenuItemClickListener = MenuBar.onMenuItemClickListener
         // 
         super.view = app.element('div').view(super.getClassName())
@@ -10590,7 +10351,7 @@ class MenuBar extends List {
         // 
     }
 
-    /** @type {function(MenuBar, Item): void} */
+    /** @type {(menuBar: MenuBar, item: Item) => void} */
     static onMenuItemClickListener = (menuBar, item) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -10684,14 +10445,16 @@ class Popup extends View {
         this.dismissOnTouchOutside = false
         /** @type {number} */
         this.dismissTimeout = 2000
-        /** @type {function(Popup): void} */
+        /** @type {Listener} */
         this.onDismissListener = Popup.onDismissListener
-        /** @type {function(Popup): void} */
+        /** @type {Listener} */
         this.onShowListener = Popup.onShowListener
         /** @type {number} */
         this.positionX = 0
         /** @type {number} */
         this.positionY = 0
+        /** @type {number} */
+        this.positionPadding = 5
         /** @type {string} */
         this.side = Popup.SIDE_RIGHT
         /** @type {number} */
@@ -10716,9 +10479,9 @@ class Popup extends View {
     /** @readonly @type {string} */
     static SIDE_TOP   = 'top'
 
-    /** @type {function(Popup): void} */
+    /** @type {(popup: Popup) => void} */
     static onDismissListener = (popup) => { }
-    /** @type {function(Popup): void} */
+    /** @type {(popup: Popup) => void} */
     static onShowListener = (popup) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -10813,7 +10576,7 @@ class Popup extends View {
         this.positionX = x
         this.positionY = y
     }
-    /** @returns {void} */
+    /** @deprecated @returns {void} */
     show() {
         if (!this.isVisible()) {
             app.body().appendChild(this.view)
@@ -10822,24 +10585,28 @@ class Popup extends View {
     }
     /** @param {number} x @param {number} y @returns {void} */
     showAt(x = this.positionX, y = this.positionY) {
+        if (this.isVisible()) return
+        app.body().appendChild(this.view)
         let viewWidth = this.view.getWidth()
         let viewHeight = this.view.getHeight()
         let viewportWidth = app.body().getWidth()
         let viewportHeight = app.body().getHeight()
-        let left = x + viewWidth > viewportWidth ? x - viewWidth - 10 : x
-        let top = y + viewHeight > viewportHeight ? y - viewHeight - 10 : y
-        left = left < 0 ? 0 : left
-        top = top < 0 ? 0 : top
+        let left, top
+        left = x <= 0 ? this.positionPadding : x
+        left = x + viewWidth > viewportWidth ? x - viewWidth - this.positionPadding : x
+        top = y <= 0 ? this.positionPadding : y
+        top = y + viewHeight > viewportHeight ? y - viewHeight - this.positionPadding : y
         this.view.setStyleProperty('left', left)
         this.view.setStyleProperty('top', top)
         clearTimeout(this.timeoutID)
         if (this.autoDismiss) {
             this.timeoutID = setTimeout(() => this.dismiss(), this.dismissTimeout)
         }
-        this.show()
+        this.onShowListener(this)
     }
     /** @param {AppElement|Element|string} anchor @param {string} side @returns {void} */
-    showOn(anchor = this.anchor, side = Popup.SIDE_RIGHT) {
+    showOn(anchor = this.anchor, side = this.side) {
+        this.side = side
         this.setAnchor(anchor)
         let rect = anchor.getBoundingClientRect()
         let x
@@ -10866,11 +10633,7 @@ class Popup extends View {
             if (element.isTagName('body')) break
             x += element.getProperty('scrollLeft')
             y += element.getProperty('scrollTop')
-            // print(`lengthX=${element.getProperty('offsetWidth')}, lengthY=${element.getProperty('offsetHeight')}, scrollX=${element.getProperty('scrollLeft')}, scrollY=${element.getProperty('scrollTop')}`)
-            // print(`x=${x}, y=${y}`)
         } while (true)
-        x = x == 0 ? 5 : x
-        y = y == 0 ? 5 : y
         this.showAt(x, y)
     }
     /** @returns {AppElement} */
@@ -10885,7 +10648,7 @@ class PopupMenu extends Popup {
         this.menu = new Menu()
         /** @type {number} */
         this.onMenuItemClickDismissTimeout = 300
-        /** @type {function(PopupMenu, Item): void} */
+        /** @type {Listener} */
         this.onMenuItemClickListener = PopupMenu.onMenuItemClickListener
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
@@ -10897,7 +10660,7 @@ class PopupMenu extends Popup {
         this.setDismissOnTouchOutside(true)
     }
 
-    /** @type {function(PopupMenu, Item): void} */
+    /** @type {(popupMenu: PopupMenu, item: Item) => void} */
     static onMenuItemClickListener = (popupMenu, item) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11008,7 +10771,7 @@ class ProgressBar extends View {
         /** @type {number} */
         this.indeterminateDuration = 100
         /** @type {string} */
-        this.indeterminateColor = app.configuration('color-accent')
+        this.indeterminateColor = app.getGlobalVariable("color-accent")
         /** @type {number} */
         this.max = 100
         /** @type {number} */
@@ -11075,7 +10838,7 @@ class SeekBar extends View {
 class Scroller extends View {
     constructor(attributes = {}) {
         super()
-        /** @type {function(Scroller, Event): void} */
+        /** @type {Listener} */
         this.onTouchEvent = Scroller.onTouchEvent
         // 
         super.view = app.element('div').view(super.getClassName())
@@ -11083,15 +10846,16 @@ class Scroller extends View {
         // 
     }
 
-    /** @type {function(Scroller, Event): void} */
+    /** @type {(scroller: Scroller, event: Event) => void} */
     static onTouchEvent = (scroller, event) => { }
+
+    
+    static computeScrollOffset() {
+
+    }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-    }
-
-    static computeScrollOffset() {
-
     }
 
     extendDuration(extent) {
@@ -11156,22 +10920,22 @@ class Scroller extends View {
 class Search extends View {
     constructor(attributes = {}) {
         super()
-        /** @type {function(Search): void} */
+        /** @type {Listener} */
         this.onCloseListener = Search.onCloseListener
-        /** @type {function(Search, Event): void} */
+        /** @type {Listener} */
         this.onKeyListener = Search.onKeyListener
-        /** @type {function(Search): void} */
+        /** @type {Listener} */
         this.onOpenListener = Search.onOpenListener
-        /** @type {function(Search): void} */
+        /** @type {Listener} */
         this.onQueryTextListener = Search.onQueryTextListener
-        /** @type {function(Search): void} */
+        /** @type {Listener} */
         this.onSearchClickListener = Search.onSearchClickListener
         /** @type {number|string} */
         this.maxWidth = '100%'
         /** @type {string[]} */
         this.suggestions = []
-        let suggestionsListId = util.identifier()
         // 
+        let suggestionsListId = util.identifier()
         super.view = app.element('div').view(super.getClassName()).appendChild(
             app.element('input').attribute(`list: ${suggestionsListId}; type: search`).style('visibility: hidden'),
             app.element('img').view('icon'),
@@ -11184,15 +10948,15 @@ class Search extends View {
         this.setQueryHint('Search...')
     }
 
-    /** @type {function(Search): void} */
+    /** @type {(search: Search) => void} */
     static onCloseListener = (search) => { }
-    /** @type {function(Search, Event): void} */
+    /** @type {(search: Search, Event) => void} */
     static onKeyListener = (search, event) => { }
-    /** @type {function(Search): void} */
+    /** @type {(search: Search) => void} */
     static onOpenListener = (search) => { }
-    /** @type {function(Search, string): void} */
+    /** @type {(search: Search, text: string) => void} */
     static onQueryTextListener = (search, text) => { }
-    /** @type {function(Search): void} */
+    /** @type {(search: Search) => void} */
     static onSearchClickListener = (search,) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11251,9 +11015,9 @@ class Search extends View {
         this.#getInput().style(`visibility: visible; width: ${this.maxWidth};`)
         this.onOpenListener(this)
     }
-    /** @param {AppElement|string} icon @returns {void} */
+    /** @param {string} icon @returns {void} */
     setIcon(icon) {
-        super.setImage(this.#getIcon(), icon)
+        super.setIcon(this.#getIcon(), icon)
     }
     /** @param {boolean} iconified @returns {void} */
     setIconified(iconified) {
@@ -11320,7 +11084,7 @@ class Search extends View {
 class Selector extends View {
     constructor(attributes = {}) {
         super()
-        /** @type {function(Selector, number, string): void } */
+        /** @type {Listener} */
         this.onItemClickListener = Selector.onItemClickListener
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
@@ -11332,7 +11096,7 @@ class Selector extends View {
         // 
     }
 
-    /** @type {function(Selector, number, string): void } */
+    /** @type {(selector: Selector, position: number, value: string) => void } */
     static onItemClickListener = (selector, position, value) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11481,7 +11245,7 @@ class Switch extends View {
         /** @type {boolean} */
         this.showText = true
         /** @type {string} */
-        this.backgroundColor = app.configuration('color-accent')
+        this.backgroundColor = app.getGlobalVariable("color-accent")
         // 
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('click', this, true)
@@ -11535,7 +11299,7 @@ class Tab extends View {
 
     /** @returns {number} */
     getPosition() {
-        let tabs = this.view.parentElement().children()
+        let tabs = this.view.parent().children()
         for (let [position, tab] of enumerate(tabs)) {
             if (tab.isEqualTo(this.view)) {
                 return position
@@ -11554,9 +11318,9 @@ class Tab extends View {
         this.view.scrollIntoView()
         this.view.setStyleProperty('border-bottom-color', color)
     }
-    /** @param {AppElement|string} icon @returns {void} */
+    /** @param {string} icon @returns {void} */
     setIcon(icon) {
-        super.setImage(this.#getIcon(), icon).show()
+        super.setIcon(this.#getIcon(), icon).show()
     }
     /** @param {AppElement|string} text @returns {void} */
     setText(text) {
@@ -11585,7 +11349,7 @@ class Tabs extends View {
         super()
         /** @type {boolean} */
         this.locked = false
-        /** @type {function(Tabs, Tab): void} */
+        /** @type {Listener} */
         this.onTabSelectedListener = Tabs.onTabSelectedListener
         /** @type {Tab[]} */
         this.tabs = new array()
@@ -11612,7 +11376,7 @@ class Tabs extends View {
     /** @readonly @type {string} */
     static TAB_LABEL_VISIBILITY_UNLABELED = 'UNLABELED'
 
-    /** @type {function(Tabs, Tab): void} */
+    /** @type {(tabs: Tabs, tab: Tab) => void} */
     static onTabSelectedListener = (tabs, tab) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11696,7 +11460,7 @@ class Tabs extends View {
     }
     /** @param {Tab} tab @returns {void} */
     removeTab(tab) {
-        this.tabs.remove(tab)
+        this.tabs.removevalues(tab)
         this.view.removeChild(tab.getView())
         this.#setTabs()
     }
@@ -11768,9 +11532,9 @@ class Table extends View {
         this.actionButtonsEnalbed = true
         /** @type {[]} */
         this.headers = []
-        /** @type {function(Table, AppElement): void } */
+        /** @type {Listener} */
         this.onActionButtonClickListener = Table.onActionButtonClickListener
-        /** @type {function(Table, AppElement): void} */
+        /** @type {Listener} */
         this.onRowSelectedListener = Table.onRowSelectedListener
         /** @type {number} */
         this.selectionType = Table.SELECTION_TYPE_SINGLE
@@ -11809,9 +11573,9 @@ class Table extends View {
     /** @readonly @type {string} */
     static SELECTION_TYPE_MULTIPLE = 'MULTIPLE'
 
-    /** @type {function(Table, AppElement): void } */
+    /** @type {(table: Table, button: AppElement) => void} */
     static onActionButtonClickListener = (table, button) => { }
-    /** @type {function(Table, AppElement): void} */
+    /** @type {(table: Table, row: AppElement) => void} */
     static onRowSelectedListener = (table, row) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -12239,17 +12003,17 @@ class Video extends View {
 class ViewPager extends View {
     constructor(attributes = {}) {
         super()
-        // place properties here ...
+        /** @type {Listener} */
+        this.onPageChangeListener = ViewPager.onPageChangeListener
         // 
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('', this, true)
         super.setAttributes(attributes)
         // 
-        // place methods here ...
     }
 
-    /** @type {function(Tabs, Tab): void} */
-    static onPageChangeListener = () => {}
+    /** @type {(tabs: Tabs, tab: Tab) => void} */
+    static onPageChangeListener = (tabs, tab) => {}
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
@@ -12266,6 +12030,7 @@ class ViewPager extends View {
     /** @param {Listener} listener @returns {void} */
     setOPageChangeListener(listener) {
         // necessary calls back to the provided TabLayout so that the tab position is kept in sync. 
+        this.onPageChangeListener = listener
     }
 
 }
@@ -12274,7 +12039,7 @@ class ViewSwitcher extends View {
         super()
         /** @type {boolean} */
         this.scrollHorizontally = false
-        /** @type {function(ViewSwitcher, AppElement): void} */
+        /** @type {Listener} */
         this.onViewChangeListener = ViewSwitcher.onViewChangeListener
         /** @type {number} */
         this.viewPosition = 0
@@ -12284,7 +12049,7 @@ class ViewSwitcher extends View {
         // 
     }
 
-    /** @type {function(ViewSwitcher, AppElement): void} */
+    /** @type {(viewSwitcher: ViewSwitcher, view: AppElement) => void} */
     static onViewChangeListener = (viewSwitcher, view) => {}
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -12421,15 +12186,15 @@ class Window extends View {
         this.menubar = new MenuBar()
         /** @type {boolean} */
         this.moving = false
-        /** @type {function(Window, Event, AppElement): void} */
+        /** @type {Listener} */
         this.onClickListener = View.onListener
-        /** @type {function(Window): void} */
+        /** @type {Listener} */
         this.onCloseListener = View.onListener
-        /** @type {function(Window): void} */
+        /** @type {Listener} */
         this.onMaximizeListener = View.onListener
-        /** @type {function(Window): void} */
+        /** @type {Listener} */
         this.onMinimizeListener = View.onListener
-        /** @type {function(Window): void} */
+        /** @type {Listener} */
         this.onOpenListener = View.onListener
         /** @type {number} */
         this.positionX = 0
@@ -12455,8 +12220,8 @@ class Window extends View {
         app.addEventListenerInterface('mousemove|mouseup', this, false)
         super.setAttributes(attributes)
         // 
-        super.setImage(this.#getSizer(), 'minimize')
-        super.setImage(this.#getCloser(), 'close')
+        super.setIcon(this.#getSizer(), 'minimize')
+        super.setIcon(this.#getCloser(), 'close')
         this.setGeometry(Window.POSITION_CENTER, Window.POSITION_CENTER, '75%', '75%')
         // 
         let mutationObserver = new MutationObserver((mutationsRecords, mutationObserver) => {
@@ -12486,17 +12251,17 @@ class Window extends View {
     /** @readonly @type {string} */
     static SIZE_MINIMIZE = 'MINIMIZE'
 
-    /** @type {function(Window, Event, AppElement): void} */
+    /** @type {(window: Window, event: PointerEvent, element: AppElement) => void} */
     static onClickListener = (window, event, element) => { }
-    /** @type {function(Window): void} */
+    /** @type {(window: Window) => void} */
     static onCloseListener = (window) => { }
-    /** @type {function(MenuBar, Item): void} */
+    /** @type {(menuBar: MenuBar, item: Item) => void} */
     static onMenuItemClickListener = (menuBar, item) => { }
-    /** @type {function(Window): void} */
+    /** @type {(window: Window) => void} */
     static onOpenListener = (window) => { }
-    /** @type {function(Window): void} */
+    /** @type {(window: Window) => void} */
     static onMaximizeListener = (window) => { }
-    /** @type {function(Window): void} */
+    /** @type {(window: Window) => void} */
     static onMinimizeListener = (window) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -12592,24 +12357,24 @@ class Window extends View {
     maximize() {
         if (this.isMaximized()) return
         this.size = Window.SIZE_MAXIMIZE
-        super.setImage(this.#getSizer(), 'minimize', true)
+        super.setIcon(this.#getSizer(), 'minimize')
         this.#getMenuBar().show()
         this.#getBody().show()
         this.#getFooter().show()
-        this.view.style('height', this.getHeight())
-        this.view.style('width', this.getWidth())
+        this.view.setStyleProperty('height', this.getHeight())
+        this.view.setStyleProperty('width', this.getWidth())
         this.onMaximizeListener(this)
     }
     /** @returns {void} */
     minimize() {
         if (this.isMinimized()) return
         this.size = Window.SIZE_MINIMIZE
-        super.setImage(this.#getSizer(), 'maximize', true)
+        super.setIcon(this.#getSizer(), 'maximize')
         this.#getMenuBar().hide()
         this.#getBody().hide()
         this.#getFooter().hide()
-        this.view.style('height', this.#getHeader().getHeight())
-        this.view.style('width', 200)
+        this.view.setStyleProperty('height', this.#getHeader().getHeight())
+        this.view.setStyleProperty('width', 200)
         this.onMinimizeListener(this)
     }
     /** @returns {void} */
@@ -12623,14 +12388,22 @@ class Window extends View {
     }
     /** @returns {void} */
     sendBack() {
-        this.view.style('z-index: 0')
+        this.view.setStyleProperty('z-index', '0')
     }
     /** @returns {void} */
     sendForward() {
         for (let element of app.body().getElementsByAttribute('view', 'window')) {
-            element.style('z-index: 0')
+            element.setStyleProperty('z-index', '0')
         }
-        this.view.style('z-index: 1')
+        this.view.setStyleProperty('z-index', '1')
+    }
+    /** @returns {void} */
+    sendToBack() {
+        this.sendBack()
+    }
+    /** @returns {void} */
+    sendToFront() {
+        this.sendForward()
     }
     /** @param {boolean} closeable @returns {void} */
     setCloseable(closeable) {
@@ -12673,11 +12446,11 @@ class Window extends View {
             height = viewport.getHeight() - 10
         }
         this.height = height
-        this.view.style('height', height)
+        this.view.setStyleProperty('height', height)
     }
-    /** @param {AppElement|string} icon @returns {void} */
+    /** @param {string} icon @returns {void} */
     setIcon(icon) {
-        super.setImage(this.#getIcon(), icon).show()
+        super.setIcon(this.#getIcon(), icon).show()
     }
     /** @param {MenuBar} menubar @returns {void} */
     setMenuBar(menubar) {
@@ -12728,7 +12501,7 @@ class Window extends View {
             positionX = Number(positionX)
         }
         this.positionX = positionX
-        this.view.style('left', positionX)
+        this.view.setStyleProperty('left', positionX)
     }
     /** @param {number|string} positionY @returns {void} */
     setPositionY(positionY) {
@@ -12746,7 +12519,7 @@ class Window extends View {
             positionY = Number(positionY)
         }
         this.positionY = positionY
-        this.view.style('top', positionY)
+        this.view.setStyleProperty('top', positionY)
     }
     /** @param {string} title @returns {void} */
     setTitle(title) {
@@ -12776,7 +12549,7 @@ class Window extends View {
             width = Number(width)
         }
         this.width = width
-        this.view.style('width', width)
+        this.view.setStyleProperty('width', width)
     }
     /** @returns {AppElement} */
     #getBody() {
@@ -12853,192 +12626,15 @@ class _ extends View {
 
     /** @returns {*} */
     get() {
-        return null
+        return this.parameter
     }
     /** @param {*} parameter @returns {void} */
     set(parameter) {
-
+        this.parameter = parameter
     }
 }
 //__________________________________________________________________________________________________________________________________________________//
-class Cards {
-    constructor(obj = null) {
-        this.attr = { backgroundColor: '#0000ff', height: 155.55, id: 'card', left: '', select: 'translateY(-20px)', side: 'front', top: '', transform: '', transition: '500ms', width: 100, }
-        this.count = 1
-        this.cards = []
-        this.discarded = []
-        this.deck = []
-        this.suits = ['D', 'C', 'H', 'S']
-        this.symbols = ['&#9830;', '&#9827;', '&#9829;', '&#9824;']
-        this.table = []
-        this.trumps = 'ace_high'
-        if (obj) this.setAttributes(obj)
-    }
 
-    setAttributes(obj) {
-        for (let key in obj) if (key in this.attr) this.attr[key] = obj[key]
-        if ('backgroundColor' in obj) this.cards.filter((crd) => this.side(crd) == 'back').map((crd) => crd.style.backgroundColor = this.attr.backgroundColor)
-        if ('transition' in obj) this.cards.map((crd) => crd.style.transition = this.attr.transition)
-        if ('width' in obj) this.cards.map((crd) => { crd.style.width = this.attr.width + 'px', crd.style.height = (3.5 / 2.25) * this.attr.width + 'px' })
-    }
-    content(crd) {
-        let arr = this.get('e', crd)
-        let fs = [this.attr.width / 5, this.attr.width + (this.attr.width / 3)]
-        return `<b style=\"color: ${arr['color']}; font-size: ${fs[0]}px\">${arr['face']}</b>` +
-            `<div style=\"color:${arr['color']}; font-size: ${fs[1]}px; margin-top: -27.5px; text-align: center;\">${arr['symbol']}</div>` +
-            `<b style=\"color: ${arr['color']}; float:right; font-size: ${fs[0]}px; margin-top:-26px;\">${arr['face']}</b>`
-    }
-    create() {
-        this.cards = [], this.deck = [], this.discarded = [], this.table = []
-        let map = null
-        if (this.trumps == 'ace_high') map = { 'D2': 'D2', 'C2': 'C2', 'H2': 'H2', 'S2': 'S2' }
-        if (this.trumps == 'ace_low') map = { 'C14': 'C1', 'D14': 'D1', 'H14': 'H1', 'S14': 'S1' }
-        if (this.trumps == 'jokers_deuces') map = { 'D2': 'S16', 'C2': 'S17', 'H2': 'S18', 'S2': 'S15' }
-        for (let i = 0; i < this.count * 52; i++) {
-            let crd = this.suits[Math.floor(i / 13) % 4] + ((i % 13) + 2)
-            crd = crd in map ? map[crd] : crd
-            this.cards.push(this.element(crd))
-        }
-        this.deck = this.cards.map((crd) => crd)
-        for (let i of [1, 2, 3]) {
-            this.discarded = this.deck
-            this.deck = []
-            this.shuffle()
-        }
-        return this.deck
-    }
-    discard(...arr) {
-        if (arr.length > 0) {
-            arr.forEach(crd => {
-                let a = this.deck.findIndex((elt) => elt == crd)
-                let b = this.table.findIndex((elt) => elt == crd)
-                this[a == -1 ? 'table' : 'deck'].splice(a == -1 ? b : a, 1).forEach(crd => this.discarded.push(crd))
-            })
-        } else {
-            this.table.forEach(crd => this.discarded.push(crd))
-            this.table = []
-        }
-    }
-    element(crd) {
-        let elt = document.createElement('div')
-        elt.id = this.attr.id
-        elt.style.backgroundColor = this.attr.side == 'back' ? this.attr.backgroundColor : 'white'
-        elt.style.border = '1px solid black'
-        elt.style.borderRadius = '5px'
-        elt.style.boxSizing = 'border-box'
-        elt.style.fontSize = '15px'
-        elt.style.height = this.attr.height + 'px'
-        elt.style.left = this.attr.left
-        elt.style.opacity = '1'
-        elt.style.padding = '5px'
-        elt.style.position = 'absolute'
-        elt.style.textAlign = 'left'
-        elt.style.top = this.attr.top
-        elt.style.transform = this.attr.transform
-        elt.style.transition = this.attr.transition
-        elt.style.width = this.attr.width + 'px'
-        elt.style.zIndex = 0
-        elt.something = crd
-        elt.innerHTML = this.attr.side == 'back' ? '' : this.content(elt)
-        return elt
-    }
-    flip(crd, side = null) {
-        let front = side == null ? crd.style.backgroundColor == 'white' : side == 'back'
-        crd.style.backgroundColor = front ? this.attr.backgroundColor : 'white'
-        crd.innerHTML = front ? '' : this.content(crd.something)
-    }
-    get(arg, crd) {
-        crd = crd instanceof Element ? crd.something : crd
-        let v = Number(crd.substring(1))
-        switch (arg.toLowerCase()) {
-            case 'c':
-            case 'card':
-                return crd
-            case 's':
-            case 'suit':
-                return crd[0]
-            case 'sv':
-            case 'suit_value':
-                return this.suits.indexOf(crd[0])
-            case 'v':
-            case 'value':
-                return v
-            case 'fv':
-            case 'face_value':
-                return v <= 10 ? v : (11 <= v && v <= 13) ? 10 : 11
-            case 'f':
-            case 'face':
-                let map = { 1: 'A', 11: 'J', 12: 'Q', 13: 'K', 14: 'A', 15: '2', 16: '2', 17: 'Jo', 18: 'Jo' }
-                return v in map ? map[v] : v
-            case 'y':
-            case 'symbol':
-                return this.symbols[this.suits.indexOf(crd == 'S16' ? 'D' : crd[0])]
-            case 'e':
-            case 'element':
-                return { face: this.get('f', crd), symbol: this.get('y', crd), color: crd[0] == 'D' || crd[0] == 'H' || crd == 'S16' || crd == 'S18' ? 'red' : 'black' }
-            case 'd':
-            case 'data':
-                return { suit: this.get('s', crd), value: this.get('v', crd) }
-        }
-    }
-    hasSuit(sut, hnd) {
-        return hnd.some((crd) => this.get('s', crd) == sut)
-    }
-    index() {
-        this.deck.map((crd, i, arr) => crd.style.zIndex = (arr.length - i))
-    }
-    position(crd, pos, rand = [random(-5, 5), random(-5, 5), random(-5, 5)]) {
-        crd.style.left = rand[0] + pos[0] + '%'
-        crd.style.top = rand[1] + pos[1] + '%'
-        crd.style.transform = pos[2] + ' rotate(' + rand[2] + 'deg)'
-        return this
-    }
-    pull(to = 'table') {
-        if (this.deck.length == 0) {
-            this.shuffle()
-            return this.pull(to)
-        }
-        let crd = this.deck[0]
-        this.deck.shift()
-        this[to].push(crd)
-        return crd
-    }
-    side(crd) {
-        return crd.style.backgroundColor == 'white' ? 'front' : 'back'
-    }
-    sort(arg, hnd) {
-        if (arg == 's' || arg == 'suit' || true) {
-            let arr = [[], [], [], []].map((v) => new Array(19))
-            hnd.forEach(crd => arr[this.get('sv', crd.something)][this.get('v', crd.something)] = crd)
-            for (let i = 0, c = 0; i < 76; i++) {
-                if (arr[Math.floor(i / 19)][i % 19]) {
-                    hnd[c] = arr[Math.floor(i / 19)][i % 19]
-                    c += 1
-                }
-            }
-        }
-        if (arg == 'v' || arg == 'value') {
-            hnd.sort((a, b) => this.get('v', a.something) - this.get('v', b.something))
-        }
-        return hnd
-    }
-    shuffle() {
-        do {
-            let idx = Math.floor(Math.random() * this.discarded.length)
-            this.deck.push(this.discarded[idx])
-            this.discarded.splice(idx, 1)
-        } while (this.discarded.length > 0)
-    }
-    select(crd, hnd = []) {
-        hnd.map((crd) => crd.style.transform = crd.style.transform.replace(` ${this.attr.select}`, ''))
-        crd.style.transform += ` ${this.attr.select}`
-    }
-    value(elt, crd) {
-        elt.something = crd
-        elt.innerHTML = this.content(crd)
-        return elt
-    }
-}
 /** @param {boolean[]|string[]|{}} iterable @returns {boolean} */
 window.all = function all(iterable) {
     if (util.istype(iterable, 'array-boolean')) {
@@ -13196,8 +12792,8 @@ window.includes = function includes(key, iterable) {
 window.istype = function istype(value, types) {
     return util.istype(value, types)
 }
-/** @param {number} number @param {number} nDigits @returns {number} */
-window.round = function round(number, nDigits) {
+/** @param {number} number @param {number} ndigits @returns {number} */
+window.round = function round(number, ndigits) {
     let multiplier = Math.pow(10, nDigits)
     return Math.round(number * multiplier) / multiplier
 }
@@ -13212,4 +12808,5 @@ window.print = console.log
 // TESTING
 
 
-/** */
+/***/
+

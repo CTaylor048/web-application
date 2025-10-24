@@ -1,6 +1,8 @@
-from collections.abc import Callable, Iterable, Mapping
 import datetime, inspect, json, math, os, re, socket, time, threading
-from queue import Queue
+from typing import Callable, Any, TypeVar
+
+# generic type for better type hinting
+T = TypeVar('T')
 
 """
 -----------------------------------DATA-TYPES-----------------------------------
@@ -23,10 +25,8 @@ address-ipv4-local-unique
 address-ipv4-loopback
 address-ipv4-mask
 address-ipv4-multicast
-address-ipv4-netmask
 address-ipv4-networkmask
 address-ipv4-prefix-length
-address-ipv4-subnetmask
 address-ipv4-subnetworkmask
 address-ipv4-unicast
 address-ipv4-unspecified
@@ -45,6 +45,7 @@ address-ipv6-local-unique
 address-ipv6-loopback
 address-ipv6-multicast
 address-ipv6-teredo
+address-ipv6-unicast
 address-ipv6-unspecified
 address-mac-broadcast
 address-mac-multicast
@@ -114,56 +115,70 @@ timestamp-date
 timestamp-time
 timestamp-zone
 url
-
 --------------------------------------------------------------------------------
-ip   | internet_protocol
-ipv4 | internet_protocol_v4
-ipv6 | internet_protocol_v6
-mac  | media_access_control
+address-ipv4-netmask    = address-ipv4-networkmask
+address-ipv4-subnetmask = address-ipv4-subnetworkmask
+ip                      = internet_protocol
+ipv4                    = internet_protocol_v4
+ipv6                    = internet_protocol_v6
+mac                     = media_access_control
+--------------------------------------------------------------------------------
+
 """
 
+class address(str): pass
+class binary(str): pass
+class decimal(int): pass
+class hexadecimal(float): pass
+class octal(str): pass
+# class timestamp(datetime.datetime|int|str): pass
+
+# ___________________________________________________________________________________________________________________________________________________#
 class util:
     """
     Utilities
 
-    1.  Description: 
-    
-    2.  Class Attributes: 
-    
-    3.  Instance Attributes: 
-    
-    4.  Class Functions: 
+    1.  Description:
 
-    5.  Instance Functions: 
+    2.  Class Attributes:
+
+    3.  Instance Attributes:
+
+    4.  Class Functions:
+
+    5.  Instance Functions:
 
     """
     def __init__(self):
         pass
-    
+
     DEGREES_TO_RADIANS = math.pi / 180
     RADIANS_TO_DEGREES = 180 / math.pi
     SPHERE_RADIUS = 6371000
 
+    ALIGN_CENTER = 'center'
+    ALIGN_LEFT = 'left'
+    ALIGN_RIGHT = 'right'
+
     FILE_TIMESTAMP_MILLISECONDS = 'milliseconds'
     FILE_TIMESTAMP_SECONDS = 'seconds'
 
-    GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_DEGREES_LATITUDE = r"(?P<decimal_degrees>(-|\+)?([0-9]|[0-8][0-9])(\.\d+)?)"
-    GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_DEGREES_LONGITUDE = r"(?P<decimal_degrees>(-|\+)?([0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(\.\d+)?)"
-    GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_MINUTES = r"(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))"
-    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE = r"(?P<degrees>[0-8][0-9])"
-    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE = r"(?P<degrees>0[0-9][0-9]|1[0-7][0-9])"
+    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT1 = r"(?P<decimal_degrees>(-|\+)?([0-8]\d)(\.\d+)?)"
+    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT2 = r"(?P<decimal_degrees>(-|\+)?([0-8]?\d)(\.\d+)?)(°|\*)"
+    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT1 = r"(?P<decimal_degrees>(-|\+)?(0\d\d|1[0-7]\d)(\.\d+)?)"
+    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT2 = r"(?P<decimal_degrees>(-|\+)?(\d\d?|0\d\d|1[0-7]\d)(\.\d+)?)(°|\*)"
+    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1 = r"(?P<degrees>[0-8]\d)"
+    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2 = r"(?P<degrees>[0-8]?\d)(°|\*)"
+    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1 = r"(?P<degrees>0\d\d|1[0-7]\d)"
+    GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2 = r"(?P<degrees>\d\d?|0\d\d|1[0-7]\d)(°|\*)"
     GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE = r"(?P<direction>N|S)"
     GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE = r"(?P<direction>E|W)"
-    GEOGRAPHIC_COORDINATES_PATTERN_MINUTES = r"(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
-    GEOGRAPHIC_COORDINATES_PATTERN_SECONDS = r"(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)"
-    GEOGRAPHIC_COORDINATES_DDM_PATTERN_LATITUDE_OPT1 = r"^(?P<degrees>[0-8][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))(?P<direction>N|S)$"
-    GEOGRAPHIC_COORDINATES_DDM_PATTERN_LATITUDE_OPT2 = r"^(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?(?P<direction>N|S)$"
-    GEOGRAPHIC_COORDINATES_DDM_PATTERN_LONGITUDE_OPT1 = r"^(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))(?P<direction>E|W)$"
-    GEOGRAPHIC_COORDINATES_DDM_PATTERN_LONGITUDE_OPT2 = r"^(?P<degrees>[0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?(?P<direction>E|W)$"
-    GEOGRAPHIC_COORDINATES_DMS_PATTERN_LATITUDE_OPT1 = r"^(?P<degrees>[0-8][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)(?P<direction>N|S)$"
-    GEOGRAPHIC_COORDINATES_DMS_PATTERN_LATITUDE_OPT2 = r"^(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)\"?(?P<direction>N|S)$"
-    GEOGRAPHIC_COORDINATES_DMS_PATTERN_LONGITUDE_OPT1 = r"^(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)(?P<direction>E|W)$"
-    GEOGRAPHIC_COORDINATES_DMS_PATTERN_LONGITUDE_OPT2 = r"^(?P<degrees>[0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)\"?(?P<direction>E|W)$"
+    GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1 = r"(?P<decimal_minutes>(0\d|[1-5]\d)\.\d\d)"
+    GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2 = r"(?P<decimal_minutes>(0?\d|[1-5]\d)\.\d+)'"
+    GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1 = r"(?P<minutes>0\d|[1-5]\d)"
+    GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2 = r"(?P<minutes>0?\d|[1-5]\d)'"
+    GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1 = r"(?P<seconds>(0\d|[1-5]\d)(\.\d+)?)"
+    GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2 = r"(?P<seconds>(0?\d|[1-5]\d)(\.\d+)?)\""
 
     HASH_MD5 = 'md5'
     HASH_SHA1 = 'sha1'
@@ -187,7 +202,7 @@ class util:
          2:  'tens',
          1:  'ones',
          0:  '',
-        -1:  'tenths', 
+        -1:  'tenths',
         -2:  'hundredths',
         -3:  'thousandths',
         -4:  'ten thousandths',
@@ -199,7 +214,7 @@ class util:
         -10: 'ten billionths',
         -11: 'hundred billionths',
         -12: 'trillionths',
-        -13: 'ten trillionths', 
+        -13: 'ten trillionths',
         -14: 'hundred trillionths'
     }
 
@@ -222,17 +237,20 @@ class util:
     TIME_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     TIME_QUARTERS = ['First', 'Second', 'Third', 'Fourth']
 
+    TIMESTAMP_OPTION_DICTIONARY = 'dictionary'
     TIMESTAMP_OPTION_MILLISECONDS = 'milliseconds'
     TIMESTAMP_OPTION_OBJECT = 'object'
     TIMESTAMP_OPTION_SECONDS = 'seconds'
     TIMESTAMP_OPTION_STRING = 'string'
+    TIMESTAMP_OPTION_STRING_SHORT = 'string_short'
+    TIMESTAMP_OPTION_STRING_LONG = 'string_long'
 
     TIMESTAMP_PATTERN_YEAR = r"(?P<year>19[7-9][0-9]|[2-9][0-9][0-9][0-9])"
     TIMESTAMP_PATTERN_MONTH = r"(?P<month>0[1-9]|1[0-2])"
     TIMESTAMP_PATTERN_DAY = r"(?P<day>0[1-9]|1[0-9]|2[0-9]|3[0-2])"
     TIMESTAMP_PATTERN_HOUR = r"(?P<hour>0[0-9]|1[0-9]|2[0-3])"
-    TIMESTAMP_PATTERN_MINUTE = r"(?P<minute>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
-    TIMESTAMP_PATTERN_SECOND = r"(?P<second>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
+    TIMESTAMP_PATTERN_MINUTE = r"(?P<minute>0\d|[1-5]\d)"
+    TIMESTAMP_PATTERN_SECOND = r"(?P<second>0\d|[1-5]\d)"
     TIMESTAMP_PATTERN_MILLISECOND = r"(?P<millisecond>\d\d\d)?"
     TIMESTAMP_PATTERN_ZONE = r"(?P<zone>[A-I]|[K-Z])?"
 
@@ -290,7 +308,7 @@ class util:
         'Y': -12,
         'Z': +0,
     }
- 
+
     path: str = 'c:\\projects'
     variables: dict[str, str] = {
     }
@@ -314,11 +332,11 @@ class util:
                 object[key] = arguments[index] if len(arguments) > index else ''
         return object
     def ispattern(value: str, pattern: str) -> bool:
-        return bool(re.match(pattern, value))
+        return bool(re.match(pattern, f"{value}"))
     def istype(value, types: str):
         if value == None: return False
         def toBinary(value: str, type: str) -> str:
-            if bool(re.match(r"^(0|1)+$", value)):
+            if util.ispattern(value, r"^(0|1)+$"):
                 return value
             elif type.startswith('address-ipv4') or type.startswith('address-internet_protocol_v4'):
                 return util.address_ipv4(value)
@@ -383,18 +401,13 @@ class util:
                     value = toBinary(value, type)
                     return value[0:8] == '01111111'
             if type == 'address-ipv4-mask' or type == 'address-internet_protocol_v4-mask':
-                return istype(value, 'address-ipv4-netmask') or istype(value, 'address-ipv4-subnetmask') or istype(value, 'address-ipv4-wildcardmask')
+                return istype(value, 'address-ipv4-networkmask') or istype(value, 'address-ipv4-wildcardmask')
             if type == 'address-ipv4-multicast' or type == 'address-internet_protocol_v4-multicast':
                 if istype(value, 'address-ipv4'):
                     value = toBinary(value, type)
                     return value[0:4] == '1110'
             if type == 'address-ipv4-netmask' or type == 'address-internet_protocol_v4-netmask':
-                if istype(value, 'address-ipv4'):
-                    value = toBinary(value, type)
-                    if '0' in value:
-                        return value.find('0') > value.rfind('1')
-                    else:
-                        return value == '11111111111111111111111111111111'
+                return istype(value, 'address-ipv4-networkmask')
             if type == 'address-ipv4-networkmask' or type == 'address-internet_protocol_v4-networkmask':
                 if istype(value, 'address-ipv4'):
                     value = toBinary(value, type)
@@ -404,24 +417,14 @@ class util:
                         return value == '11111111111111111111111111111111'
             if type == 'address-ipv4-prefix-length' or type == 'address-internet_protocol_v4-prefix-length':
                 if istype(value, 'number') or istype(value, 'string-number'):
-                    return bool(re.match(r"^(0?[0-9]|1[0-9]|2[0-9]|3[1-2])$", f"{value}"))
+                    return util.ispattern(value, r"^(0?[0-9]|1[0-9]|2[0-9]|3[1-2])$")
             if type == 'address-ipv4-subnetmask' or type == 'address-internet_protocol_v4-subnetmask':
-                if istype(value, 'address-ipv4'):
-                    value = toBinary(value, type)
-                    if '0' in value:
-                        return value.find('0') > value.rfind('1')
-                    else:
-                        return value == '11111111111111111111111111111111'
+                return istype(value, 'address-ipv4-networkmask')
             if type == 'address-ipv4-subnetworkmask' or type == 'address-internet_protocol_v4-subnetworkmask':
-                if istype(value, 'address-ipv4'):
-                    value = toBinary(value, type)
-                    if '0' in value:
-                        return value.find('0') > value.rfind('1')
-                    else:
-                        return value == '11111111111111111111111111111111'
+                return istype(value, 'address-ipv4-networkmask')
             if type == 'address-ipv4-unicast' or type == 'address-internet_protocol_v4-unicast':
                 if istype(value, 'address-ipv4'):
-                    return not (istype(value, 'address-ipv4-broadcast') or istype(value, 'address-ipv4-dummy') or istype(value, 'address-ipv4-mask') or istype(value, 'address-ipv4-multicast') or istype(value, 'address-ipv4-unspecified'))
+                    return not (istype(value, 'address-ipv4-broadcast') or istype(value, 'address-ipv4-multicast'))
             if type == 'address-ipv4-unspecified' or type == 'address-internet_protocol_v4-unspecified':
                 if istype(value, 'address-ipv4'):
                     value = toBinary(value, type)
@@ -446,7 +449,7 @@ class util:
                                 if not istype(string, 'hexadecimal'): return False
                             return True
                         elif '::' in value:
-                            return bool(re.match(r"^(:|[0-9]|[A-F]|[a-f])+$", value)) and len(value) <= 39
+                            return util.ispattern(value, r"^(:|[0-9]|[A-F]|[a-f])+$") and len(value) <= 39
             if type == 'address-ipv6-4to6' or type == 'address-internet_protocol_v6-4to6':
                 if istype(value, 'address-ipv6'):
                     value = toBinary(value, type)
@@ -495,6 +498,9 @@ class util:
                 if istype(value, 'address-ipv6'):
                     value = toBinary(value, type)
                     return value[0:32] == '00100000000000010000000000000000'
+            if type == 'address-ipv6-unicast' or type == 'address-internet_protocol_v6-unicast':
+                if istype(value, 'address-ipv6'):
+                    return istype(value, 'address-ipv6-global') or istype(value, 'address-ipv6-local')
             if type == 'address-ipv6-unspecified' or type == 'address-internet_protocol_v6-unspecified':
                 if istype(value, 'address-ipv6'):
                     value = toBinary(value, type)
@@ -529,7 +535,7 @@ class util:
                 if istype(value, 'address-mac'):
                     return not (istype(value, 'address-mac-broadcast') or istype(value, 'address-mac-multicast'))
             if type == 'array':
-                return isinstance(value, array) or isinstance(value, list)
+                return isinstance(value, list)
             if type == 'array-boolean':
                 if istype(value, 'array'):
                     for value_ in value:
@@ -582,10 +588,10 @@ class util:
                     return True
             if type == 'base64':
                 if istype(value, 'string'):
-                    return bool(re.match(r"^(\+|/|[0-9]|=|[A-Z]|[a-z])+$", value))
+                    return util.ispattern(value, r"^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$")
             if type == 'binary':
                 if istype(value, 'string'):
-                    return bool(re.match(r"^(0|1)+$", value))
+                    return util.ispattern(value, r"^(0|1)+$")
             if type == 'boolean':
                 return isinstance(value, bool)
             if type == 'bytes':
@@ -601,7 +607,7 @@ class util:
                     return istype(util.byt2str(value), 'string-object')
             if type == 'character':
                 if istype(value, 'string'):
-                    return bool(re.match(r"^([A-Z]|[a-z])$", value))
+                    return util.ispattern(value, r"^([A-Z]|[a-z])$")
             if type == 'coordinates-geographic':
                 return istype(value, 'coordinates-geographic-ddd') or istype(value, 'coordinates-geographic-ddm') or istype(value, 'coordinates-geographic-dms')
             if type == 'coordinates-geographic-ddd':
@@ -626,77 +632,43 @@ class util:
                 if istype(value, 'string'):
                     return istype(value, 'coordinates-geographic-latitude-ddd') or istype(value, 'coordinates-geographic-latitude-ddm') or istype(value, 'coordinates-geographic-latitude-dms')
             if type == 'coordinates-geographic-latitude-ddd':
-                if istype(value, 'string') or istype(value, 'number'):
-                    return bool(re.match(util.GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_DEGREES_LATITUDE, f"{value}")) or bool(re.match(r"^-?90(\.0+)?$", f"{value}"))
+                if istype(value, 'number') or istype(value, 'string-number'):
+                    return 0 <= abs(float(value)) and abs(float(value)) <= 90
+                if istype(value, 'string'):
+                    pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT1}" if not ('°' in value or '*' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT2}"
+                    return util.ispattern(value, f"^{pattern}$")
             if type == 'coordinates-geographic-latitude-ddm':
                 if istype(value, 'string'):
-                    pattern = ""
-                    if '°' in value or '*' in value:
-                        if value[0] == 'N' or value[0] == 'S':
-                            pattern = r"^(?P<direction>N|S)(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?$"
-                        if value[-1] == 'N' or value[-1] == 'S':
-                            pattern = r"^(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?(?P<direction>N|S)$"
-                    else:
-                        if value[0] == 'N' or value[0] == 'S':
-                            pattern = r"^(?P<direction>N|S)(?P<degrees>[0-8][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))(?P<direction>N|S)$"
-                        if value[-1] == 'N' or value[-1] == 'S':
-                            pattern = r"^(?P<degrees>[0-8][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))$"
-                    return bool(re.match(pattern, value))
+                    pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}" if not ('°' in value or '*' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}"
+                    return util.ispattern(value, f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$") or util.ispattern(value, f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}{pattern}$")
             if type == 'coordinates-geographic-latitude-dms':
                 if istype(value, 'string'):
-                    pattern = ""
-                    if '°' in value or '*' in value:
-                        if value[0] == 'N' or value[0] == 'S':
-                            pattern = r"^(?P<direction>N|S)(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9](.\d+)?)\"?$"
-                        if value[-1] == 'N' or value[-1] == 'S':
-                            pattern = r"^(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9](.\d+)?)\"?(?P<direction>N|S)$"
-                    else:
-                        if value[0] == 'N' or value[0] == 'S':
-                            pattern = r"^(?P<direction>N|S)(?P<degrees>[0-8][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9](.\d+)?)$"
-                        if value[-1] == 'N' or value[-1] == 'S':
-                            pattern = r"^(?P<degrees>[0-8][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9](.\d+)?)(?P<direction>N|S)$"
-                    return bool(re.match(pattern, value))
+                    pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}" if not ('°' in value or '*' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}"
+                    return util.ispattern(value, f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$") or util.ispattern(value, f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}{pattern}$")
             if type == 'coordinates-geographic-longitude':
                 if istype(value, 'string'):
                     return istype(value, 'coordinates-geographic-longitude-ddd') or istype(value, 'coordinates-geographic-longitude-ddm') or istype(value, 'coordinates-geographic-longitude-dms')
             if type == 'coordinates-geographic-longitude-ddd':
-                if istype(value, 'string') or istype(value, 'number'):
-                    return bool(re.match(util.GEOGRAPHIC_COORDINATES_PATTERN_DECIMAL_DEGREES_LONGITUDE, f"{value}")) or bool(re.match(r"^-?180(\.0+)?$", f"{value}"))
+                if istype(value, 'number') or istype(value, 'string-number'):
+                    return 0 <= abs(float(value)) and abs(float(value)) <= 180
+                if istype(value, 'string'):
+                    pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT1}" if not ('°' in value or '*' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT2}"
+                    return util.ispattern(value, f"^{pattern}$")
             if type == 'coordinates-geographic-longitude-ddm':
                 if istype(value, 'string'):
-                    pattern = ""
-                    if '°' in value or '*' in value:
-                        if value[0] == 'E' or value[0] == 'W':
-                            pattern = r"^(?P<direction>E|W)(?P<degrees>[0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?$"
-                        if value[-1] == 'E' or value[-1] == 'W':
-                            pattern = r"^(?P<degrees>[0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?(?P<direction>E|W)$"
-                    else:
-                        if value[0] == 'E' or value[0] == 'W':
-                            pattern = r"^(?P<direction>E|W)(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))$"
-                        if value[-1] == 'E' or value[-1] == 'W':
-                            pattern = r"^(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))(?P<direction>E|W)$"
-                    return bool(re.match(pattern, value))
+                    pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}" if not ('°' in value or '*' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}"
+                    return util.ispattern(value, f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$") or util.ispattern(value, f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}{pattern}$")
             if type == 'coordinates-geographic-longitude-dms':
                 if istype(value, 'string'):
-                    pattern = ""
-                    if '°' in value or '*' in value:
-                        if value[0] == 'E' or value[0] == 'W':
-                            pattern = r"^(?P<direction>E|W)(?P<degrees>[0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9](.\d+)?)\"?$"
-                        if value[-1] == 'E' or value[-1] == 'W':
-                            pattern = r"^(?P<degrees>[0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9](.\d+)?)\"?(?P<direction>E|W)$"
-                    else:
-                        if value[0] == 'E' or value[0] == 'W':
-                            pattern = r"^(?P<direction>E|W)(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9](.\d+)?)$"
-                        if value[-1] == 'E' or value[-1] == 'W':
-                            pattern = r"^(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9](.\d+)?)(?P<direction>E|W)$"
-                    return bool(re.match(pattern, value))
+                    pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}" if not ('°' in value or '*' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}"
+                    return util.ispattern(value, f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$") or util.ispattern(value, f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}{pattern}$")
             if type == 'date':
                 return isinstance(value, datetime.datetime)
             if type == 'decimal':
-                return isinstance(value, int)
+                return istype(value, 'number') or istype(value, 'string-number')
             if type == 'hexadecimal':
                 if istype(value, 'string'):
-                    return bool(re.match(r"^([0-9]|[A-F]|[a-f])+$", value))
+                    return util.ispattern(value, r"^([0-9]|[A-F]|[a-f])+$")
             if type == 'html':
                 pass
             if type == 'html-tag':
@@ -705,7 +677,7 @@ class util:
                     return value in strings
             if type == 'identifier':
                 if istype(value, 'string'):
-                    return bool(re.match(r"^([0-9]|[A-Z]|[a-z]|_)+$", value))
+                    return util.ispattern(value, r"^([0-9]|[A-Z]|[a-z]|_)+$")
             if type == 'number':
                 return istype(value, 'number-float') or istype(value, 'number-integer')
             if type == 'number-float':
@@ -713,10 +685,10 @@ class util:
             if type == 'number-integer':
                 return isinstance(value, int)
             if type == 'object':
-                return isinstance(value, dict) or isinstance(value, object)
+                return isinstance(value, dict)
             if type == 'octal':
                 if istype(value, 'string'):
-                    return bool(re.match(r"^[0-7]+$", value))
+                    return util.ispattern(value, r"^[0-7]+$")
             if type == 'port':
                 if istype(value, 'number') or istype(value, 'string-number'):
                     return 0 <= int(value) and int(value) <= 65535
@@ -750,10 +722,10 @@ class util:
                  return istype(value, 'string-number-float') or istype(value, 'string-number-integer')
             if type == 'string-number-float':
                 if istype(value, 'string'):
-                    return bool(re.match(r"^(-|\+)?\d+\.\d+$", value))
+                    return util.ispattern(value, r"^(-|\+)?\d+\.\d+$")
             if type == 'string-number-integer':
                 if istype(value, 'string'):
-                    return bool(re.match(r"^(-|\+)?\d+$", value))
+                    return util.ispattern(value, r"^(-|\+)?\d+$")
             if type == 'string-object':
                 if istype(value, 'string'):
                     if len(value) >= 2:
@@ -762,7 +734,6 @@ class util:
                 if istype(value, 'string'):
                     pattern = ""
                     if '-' in value:
-                        print(f"DepreciationError: name=timestamp (legacy) value=YYYY-MM-DDTHH:MM:SS")
                         if len(value) == 4 or len(value) == 5:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
                         if len(value) == 7 or len(value) == 8:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}"
                         if len(value) == 10 or len(value) == 11: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}"
@@ -770,7 +741,7 @@ class util:
                         if len(value) == 16 or len(value) == 17: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}"
                         if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}"
                         if len(value) == 23 or len(value) == 24: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
-                    else: 
+                    else:
                         if len(value) == 4 or len(value) == 5:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
                         if len(value) == 6 or len(value) == 7:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}"
                         if len(value) == 8 or len(value) == 9:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}"
@@ -778,25 +749,23 @@ class util:
                         if len(value) == 13 or len(value) == 14: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}"
                         if len(value) == 15 or len(value) == 16: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}"
                         if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
-                    return bool(re.match(f"^{pattern}{util.TIMESTAMP_PATTERN_ZONE}$", value))
+                    return util.ispattern(value, f"^{pattern}{util.TIMESTAMP_PATTERN_ZONE}$")
             if type == 'timestamp-date':
                 if istype(value, 'string'):
                     if '-' in value:
-                        print(f"DepreciationError: name=timestamp (legacy) value=YYYY-MM-DD")
-                        return bool(re.match(f"^{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}{util.TIMESTAMP_PATTERN_ZONE}$", value))
+                        return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}{util.TIMESTAMP_PATTERN_ZONE}$")
                     else:
-                        return bool(re.match(f"^{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}{util.TIMESTAMP_PATTERN_ZONE}$", value))
+                        return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}{util.TIMESTAMP_PATTERN_ZONE}$")
             if type == 'timestamp-time':
                 if istype(value, 'string'):
                     if ':' in value:
-                        print(f"DepreciationError: name=timestamp (legacy) value=HH:MM:SS")
-                        return bool(re.match(f"^{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}{util.TIMESTAMP_PATTERN_ZONE}$", value))
+                        return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}{util.TIMESTAMP_PATTERN_ZONE}$")
                     else:
-                        return bool(re.match(f"^{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}{util.TIMESTAMP_PATTERN_ZONE}$", value))
+                        return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}{util.TIMESTAMP_PATTERN_ZONE}$")
             if type == 'timestamp-zone':
                 if istype(value, 'string'):
-                    return bool(re.match(util.TIMESTAMP_PATTERN_ZONE, value))
-            
+                    return util.ispattern(value, util.TIMESTAMP_PATTERN_ZONE)
+
             if type[-2:len(type)] == '[]':
                 if istype(value, 'array'):
                     for value_ in value:
@@ -816,7 +785,7 @@ class util:
             if delimiter == '|': return True in results
             if delimiter == '&': return not False in results
     def importModule(name: str):
-        # if util.importModule(''): import 
+        # if util.importModule(''): import
         return not name in dir()
     def invalidateType(value, types: str) -> bool:
         valid = util.istype(value, types)
@@ -861,7 +830,7 @@ class util:
             'service locator': 'SRV',
             'service binding': 'SVCB',
             'transaction signature': 'TSIG',
-            'transport layer security': 'TLS', 
+            'transport layer security': 'TLS',
         }
         for specialBefore, specialAfter in specials.items():
             if specialBefore.lower() == string.lower() or specialBefore.replace(' ', '_').lower() == string.lower():
@@ -870,7 +839,7 @@ class util:
         for substring in string.split(delimiter):
             nString += substring[0]
         return nString
-    def address_binary(value: int|str) -> str:
+    def address_binary(value: str|int) -> str:
         if util.istype(value, 'address&binary'):
             return value
         if util.istype(value, 'number|string-number'):
@@ -882,31 +851,42 @@ class util:
         elif util.istype(value, 'address-mac'):
             return util.address_mac(value)
         else:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"TypeError: variable-name=value variable-value={value} variable-type={type(value)} type=address|binary|number|string-number")
-    def address_broadcast(address: str, netmask: int|str) -> str:
-        address = util.address_binary(address)
-        netmask = util.address_binary(netmask)
-        prefix_length = util.address_mask_to_prefix_length(netmask)
-        return address[0:prefix_length].ljust(32, '1')
-    def address_decimal(value: int|str) -> str:
+            raise Exception(f"TypeError: require type address or number")
+    def address_decimal(value: str) -> int:
         return util.bin2dec(util.address_binary(value))
-    def address_family(value: str, short: bool = True) -> str:
+    def address_family(value: str, short: bool = False) -> str:
         if util.istype(value, 'address-internet_protocol_v4'):
-            return 'internet_protocol_v4'
+            return 'ipv4' if short else 'internet_protocol_v4'
         elif util.istype(value, 'address-internet_protocol_v6'):
-            return 'internet_protocol_v6'
+            return 'ipv6' if short else 'internet_protocol_v6'
         elif util.istype(value, 'address-media_access_control'):
-            return 'media_access_control'
+            return 'mac' if short else 'media_access_control'
         else:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"TypeError: variable-name=value variable-value={value} variable-type={type(value)} type=address")
-    def address_hexadecimal(value: int|str) -> str:
+            raise Exception(f"TypeError: require type address")
+    def address_hexadecimal(value: str) -> str:
         return util.bin2hex(util.address_binary(value))
+    def address_string(value: int|str) -> str:
+        if util.istype(value, 'address') and not util.istype(value, 'binary'):
+            return value
+        elif util.istype(value, 'address') and util.istype(value, 'binary'):
+            if util.istype(value, 'address-internet_protocol_v4'):
+                return util.address_ipv4(value)
+            elif util.istype(value, 'address-internet_protocol_v6'):
+                return util.address_ipv6(value)
+            elif util.istype(value, 'address-media_access_control'):
+                return util.address_mac(value)
+        elif util.istype(value, 'number|string-number'):
+            return util.address_ipv4(util.address_prefix_length_to_mask(value))
+        else:
+            raise Exception(f"TypeError: require type address or number")
     def address_ip_to_mac_multicast(value: str) -> str:
         if util.istype(value, 'address-ipv4'):
             return util.address_ipv4_to_mac_multicast(value)
-        if util.istype(value, 'address-ipv6'):
+        elif util.istype(value, 'address-ipv6'):
             return util.address_ipv6_to_mac_multicast(value)
-    def address_ipv4(value: str = None) -> str:
+        else:
+            raise Exception(f"TypeError: require type address-ipv4 or address-ipv6")
+    def __address_ipv4(value: str = None) -> str:
         output = ''
         if value == None:
             for i in range(4): output += util.dec2bin(util.random(0, 255), 8)
@@ -917,29 +897,58 @@ class util:
             else:
                 for i in range(0, 32, 8): output += ('' if output == '' else '.') + str(util.bin2dec(value[i:i + 8]))
         return output
+    def address_ipv4(value: str = None) -> str:
+        def generate() -> str:
+            # generate a random number and convert to 8-bit binary for each octet
+            return ''.join([util.dec2bin(util.random(0, 255), 8) for i in range(4)])
+        def toBinary(text: str) -> str:
+            # convert each number to 8-bit binary string (octet)
+            return ''.join([util.dec2bin(int(octet), 8) for octet in text.split('.')])
+        def toText(binary: str) -> str:
+            # convert each 8-bit binary string to number (octet)
+            return '.'.join([str(util.bin2dec(binary[i:i+8])) for i in range(0, 32, 8)])
+        # generate random binary
+        if value == None:
+            return generate()
+        # text to binary
+        elif '.' in value:
+            if not len(value.split('.')) == 4:
+                raise Exception(f"Error: invalid IPv4 address (requires 4 octets)")
+            return toBinary(value)
+        # binary to text
+        else:
+            if not len(value) == 32:
+                raise Exception(f"Error: invalid IPv4 address (improper length)")
+            return toText(value)
     def address_ipv4_broadcast(address: str, netmask: int|str) -> str:
-        address = util.address_binary(address)
-        netmask = util.address_binary(netmask)
-        prefix_length = util.address_mask_to_prefix_length(netmask)
-        return address[0:prefix_length].ljust(32, '1')
+        binary_address = util.address_binary(address)
+        binary_netmask = util.address_binary(netmask)
+        prefix_length = util.address_mask_to_prefix_length(binary_netmask)
+        return binary_address[0:prefix_length].ljust(32, '1')
     def address_ipv4_network_identifier(address: str, netmask: int|str) -> str:
-        address = util.address_binary(address)
-        netmask = util.address_binary(netmask)
-        prefix_length = util.address_mask_to_prefix_length(netmask)
-        return address[0:prefix_length].ljust(32, '0')
+        binary_address = util.address_binary(address)
+        binary_netmask = util.address_binary(netmask)
+        prefix_length = util.address_mask_to_prefix_length(binary_netmask)
+        return binary_address[0:prefix_length].ljust(32, '0')
     def address_ipv4_to_ipv6_4to6(value: str) -> str:
-        value = util.address_binary(value)
-        return '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111' + value
+        binary = util.address_binary(value)
+        return '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111' + binary
     def address_ipv4_to_ipv6_6to4(value: str) -> str:
-        value = util.address_binary(value)
-        return '0010000000000010' + value + '00000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        binary = util.address_binary(value)
+        return '0010000000000010' + binary + '00000000000000000000000000000000000000000000000000000000000000000000000000000000'
     def address_ipv4_to_ipv6_mapped(value: str) -> str:
-        value = util.address_binary(value)
-        return '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111' + value
+        binary = util.address_binary(value)
+        return '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111' + binary
     def address_ipv4_to_mac_multicast(value: str) -> str:
-        value = util.address_binary(value)
-        return util.hex2bin('01005E') + '0' + value[9:32]
-    def address_ipv6(value: str = None) -> str:
+        binary = util.address_binary(value)
+        return util.hex2bin('01005E') + '0' + binary[9:32]
+    def address_ipv4_to_ptr(address: str) -> str:
+        text: str = util.address_string(address)
+        digits = text.split('.')
+        digits.reverse()
+        ptr_prefix = ".".join(digits)
+        return f"{ptr_prefix}.in-addr.arpa"
+    def __address_ipv6(value: str = None) -> str:
         output = ''
         if value == None:
             for i in range(8): output += util.dec2bin(util.random(0, 65535), 16)
@@ -949,7 +958,7 @@ class util:
             if len(value) == 39:
                 for quartet in value.split(':'): output += util.hex2bin(quartet)
             else:
-                aArray = [(util.pad(quartet, 4, '0', 'left')) for quartet in quartets]
+                aArray = [quartet.ljust(4, '0') for quartet in quartets]
                 bArray = []
                 a = aArray.index('0000') if '0000' in aArray else -1
                 for i in range(len(aArray)):
@@ -984,28 +993,123 @@ class util:
             else:
                 output = ':'.join(aArray)
         return output
+    def address_ipv6(value: str = None) -> str:
+        def generate() -> str:
+            # generate a random number and convert to 16-bit binary for each hextet
+            return ''.join([util.dec2bin(util.random(0, 65535), 16) for i in range(8)])
+        def toBinary(text: str) -> str:
+            isCompressed = '::' in text or any(len(hextet) < 4 for hextet in text.split(':'))
+            if isCompressed:
+                hextets = util.address_ipv6_uncompress(text).split(':')
+            else:
+                hextets = text.split(':')
+            # convert each 4-digit hexadecimal string to 16-bit binary string (hextet)
+            binary = ''
+            for hextet in hextets:
+                binary += util.hex2bin(hextet)
+            return binary
+        def toText(binary: str) -> str:
+            # convert each 16-bit binary string to 4-digit hexadecimal string (hextet)
+            text = ":".join([util.bin2hex(binary[i:i+16]) for i in range(0, 128, 16)])
+            return util.address_ipv6_compress(text)
+        # generate random binary
+        if value == None:
+            return generate()
+        # text to binary
+        elif ':' in value:
+            return toBinary(value)
+        # binary to text
+        else:
+            if not len(value) == 128:
+                raise Exception(f"Error: invalid IPv6 address (improper length)")
+            return toText(value)
+    def address_ipv6_compress(text: str) -> str:
+        if not ':' in text:
+            raise Exception(f"Error: invalid IPv6 address")
+        # ensure address is fully expanded
+        text = util.address_ipv6_uncompress(text)
+        # remove all zero expansion block hextets and insert the double colon notation
+        if text.startswith('0000:'):
+            text = text.replace('0000:', '')
+            text = '::' + text
+        elif text.endswith(':0000'):
+            text = text.replace(':0000', '')
+            text = text + '::'
+        elif '0000' in text:
+            index = text.index('0000')
+            text = text.replace('0000:', '')
+            text = text[:index] + ':' + text[index:]
+        # strip leading zeros in each hextet
+        hextets = text.split(':')
+        for index, hextet in enumerate(hextets):
+            if len(hextet) == 0: continue
+            hextets[index] = hex(int(hextet, 16))[2:]
+        return ':'.join(hextets)
+    def address_ipv6_expand(text: str) -> str:
+        return util.address_ipv6_uncompress(text)
+    def address_ipv6_uncompress(text: str) -> str:
+        if not ':' in text:
+            raise Exception(f"Error: invalid IPv6 address (missing colon)")
+        if len(text.split('::')) > 2:
+            raise Exception(f"Error: invalid IPv6 address (more than one '::')")
+        # address is already fully expanded
+        if '::' not in text:
+            hextets = text.split(':')
+            if len(hextets) != 8:
+                raise Exception(f"Error: invalid IPv6 address (requires 8 hextets)")
+            # pad hextets to 4 hexadecimal digits
+            return ':'.join(hextet.zfill(4) for hextet in hextets)
+        parts = text.split('::')
+        # process left and right parts of the '::'
+        # pad existing hextets to 4 hexadecimal digits
+        hextets_lt = [hextet.zfill(4) for hextet in parts[0].split(':') if hextet]
+        hextets_rt = [hextet.zfill(4) for hextet in parts[1].split(':') if hextet]
+        # calculate the number of zero blocks to insert
+        num_existing_hextets = len(hextets_lt) + len(hextets_rt)
+        num_zeros_to_insert = 8 - num_existing_hextets
+        if num_zeros_to_insert < 0:
+            raise Exception(f"Error: invalid IPv6 address")
+        # create the zero expansion block
+        expansion_blocks = ['0000'] * num_zeros_to_insert
+        hextets = hextets_lt + expansion_blocks + hextets_rt
+        return ':'.join(hextets)
     def address_ipv6_local_link_to_mac(value: str) -> str:
-        universal_local_bit = '1' if value[70] == '0' else '0'
-        return value[64:70] + universal_local_bit + value[71:88] + value[104:128]
+        binary = util.address_binary(value)
+        universal_local_bit = '1' if binary[70] == '0' else '0'
+        return binary[64:70] + universal_local_bit + binary[71:88] + binary[104:128]
     def address_ipv6_to_ipv4(value: str) -> str:
-        if util.istype(value, 'address-ipv6-4to6'):
-            return value[96:128]
-        if util.istype(value, 'address-ipv6-6to4'):
-            return value[16:48]
+        binary = util.address_binary(value)
+        if util.istype(binary, 'address-ipv6-4to6'):
+            return binary[96:128]
+        elif util.istype(binary, 'address-ipv6-6to4'):
+            return binary[16:48]
+        else:
+            raise Exception(f"TypeError: require type address-ipv6-4to6 or address-ipv6-6to4")
     def address_ipv6_to_mac(value: str) -> str:
-        value = util.address_binary(value)
-        if util.istype(value, 'address-ipv6-local-link'):
-            return util.address_ipv6_local_link_to_mac(value)
-        if util.istype(value, 'address-ipv6-multicast'):
-            return util.address_ipv6_to_mac_multicast(value)
+        binary = util.address_binary(value)
+        if util.istype(binary, 'address-ipv6-local-link'):
+            return util.address_ipv6_local_link_to_mac(binary)
+        elif util.istype(binary, 'address-ipv6-multicast'):
+            return util.address_ipv6_to_mac_multicast(binary)
+        else:
+            raise Exception(f"TypeError: require type address-ipv6-local-link or address-ipv6-multicast")
     def address_ipv6_to_mac_multicast(value: str) -> bool:
-        value = util.address_binary(value)
-        return util.hex2bin('3333') + value[96:128]
+        binary = util.address_binary(value)
+        return util.hex2bin('3333') + binary[96:128]
+    def address_ipv6_to_ptr(address: str) -> str:
+        text_compressed = util.address_string(address)
+        text_expanded: str = util.address_ipv6_uncompress(text_compressed)
+        hexadecimal = text_expanded.replace(':', '')
+        digits = list(hexadecimal)
+        digits.reverse()
+        ptr_prefix = ".".join(digits)
+        return f"{ptr_prefix}.ip6.arpa"
     def address_is_ipv4_broadcast(value: str, network_identifier: str, subnetmask: str) -> bool:
-        value = util.address_binary(value)
-        if value == util.address_ipv4('255.255.255.255'): return True
-        return value == util.address_broadcast(network_identifier, subnetmask)
-    def address_mac(value: str) -> str:
+        binary = util.address_binary(value)
+        if binary == util.address_ipv4('255.255.255.255'):
+            return True
+        return binary == util.address_ipv4_broadcast(network_identifier, subnetmask)
+    def __address_mac(value: str) -> str:
         output = ''
         if value == None:
             for i in range(6): output += util.dec2bin(util.random(0, 255), 8)
@@ -1016,10 +1120,34 @@ class util:
             else:
                 output = '-'.join([(util.bin2hex(value[i:i+8])) for i in range(0, 48, 8)])
         return output
+    def address_mac(value: str) -> str:
+        def generate() -> str:
+            # generate a random number and convert to 8-bit binary for each octet
+            return ''.join([util.dec2bin(util.random(0, 255), 8) for i in range(6)])
+        def toBinary(text: str) -> str:
+            # convert each 2-digit hexadecimal string to 8-bit binary string (octet)
+            return ''.join([util.hex2bin(octet) for octet in text.split('-')])
+        def toText(binary: str) -> str:
+            # convert each 8-bit binary string to 2-digit hexadecimal string (octet)
+            return '-'.join([util.bin2hex(binary[i:i+8]) for i in range(0, 48, 8)])
+        # generate random binary
+        if value == None:
+            return generate()
+        # text to binary
+        elif '-' in value:
+            if not len(value.split('-')) == 6:
+                raise Exception(f"Error: invalid MAC address (requires 6 octets)")
+            return toBinary(value)
+        # binary to text
+        else:
+            if not len(value) == 48:
+                raise Exception(f"Error: invalid MAC address (improper length)")
+            return toText(value)
     def address_mac_to_ipv6_local_link(address: str, network_prefix: str) -> str:
-        if len(network_prefix) != 64: return util.system_log(__file__, inspect.currentframe().f_lineno, f"StringLengthError: variable-name=network_prefix variable-length={len(network_prefix)} length=eq64")
-        address = util.address_binary(address)
-        interface_identifier = address[0:24] + util.hex2bin('fffe') + address[24:48]
+        if len(network_prefix) != 64:
+            raise Exception(f"StringLengthError: network_prefix requires 64 characters")
+        binary = util.address_binary(address)
+        interface_identifier = binary[0:24] + util.hex2bin('fffe') + binary[24:48]
         universal_local_bit = '1' if interface_identifier[7] == '0' else '0'
         interface_identifier = interface_identifier[0:6] + universal_local_bit + interface_identifier[7:64]
         return network_prefix + interface_identifier
@@ -1038,22 +1166,20 @@ class util:
             if bit == None:
                 break
         return util.address_prefix_length_to_mask(prefix_length)
+    def address_mask_to_address_count(value: int|str) -> int:
+        prefix_length = util.address_mask_to_prefix_length(value)
+        return 2 ** (32 - prefix_length)
     def address_mask_to_prefix_length(value: str) -> str:
-        # networkmask|subnetworkmask: 11110000..., wildcardmask: 00001111...
-        value = util.address_binary(value)
-        if value.count('1') == 32 or value.count('0') == 32:
+        binary = util.address_binary(value)
+        if binary.count('1') == 32 or binary.count('0') == 32:
             return 32
         else:
-            character = '1' if value.find('0') > value.rfind('1') else '0'
-            return value.count(character)
+            character = '1' if binary.find('0') > binary.rfind('1') else '0'
+            return binary.count(character)
     def address_mask_to_wildcardmask(value: str) -> str:
-        value = util.address_binary(value)
-        prefix_length = value.count('1')
+        binary = util.address_binary(value)
+        prefix_length = binary.count('1')
         return ''.ljust(prefix_length, '0') + ''.ljust(32 - prefix_length, '1')
-    def address_network_identifier(address: str, netmask: int|str) -> str:
-        address = util.address_binary(address)
-        prefix_length = netmask if util.istype(netmask, 'number') else util.address_mask_to_prefix_length(netmask)
-        return address[0:prefix_length].ljust(32, '0')
     def address_prefix_length_to_mask(prefix_length: int|str) -> str:
         prefix_length = int(prefix_length)
         return ''.ljust(prefix_length, '1') + ''.ljust(32 - prefix_length, '0')
@@ -1063,29 +1189,15 @@ class util:
     def address_prefix_length_to_address_count(prefix_length: int|str) -> int:
         prefix_length = int(prefix_length)
         return 2 ** (32 - prefix_length)
-    def address_string(value: int|str) -> str:
-        if util.istype(value, 'binary'):
-            if util.istype(value, 'address-internet_protocol_v4'):
-                return util.address_ipv4(value)
-            elif util.istype(value, 'address-internet_protocol_v6'):
-                return util.address_ipv6(value)
-            elif util.istype(value, 'address-media_access_control'):
-                return util.address_mac(value)
-            else:
-                return util.system_log(__file__, inspect.currentframe().f_lineno, f"TypeError: variable-name=value variable-value={value} variable-type={type(value)} type=address")
-        elif util.istype(value, 'address'):
-            return value
-        elif util.istype(value, 'number|string-number'):
-            return util.address_ipv4(util.address_prefix_length_to_mask(value))
-        else:
-            return util.system_log(__file__, inspect.currentframe().f_lineno, f"TypeError: variable-name=value variable-value={value} variable-type={type(value)} type=address|binary|number|string-number")
     def address_subnetting(network_identifier: str, netmask: int|str, subnets: int):
-        network_identifier = util.address_binary(network_identifier)
         netmask = util.address_binary(netmask)
         subnets = int(subnets)
-        # 
-        network_identifier = util.address_network_identifier(network_identifier, netmask)
-        # 
+        #
+        network_identifier = util.address_ipv4_network_identifier(
+            util.address_binary(network_identifier),
+            netmask
+        )
+        #
         network_mask_prefix_length = netmask.index('0')
         network_extension_length = None
         if subnets == 1:
@@ -1105,15 +1217,13 @@ class util:
         for x in range(0, 2 ** network_extension_length, 1):
             network_identifiers.append(network_identifier[0:network_mask_prefix_length] + util.dec2bin(x, network_extension_length) + ''.ljust(wildcardmask_prefix_length, '0'))
         return [subnetmask, network_identifiers]
-    def address_type(value: str) -> str:
-        pass
     def address_wildcardmask_to_mask(value: str) -> str:
-        value = util.address_binary(value)
-        prefix_length = value.count('0')
+        binary = util.address_binary(value)
+        prefix_length = binary.count('0')
         return ''.ljust(prefix_length, '1') + ''.ljust(32 - prefix_length, '0')
     def address_wildcardmask_to_prefix_length(value: str) -> str:
-        value = util.address_binary(value)
-        return value.count('0')
+        binary = util.address_binary(value)
+        return binary.count('0')
     def algebra_prime_factorization(number: int) -> list[int]:
         factors = []
         if number < 0:
@@ -1171,7 +1281,7 @@ class util:
                 factors[index][0] = -factors[index][0]
         return factors
     def algebra_factoring(number: int) -> list[list[int]]:
-        return uti.algebra_factor(number)
+        return util.algebra_factor(number)
     def algebra_quadratic_formula(a: float, b: float, c: float) -> tuple[float, float]:
         try:
             return ((-b)+math.sqrt(b**2-4*a*c))/(a*2), ((-b)-math.sqrt(b**2-4*a*c))/(a*2)
@@ -1438,22 +1548,37 @@ class util:
         z = height
         return [x, y, z]
     # d
+    def date_to_julian_date(date: datetime.datetime) -> int:
+        """
+        Converts a Gregorian date to a Julian date.
+        The Julian Date is the continuous count of days since the beginning of the
+        Julian Period, starting from noon Universal Time on January 1, 4713 BC.
+        """
+        year = date.year
+        month = date.month
+        day = date.day
+        if month <= 2:
+            year -= 1
+            month += 12
+        # algorithm for Julian Day Number calculation
+        a = year // 100
+        b = a // 4
+        c = 2 - a + b
+        e = int(365.25 * (year + 4716))
+        f = int(30.6001 * (month + 1))
+        julian_day_number = c + day + e + f - 1524
+        return julian_day_number
+
     def degrees_to_radians(degrees: float|int) -> float:
         return degrees * util.DEGREES_TO_RADIANS
     def dump(value: dict|list, tabs: int = 0):
-        if isinstance(value, array|object):
-            value = value.data
         def tab(count: int, size: int = 4):
             return " " * count * size
         def get(value, tabs: int = 0) -> str:
             if value == None:
-                return 'None'
-            elif isinstance(value, bool):
-                return str(value)
-            elif isinstance(value, float|int):
-                return str(value)
+                return 'null'
             elif isinstance(value, str):
-                return '\'' + value + '\''
+                return f"'{value}'"
             elif isinstance(value, dict|list):
                 return util.dump(value, tabs)
             else:
@@ -1537,7 +1662,7 @@ class util:
         return None
     def entries_remove(entries: list[dict], values: list) -> list[dict]:
         identifierKey = ''
-        if entries == []: 
+        if entries == []:
             return []
         identifierKey = 'id' if 'id' in entries[0] else 'identifier'
         identifiers: list[str] = [(value[identifierKey] if isinstance(value, dict) else value) for value in values]
@@ -1563,7 +1688,7 @@ class util:
             pass
         elif isinstance(value, str):
             value = value.encode()
-        elif isinstance(value, array|dict|list|object):
+        elif isinstance(value, dict|list):
             value = util.json_encode(value)
             assert isinstance(value, str)
             value = value.encode()
@@ -1684,28 +1809,28 @@ class util:
     def file_read_data(path: str) -> dict:
         dataTypes = {
             'list':{
-                'lines': 'multiple', 
-                'type': 'object', 
-            }, 
+                'lines': 'multiple',
+                'type': 'object',
+            },
             'name': {
-                'lines': 'single', 
-                'type': 'string', 
+                'lines': 'single',
+                'type': 'string',
             },
             'reference': {
-                'lines': 'single', 
-                'type': 'array', 
-            }, 
+                'lines': 'single',
+                'type': 'array',
+            },
             'subtitle': {
-                'lines': 'single', 
-                'type': 'string', 
+                'lines': 'single',
+                'type': 'string',
             },
             'table': {
-                'lines': 'multiple', 
-                'type': 'object', 
-            }, 
+                'lines': 'multiple',
+                'type': 'object',
+            },
             'title': {
-                'lines': 'single', 
-                'type': 'string', 
+                'lines': 'single',
+                'type': 'string',
             },
         }
         def isBlank(line: str):
@@ -1815,15 +1940,15 @@ class util:
             return int(os.path.getmtime(path))
     def file_write(path: str, value: bytes|dict|int|float|list|str):
         forbiddenCharacters = {
-            '"': '&quot;', 
-            '*': '&ast;', 
-            '/': '&sol;', 
-            ':': '&colon;', 
-            '<': '&lt;', 
-            '>': '&gt;', 
-            '?': '&quest;', 
-            '\\': '&bsol;', 
-            '|': '&verbar;', 
+            '"': '&quot;',
+            '*': '&ast;',
+            '/': '&sol;',
+            ':': '&colon;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '?': '&quest;',
+            '\\': '&bsol;',
+            '|': '&verbar;',
         }
         pathInfo = util.path_info(path)
         changedFilename = False
@@ -1840,8 +1965,6 @@ class util:
             value = value.encode()
         elif isinstance(value, dict|list):
             value = util.json_encode(value).encode()
-        elif isinstance(value, array|object):
-            value = util.json_encode(value.data).encode()
         else:
             value = str(value).encode()
         file = open(path, 'wb')
@@ -1858,10 +1981,12 @@ class util:
     def fraction_to_percentage(numerator: float, denominator: float) -> float:
         return round(numerator / denominator * 100, 3)
     # g
-    def geographic_ddd_to_ddm(point: list[str]) -> list[str]:
+    def geographic_ddd_to_ddm(*point) -> list[str]:
+        point = point[0] if len(point) == 1 else list(point)
         if not util.istype(point, 'coordinates-geographic-ddd'):
-            raise ValueError(f"ValueError: variable-name=point variable-value={point} >>> Invalid format")
+            raise Exception(f"ValueError: invalid geographic coordinate format")
         point = [float(point[0]), float(point[1])]
+        direction = 'N' if point[0] >= 0 else 'S'
         degrees = int(abs(point[0]))
         minutes = int((abs(point[0]) - degrees) * 60)
         seconds = int(round((abs(point[0]) - degrees - minutes / 60) * 3600, 0))
@@ -1871,9 +1996,9 @@ class util:
         if minutes == 60:
             minutes = 0
             degrees += 1
-        direction = 'N' if point[0] >= 0 else 'S'
         decimal_minutes = minutes + seconds/60
         latitude = f"{degrees:02d}{decimal_minutes:05.2f}{direction}"
+        direction = 'E' if point[1] >= 0 else 'W'
         degrees = int(abs(point[1]))
         minutes = int((abs(point[1]) - degrees) * 60)
         seconds = int(round((abs(point[1]) - degrees - minutes / 60) * 3600, 0))
@@ -1883,14 +2008,15 @@ class util:
         if minutes == 60:
             degrees += 1
             minutes = 0
-        direction = 'E' if point[1] >= 0 else 'W'
         decimal_minutes = minutes + seconds/60
         longitude = f"{degrees:03d}{decimal_minutes:05.2f}{direction}"
         return [latitude, longitude]
-    def geographic_ddd_to_dms(point: list[str]) -> list[str]:
+    def geographic_ddd_to_dms(*point) -> list[str]:
+        point = point[0] if len(point) == 1 else list(point)
         if not util.istype(point, 'coordinates-geographic-ddd'):
-            raise ValueError(f"ValueError: variable-name=point variable-value={point} >>> Invalid format")
+            raise Exception(f"ValueError: invalid geographic coordinate format")
         point = [float(point[0]), float(point[1])]
+        direction = 'N' if point[0] >= 0 else 'S'
         degrees = int(abs(point[0]))
         minutes = int((abs(point[0]) - degrees) * 60)
         seconds = int(round((abs(point[0]) - degrees - minutes / 60) * 3600, 0))
@@ -1900,8 +2026,8 @@ class util:
         if minutes == 60:
             minutes = 0
             degrees += 1
-        direction = 'N' if point[0] >= 0 else 'S'
         latitude = f"{degrees:02d}{minutes:02d}{seconds:02d}{direction}"
+        direction = 'E' if point[1] >= 0 else 'W'
         degrees = int(abs(point[1]))
         minutes = int((abs(point[1]) - degrees) * 60)
         seconds = int(round((abs(point[1]) - degrees - minutes / 60) * 3600, 0))
@@ -1911,160 +2037,107 @@ class util:
         if minutes == 60:
             degrees += 1
             minutes = 0
-        direction = 'E' if point[1] >= 0 else 'W'
         longitude = f"{degrees:03d}{minutes:02d}{seconds:02d}{direction}"
         return [latitude, longitude]
-    def geographic_ddm_to_ddd(point: list[str]) -> list[str]:
-        if '°' in point[0] or '*' in point[0]:
-            if point[0][0] == 'N' or point[0][0] == 'S':
-                pattern = r"^(?P<direction>N|S)(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?$"
-            if point[0][-1] == 'N' or point[0][-1] == 'S':
-                pattern = r"^(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?(?P<direction>N|S)$"
-        else:
-            if point[0][0] == 'N' or point[0][0] == 'S':
-                pattern = r"^(?P<direction>N|S)(?P<degrees>[0-8][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))(?P<direction>N|S)$"
-            if point[0][-1] == 'N' or point[0][-1] == 'S':
-                pattern = r"^(?P<degrees>[0-8][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))$"
+    def geographic_ddm_to_ddd(*point) -> list[str]:
+        point = point[0] if len(point) == 1 else list(point)
+        if not util.istype(point, 'coordinates-geographic-ddm'):
+            raise Exception(f"ValueError: invalid geographic coordinate format")
+        pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}" if not ('°' in point[0] or '*' in point[0]) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}"
+        pattern = f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}{pattern}$" if (point[0][0] == 'N' or point[0][0] == 'S') else f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$"
         match = re.match(pattern, point[0])
         groups = match.groupdict()
+        direction = groups["direction"]
         degrees = int(groups["degrees"])
         minutes = float(groups['decimal_minutes'])
-        direction = groups["direction"]
         decimal_degrees = degrees + minutes/60
         decimal_degrees *= 1 if direction == 'N' else -1
         latitude = f"{decimal_degrees:.6f}"
-        if '°' in point[1] or '*' in point[1]:
-            if point[1][0] == 'E' or point[1][0] == 'W':
-                pattern = r"^(?P<direction>E|W)(?P<degrees>[0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?$"
-            if point[1][-1] == 'E' or point[1][-1] == 'W':
-                pattern = r"^(?P<degrees>[0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?(?P<direction>E|W)$"
-        else:
-            if point[1][0] == 'E' or point[1][0] == 'W':
-                pattern = r"^(?P<direction>E|W)(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))$"
-            if point[1][-1] == 'E' or point[1][-1] == 'W':
-                pattern = r"^(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))(?P<direction>E|W)$"
+        pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}" if not ('°' in point[1] or '*' in point[1]) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}"
+        pattern = f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}{pattern}$" if (point[1][0] == 'E' or point[1][0] == 'W') else f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$"
         match = re.match(pattern, point[1])
         groups = match.groupdict()
+        direction = groups["direction"]
         degrees = int(groups["degrees"])
         minutes = float(groups['decimal_minutes'])
-        direction = groups["direction"]
         decimal_degrees = degrees + minutes/60
         decimal_degrees *= 1 if direction == 'E' else -1
         longitude = f"{decimal_degrees:.6f}"
         return [latitude, longitude]
-    def geographic_ddm_to_dms(point: list[str]) -> list[str]:
-        if '°' in point[0] or '*' in point[0]:
-            if point[0][0] == 'N' or point[0][0] == 'S':
-                pattern = r"^(?P<direction>N|S)(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?$"
-            if point[0][-1] == 'N' or point[0][-1] == 'S':
-                pattern = r"^(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?(?P<direction>N|S)$"
-        else:
-            if point[0][0] == 'N' or point[0][0] == 'S':
-                pattern = r"^(?P<direction>N|S)(?P<degrees>[0-8][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))(?P<direction>N|S)$"
-            if point[0][-1] == 'N' or point[0][-1] == 'S':
-                pattern = r"^(?P<degrees>[0-8][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))$"
+    def geographic_ddm_to_dms(*point) -> list[str]:
+        point = point[0] if len(point) == 1 else list(point)
+        if not util.istype(point, 'coordinates-geographic-ddm'):
+            raise Exception(f"ValueError: invalid geographic coordinate format")
+        pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}" if not ('°' in point[0] or '*' in point[0]) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}"
+        pattern = f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}{pattern}$" if (point[0][0] == 'N' or point[0][0] == 'S') else f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$"
         match = re.match(pattern, point[0])
         groups = match.groupdict()
+        direction = groups["direction"]
         degrees = int(groups["degrees"])
         minutes = float(groups['decimal_minutes'])
-        direction = groups["direction"]
         decimal_degrees = degrees + minutes/60
         decimal_degrees *= 1 if direction == 'N' else -1
         latitude = f"{decimal_degrees}"
-        if '°' in point[1] or '*' in point[1]:
-            if point[1][0] == 'E' or point[1][0] == 'W':
-                pattern = r"^(?P<direction>E|W)(?P<degrees>[0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?$"
-            if point[1][-1] == 'E' or point[1][-1] == 'W':
-                pattern = r"^(?P<degrees>[0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<decimal_minutes>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9]|[0-9][0-9]))'?(?P<direction>E|W)$"
-        else:
-            if point[1][0] == 'E' or point[1][0] == 'W':
-                pattern = r"^(?P<direction>E|W)(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))$"
-            if point[1][-1] == 'E' or point[1][-1] == 'W':
-                pattern = r"^(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<decimal_minutes>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])\.([0-9][0-9]))(?P<direction>E|W)$"
+        pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}" if not ('°' in point[1] or '*' in point[1]) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}"
+        pattern = f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}{pattern}$" if (point[1][0] == 'E' or point[1][0] == 'W') else f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$"
         match = re.match(pattern, point[1])
         groups = match.groupdict()
+        direction = groups["direction"]
         degrees = int(groups["degrees"])
         minutes = float(groups['decimal_minutes'])
-        direction = groups["direction"]
         decimal_degrees = degrees + minutes/60
         decimal_degrees *= 1 if direction == 'E' else -1
         longitude = f"{decimal_degrees}"
         return util.geographic_ddd_to_dms([latitude, longitude])
-    def geographic_dms_to_ddd(point: list[str]) -> list[str]:
-        if '°' in point[0] or '*' in point[0]:
-            if point[0][0] == 'N' or point[0][0] == 'S':
-                pattern = r"^(?P<direction>N|S)(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)\"?$"
-            if point[0][-1] == 'N' or point[0][-1] == 'S':
-                pattern = r"^(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)\"?(?P<direction>N|S)$"
-        else:
-            if point[0][0] == 'N' or point[0][0] == 'S':
-                pattern = r"^(?P<direction>N|S)(?P<degrees>[0-8][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)$"
-            if point[0][-1] == 'N' or point[0][-1] == 'S':
-                pattern = r"^(?P<degrees>[0-8][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)(?P<direction>N|S)$"
+    def geographic_dms_to_ddd(*point) -> list[str]:
+        point = point[0] if len(point) == 1 else list(point)
+        if not util.istype(point, 'coordinates-geographic-dms'):
+            raise Exception(f"ValueError: invalid geographic coordinate format")
+        pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}" if not ('°' in point[0] or '*' in point[0]) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}"
+        pattern = f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}{pattern}$" if (point[0][0] == 'N' or point[0][0] == 'S') else f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$"
         match = re.match(pattern, point[0])
         groups = match.groupdict()
+        direction = groups["direction"]
         degrees = int(groups["degrees"])
         minutes = int(groups["minutes"])
         seconds = float(groups["seconds"])
-        direction = groups["direction"]
         decimal_degrees = degrees + minutes/60 + seconds/3600
         decimal_degrees *= 1 if direction == 'N' else -1
-        latitude = f"{decimal_degrees}"
-        if '°' in point[1] or '*' in point[1]:
-            if point[1][0] == 'E' or point[1][0] == 'W':
-                pattern = r"^(?P<direction>E|W)(?P<degrees>[0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)\"?$"
-            if point[1][-1] == 'E' or point[1][-1] == 'W':
-                pattern = r"^(?P<degrees>[0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)\"?(?P<direction>E|W)$"
-        else:
-            if point[1][0] == 'E' or point[1][0] == 'W':
-                pattern = r"^(?P<direction>E|W)(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)$"
-            if point[1][-1] == 'E' or point[1][-1] == 'W':
-                pattern = r"^(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)(?P<direction>E|W)$"
+        latitude = f"{decimal_degrees:.6f}"
+        pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}" if not ('°' in point[1] or '*' in point[1]) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}"
+        pattern = f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}{pattern}$" if (point[1][0] == 'E' or point[1][0] == 'W') else f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$"
         match = re.match(pattern, point[1])
         groups = match.groupdict()
+        direction = groups["direction"]
         degrees = int(groups["degrees"])
         minutes = int(groups["minutes"])
         seconds = float(groups["seconds"])
-        direction = groups["direction"]
         decimal_degrees = degrees + minutes/60 + seconds/3600
         decimal_degrees *= 1 if direction == 'E' else -1
-        longitude = f"{decimal_degrees}"
+        longitude = f"{decimal_degrees:.6f}"
         return [latitude, longitude]
-    def geographic_dms_to_ddm(point: list[str]) -> list[str]:
-        if '°' in point[0] or '*' in point[0]:
-            if point[0][0] == 'N' or point[0][0] == 'S':
-                pattern = r"^(?P<direction>N|S)(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)\"?$"
-            if point[0][-1] == 'N' or point[0][-1] == 'S':
-                pattern = r"^(?P<degrees>[0-9]|[0-8][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)\"?(?P<direction>N|S)$"
-        else:
-            if point[0][0] == 'N' or point[0][0] == 'S':
-                pattern = r"^(?P<direction>N|S)(?P<degrees>[0-8][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)$"
-            if point[0][-1] == 'N' or point[0][-1] == 'S':
-                pattern = r"^(?P<degrees>[0-8][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(\.\d+)?)(?P<direction>N|S)$"
+    def geographic_dms_to_ddm(*point) -> list[str]:
+        point = point[0] if len(point) == 1 else list(point)
+        if not util.istype(point, 'coordinates-geographic-dms'):
+            raise Exception(f"ValueError: invalid geographic coordinate format")
+        pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}" if not ('°' in point[0] or '*' in point[0]) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}"
+        pattern = f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}{pattern}$" if (point[0][0] == 'N' or point[0][0] == 'S') else f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$"
         match = re.match(pattern, point[0])
         groups = match.groupdict()
+        direction = groups["direction"]
         degrees = int(groups["degrees"])
         minutes = int(groups["minutes"])
         seconds = float(groups["seconds"])
-        direction = groups["direction"]
         decimal_minutes = minutes + seconds/60
         latitude = f"{degrees:02d}{decimal_minutes:05.2f}{direction}"
-        if '°' in point[1] or '*' in point[1]:
-            if point[1][0] == 'E' or point[1][0] == 'W':
-                pattern = r"^(?P<direction>E|W)(?P<degrees>[0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(.\d+)?)\"?$"
-            if point[1][-1] == 'E' or point[1][-1] == 'W':
-                pattern = r"^(?P<degrees>[0-9]|[0-9][0-9]|0[0-9][0-9]|1[0-7][0-9])(°|\*)?(?P<minutes>[0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])'?(?P<seconds>([0-9]|0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(.\d+)?)\"?(?P<direction>E|W)$"
-        else:
-            if point[1][0] == 'E' or point[1][0] == 'W':
-                pattern = r"^(?P<direction>E|W)(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(.\d+)?)$"
-            if point[1][-1] == 'E' or point[1][-1] == 'W':
-                pattern = r"^(?P<degrees>0[0-9][0-9]|1[0-7][0-9])(?P<minutes>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(?P<seconds>(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])(.\d+)?)(?P<direction>E|W)$"
+        pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}" if not ('°' in point[1] or '*' in point[1]) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}"
+        pattern = f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}{pattern}$" if (point[1][0] == 'E' or point[1][0] == 'W') else f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$"
         match = re.match(pattern, point[1])
         groups = match.groupdict()
+        direction = groups["direction"]
         degrees = int(groups["degrees"])
         minutes = int(groups["minutes"])
         seconds = float(groups["seconds"])
-        direction = groups["direction"]
         decimal_minutes = minutes + seconds/60
         longitude = f"{degrees:03d}{decimal_minutes:05.2f}{direction}"
         return [latitude, longitude]
@@ -2425,47 +2498,20 @@ class util:
         # runs in only ECMAScript 5
         return js2py.eval_js(path)
     def json_encode(value: dict|list) -> str:
-        def typeConversion(value):
-            # convert array to list and object to dict
-            if isinstance(value, array|object):
-                value = value.data
-            if isinstance(value, dict):
-                for k, v in value.items():
-                    if isinstance(v, array|object):
-                        value[k] = v.data
-                        typeConversion(value[k])
-            if isinstance(value, list):
-                for i, v in enumerate(value):
-                    if isinstance(v, array|object):
-                        value[i] = v.data
-                        typeConversion(value[i])
-            return value
-        value = typeConversion(value)
         try:
             return json.dumps(value)
         except:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"TypeError: variable-name=value variable-type={type(value)} type=array|object")
-            if isinstance(value, dict):
-                return "{}"
-            if isinstance(value, list):
-                return "[]"
+            raise Exception(f"TypeError: ")
     def json_decode(value: str) -> dict|list:
         try:
             return json.loads(value)
         except:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"TypeError: variable-name=value variable-type={type(value)} type=string-array|string-object")
-            if util.istype(value, 'string-array'):
-                return []
-            if util.istype(value, 'string-object'):
-                return {}
+            raise Exception(f"TypeError: ")
     # k
 
     # l
     def len(value, base: int = 1) -> int:
-        if value == None: return 0
-        if str(len(value) / base).split('.')[1] != '0': 
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"ValueError: variable-name=value variable-value={value}")
-        return int(len(value) / base)
+        return util.mathematics_block_count(value, base)
     def logic_gate_and(inputs: list[bool]) -> bool:
         # (A ⋅ B) = AND
         return all(inputs)
@@ -2504,8 +2550,13 @@ class util:
             return minimum + (number % maximum)
         if number < minimum:
             return number % maximum
-    def mathematics_length(value: dict|list, base: int = 1) -> int:
-        return int(len(value) / base)
+    def mathematics_block_count(value: dict|int|list, base: int = 1) -> int:
+        """
+        Calculates the number of full blocks (segments) of size 'base'
+        that can be fit into the total length of the input 'value'.
+        """
+        if value == None: return 0
+        return len(value) // base
     def mathematics_random(*values):
         if util.importModule('random'): import random
         # 1. list item
@@ -2528,13 +2579,15 @@ class util:
                 random_number = random.randint(range[0], range[1])
                 return util.mathematics_round(random_number, placement) / multiple
     def mathematics_round(number: float, placement: int = 1) -> int|float:
-        number_whole, number_rational = str(float(number)).split('.')
+        multiplier = 10**placement
         if placement > 0:
-            v = number / 10**placement
-            number = round(round(v, 1) * 10**placement, 1)
-        elif placement < 0 and len(number_rational) > -placement:
+            number = round(number / multiplier, 1) * multiplier
+            # correct floating point precision errors when handling large numbers
+            number = round(number)
+        elif placement < 0:
             number = round(number, -placement)
         number = util.mathematics_simplify(number)
+
         return number
     def mathematics_simplify(number: int|float) -> int|float:
         return int(number) if str(number)[-2:] == '.0' else number
@@ -2549,7 +2602,7 @@ class util:
                 nMatrix[i][j] = matrix1[i][j] + matrix2[i][j]
         return nMatrix
     def matrix_combination(matrix1: list[list[int]], matrix2: list[list[int]]) -> list[list[int]]:
-        return 
+        return
     def matrix_multiplication(matrix1: list[list[int]], matrix2: list[list[int]]) -> list[list[int]]:
         rows = len(matrix1)
         columns = len(matrix1[0])
@@ -2601,16 +2654,9 @@ class util:
 
     # p
     def pad(string: str, length: int, pad: str = ' ', type = 'l') -> str:
-        length = length - len(string)
-        if length <= 0: return string
-        if type == 'l' or type == 'left':
-            return ''.ljust(length, pad) + string
-        if type == 'b' or type == 'both':
-            left = length / 2 if length % 2 == 0 else (length - 1) / 2
-            right = length - left
-            return ''.ljust(left, pad) + string + ''.ljust(right, pad)
-        if type == 'r' or type == 'right':
-            return string + ''.ljust(length, pad)
+        return util.string_pad(string, length, type, pad)
+    def pad_block(string: str, width: int, align: str = 'left', fillChar: str = ' '):
+        return util.string_pad_block(string, width, align, fillChar)
     def path_info(path: str, option: str = None) -> dict[str, str]|str:
         delimiter = '/' if '/' in path else '\\'
         # example: C:\\path\\filename.ext
@@ -2671,7 +2717,7 @@ class util:
             'TITLE': '',
             # string
         }
-        # 
+        #
         def getTagValue(tagKey: str, line: str) -> str:
             tagValue: str = line[0+len(tagKey)+1:]
             tagValue = tagValue.strip(' ')
@@ -2687,7 +2733,7 @@ class util:
                     break
                 tagContent += [line]
             return tagContent
-        # 
+        #
         lines = [line.strip(' ') for line in data.splitlines()]
         index = -1
         while index < len(lines) - 1:
@@ -2695,7 +2741,7 @@ class util:
             line = lines[index]
             # line bypass
             if line.startswith('#') or line.startswith('-----'): continue
-            # 
+            #
             tagKey = 'ABBREVIATIONS'
             if line.startswith(tagKey):
                 tag = results[tagKey]
@@ -2800,13 +2846,13 @@ class util:
                 tag = getTagValue(tagKey, line)
         return results
     def regular_expression_match(pattern: str, value: str) -> bool:
-        return bool(re.match(pattern, value))
+        return util.ispattern(value, pattern)
     def round(number: float, placement: int) -> float|int:
         # round non integer numbers by nth placement
         return round(number * (10 ** placement)) / (10 ** placement)
     # s
     def statistics_correlation_coefficient(numbers1: list[float], numbers2: list[float]):
-        if len(numbers1) != len(numbers2): raise ValueError("Lists must have the same length.")
+        if len(numbers1) != len(numbers2): raise Exception("ValueError: array length mismatch")
         xMean = util.statistics_mean(numbers1)
         yMean = util.statistics_mean(numbers2)
         xStandardDeviation = util.statistics_standard_deviation(numbers1)
@@ -2818,7 +2864,7 @@ class util:
         zScoreSum = util.statistics_sum(zScoresProduct)
         return (1 / (len(numbers1) - 1)) * zScoreSum
     def statistics_correlation_matrix(numbers: list[float]):
-        return 
+        return
     def statistics_count(numbers: list[float]) -> float:
         return len(numbers)
     def statistics_maximum(numbers: list[float]) -> float:
@@ -2891,6 +2937,25 @@ class util:
             return util.json_decode(value)
         else:
             return value
+    def string_pad(string: str, width: int, align: str = 'left', fillChar: str = ' ') -> str:
+        if len(string) >= width: return string
+        align = align.lower()
+        if align == 'right':
+            return string.rjust(width, fillChar)
+        elif align == 'center':
+            return string.center(width, fillChar)
+        else:
+            return string.ljust(width, fillChar)
+    def string_pad_block(string: str, width: int, align: str = 'left', fillChar: str = ' ') -> str:
+        padding_length = (width - len(string) % width) % width
+        if padding_length == 0: return string
+        align = align.lower()
+        if align == 'right':
+            return fillChar * padding_length + string
+        elif align == 'center':
+            return fillChar * math.floor(padding_length / 2) + string + fillChar * math.ceil(padding_length / 2)
+        else:
+            return string + fillChar * padding_length
     def spherical_to_cartesian(r: float, theta: float, phi: float) -> list[float]:
         x = r * math.sin(phi) * math.cos(theta)
         y = r * math.sin(phi) * math.sin(theta)
@@ -2950,34 +3015,6 @@ class util:
                     results += delimiter if x < len(rows) else ""
             return results
         return ""
-    def _table_decode(string: str, delimiter: str = '     ') -> list[dict[str, int|str]]:
-        entries = [  ]
-        def getHeaders(string: str, delimiter: str) -> dict[str, list[int]]:
-            headers = {  }
-            indexStart = 0
-            dLength = len(delimiter)
-            index = 0
-            while index < len(string):
-                if index == len(string)-1:
-                    value = string[indexStart:index+1].strip(' ')
-                    headers[value] = [indexStart, -1]
-                if string[index:index+dLength] == delimiter and string[index+dLength] != ' ':
-                    value = string[indexStart:index+dLength-1].strip(' ')
-                    headers[value] = [indexStart, index+dLength-1]
-                    indexStart = index+dLength
-                index += 1
-            return headers
-        lines = [line for line in string.split('\n') if len(line.strip(' ')) > 0]
-        headers = getHeaders(lines[0], delimiter)
-        for i in range(1, len(lines)):
-            line = lines[i]
-            entry = {  }
-            for header, indexes in headers.items():
-                indexStart = indexes[0]
-                indexEnd = len(line) if indexes[1] == -1 else indexes[1]
-                entry[header] = line[indexStart:indexEnd].strip(' ')
-            entries.append(entry)
-        return entries
     def table_decode(data: list|str, delimiter: str = '     ') -> list[dict[str, int|str]]:
         # NOTE: each header name must be unique
         rows = [  ]
@@ -2988,11 +3025,11 @@ class util:
         lines = [line for line in lines if len(line.strip(' ')) > 0]
         headers = [header.strip(' ') for header in lines[0].split(delimiter) if len(header.strip(' ')) > 0]
         if len(headers) == 0:
-            raise ValueError(f"Invalid table format: no headers found.")
+            raise Exception(f"ValueError: no headers found")
         for line in lines[1:]:
             cells = [cell.strip(' ') for cell in line.split(delimiter) if len(cell) > 0]
             if len(cells) != len(headers):
-                raise ValueError("Invalid table format: row has incorrect number of columns.")
+                raise Exception("ValueError: row and header column number mismatch")
             row = dict(zip(headers, cells))
             rows.append(row)
         return rows
@@ -3000,6 +3037,17 @@ class util:
         def convert(date: datetime.datetime, option: str) -> datetime.datetime|int|str:
             if option == None:
                 return date
+            if option.lower() == util.TIMESTAMP_OPTION_DICTIONARY:
+                return {
+                    "year"       : date.year,
+                    "month"      : date.month,
+                    "day"        : date.day,
+                    "hour"       : date.hour,
+                    "minute"     : date.minute,
+                    "second"     : date.second,
+                    "millisecond": int(date.microsecond / 1000) % 1000,
+                    "zone"       : 'Z',
+                }
             if option.lower() == util.TIMESTAMP_OPTION_MILLISECONDS:
                 return round((date.timestamp()) * 1000)
             if option.lower() == util.TIMESTAMP_OPTION_OBJECT:
@@ -3008,12 +3056,18 @@ class util:
                 return round(date.timestamp())
             if option.lower() == util.TIMESTAMP_OPTION_STRING:
                 return date.strftime('%Y%m%dT%H%M%S') + 'Z'
+            if option.lower() == util.TIMESTAMP_OPTION_STRING:
+                return date.strftime('%Y%m%dT%H%M%S') + 'Z'
             # if len(option) == 1 and util.regular_expression_match(r"^([A-I]|[K-Z])$"):
             #     zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[option]
             #     timezoneTO = datetime.timezone(datetime.timedelta(hours=zone_utc_offset))
             #     return date.astimezone(timezoneTO)
+        def isOption(value: str):
+            option = value.lower()
+            return option == util.TIMESTAMP_OPTION_DICTIONARY or option == util.TIMESTAMP_OPTION_MILLISECONDS or option == util.TIMESTAMP_OPTION_OBJECT or option == util.TIMESTAMP_OPTION_SECONDS or option == util.TIMESTAMP_OPTION_STRING
         def getString(value) -> dict:
             if '-' in value:
+                # print(f"DepreciationError: legacy timestamp format \"YYYY-MM-DDTHH:MM:SS\" depreciated")
                 if len(value) == 4 or len(value) == 5:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
                 if len(value) == 7 or len(value) == 8:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}"
                 if len(value) == 10 or len(value) == 11: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}"
@@ -3021,7 +3075,7 @@ class util:
                 if len(value) == 16 or len(value) == 17: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}"
                 if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}"
                 if len(value) == 23 or len(value) == 24: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
-            else: 
+            else:
                 if len(value) == 4 or len(value) == 5:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
                 if len(value) == 6 or len(value) == 7:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}"
                 if len(value) == 8 or len(value) == 9:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}"
@@ -3043,18 +3097,18 @@ class util:
                 date = datetime.datetime.fromtimestamp(value / 1000)
             return convert(date, convert_to)
         elif isinstance(value, str):
-            if value.lower() == util.TIMESTAMP_OPTION_MILLISECONDS or value.lower() == util.TIMESTAMP_OPTION_OBJECT or value.lower() == util.TIMESTAMP_OPTION_SECONDS or value.lower() == util.TIMESTAMP_OPTION_STRING:
+            if isOption(value):
                 return convert(date, value)
             elif bool(getString(value)):
                 groups = getString(value)
-                year = int(groups["year"])
-                month = int(groups["month"]) if "month" in groups else 1
-                day = int(groups["day"]) if "day" in groups else 1
-                hour = int(groups["hour"]) if "hour" in groups else 0
-                minute = int(groups["minute"]) if "minute" in groups else 0
-                second = int(groups["second"]) if "second" in groups else 0
+                year        = int(groups["year"])               if "year"        in groups else 1970
+                month       = int(groups["month"])              if "month"       in groups else 1
+                day         = int(groups["day"])                if "day"         in groups else 1
+                hour        = int(groups["hour"])               if "hour"        in groups else 0
+                minute      = int(groups["minute"])             if "minute"      in groups else 0
+                second      = int(groups["second"])             if "second"      in groups else 0
                 microsecond = int(groups["millisecond"]) * 1000 if "millisecond" in groups else 0
-                zone = groups["zone"] if "zone" in groups and groups['zone'] else 'Z'
+                zone        = groups["zone"]                    if groups['zone']          else 'Z'
                 zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[zone]
                 timezone = datetime.timezone(datetime.timedelta(hours=zone_utc_offset))
                 date = datetime.datetime(year=year, month=month, day=day, hour=hour, minute=minute, second=second, microsecond=microsecond, tzinfo=timezone)
@@ -3096,7 +3150,10 @@ class util:
         return f"{year}-{month}-{day}"
     def timestamp_day(timestamp: datetime.datetime|int|str = None) -> str:
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
-        return f"{timestamp.day}".ljust(2, '0')
+        return f"{timestamp.day}".rjust(2, '0')
+    def timestamp_day_of_year(timestamp: datetime.datetime|int|str = None) -> int:
+        timestamp: datetime.datetime = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        return timestamp.timetuple().tm_yday
     def timestamp_difference(timestamp1: datetime.datetime|int|str, timestamp2: datetime.datetime|int|str = None, short: bool = True) -> str:
         timestamp1 = util.timestamp(timestamp1, util.TIMESTAMP_OPTION_SECONDS)
         timestamp2 = util.timestamp(util.TIMESTAMP_OPTION_SECONDS) if timestamp2 == None else util.timestamp(timestamp2, util.TIMESTAMP_OPTION_SECONDS)
@@ -3147,6 +3204,51 @@ class util:
     def timestamp_hour(timestamp: datetime.datetime|int|str = None) -> str:
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return f"{timestamp.hour}".rjust(2, '0')
+    def __timestamp_julian_date(timestamp: datetime.datetime|int|str = None) -> int:
+        """
+        Converts a Gregorian date to a Julian date.
+        The Julian Date is the continuous count of days since the beginning of the
+        Julian Period, starting from noon Universal Time on January 1, 4713 BC.
+        """
+        timestamp: datetime.datetime = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        year = timestamp.year
+        month = timestamp.month
+        day = timestamp.day
+        # algorithm for Julian Day Number calculation
+        if month <= 2:
+            year -= 1
+            month += 12
+        a = year // 100
+        b = a // 4
+        c = 2 - a + b
+        e = int(365.25 * (year + 4716))
+        f = int(30.6001 * (month + 1))
+        julian_day_number = c + day + e + f - 1524
+        return julian_day_number
+    def timestamp_julian_date(timestamp: datetime.datetime|int|str = None) -> int:
+        timestamp: datetime.datetime = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        # reference point for Julian Day Number: January 1, 4713 BC, 12:00 UTC (JD 0.0)
+        # python datetime does not support dates before 1 CE, so we use a known reference point
+        # use 1858-11-17T00:00Z as a reference, which corresponds to JD 2400000.5
+        reference_date = datetime.datetime(1858, 11, 17, 0, 0, 0, tzinfo=timestamp.astimezone().tzinfo)
+        julian_date_reference = 2400000.5
+        # the offset from this reference to the input date will be added to the reference JD.
+        # calculate the difference in days from the reference date
+        difference = timestamp - reference_date
+        days_since_reference = difference.total_seconds() / (24 * 3600)
+        return julian_date_reference + days_since_reference
+    def timestamp_julian_day(timestamp: datetime.datetime|int|str = None) -> int:
+        return math.floor(util.timestamp_julian_date(timestamp))
+    def timestamp_julian_day_of_year(timestamp: datetime.datetime|int|str = None) -> int:
+        timestamp: datetime.datetime = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        first_day_of_year = datetime.datetime(timestamp.year, 1, 1, tzinfo=timestamp.astimezone().tzinfo)
+        # calculate the difference in days and add 1 (since it's a 1-indexed day count)
+        return (timestamp - first_day_of_year).days + 1
+    def timestamp_millisecond(timestamp: datetime.datetime|int|str = None) -> str:
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        millisecond = int(timestamp.microsecond / 1000)
+        if millisecond == '1000': millisecond = '0'
+        return f"{millisecond}".rjust(3, '0')
     def timestamp_minute(timestamp: datetime.datetime|int|str = None) -> str:
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return f"{timestamp.minute}".rjust(2, '0')
@@ -3159,14 +3261,14 @@ class util:
         return f"Q{quarter}" if short else util.TIME_QUARTERS[quarter-1]
     def timestamp_second(timestamp: datetime.datetime|int|str = None) -> str:
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
-        return f"{timestamp.minute}".rjust(2, '0')
+        return f"{timestamp.second}".rjust(2, '0')
     def timestamp_time(timestamp: datetime.datetime|int|str = None, short: bool = False) -> str:
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         hour = f"{timestamp.hour}".rjust(2, '0')
         minute = f"{timestamp.minute}".rjust(2, '0')
         second = f"{timestamp.second}".rjust(2, '0')
         millisecond = f"{timestamp.microsecond / 1000:.0f}".rjust(3, '0')
-        # TODO: regarding millisecond == 1000, increase second by one
+        # TODO: if millisecond == 1000, increase second by one
         if millisecond == '1000': millisecond = '999'
         return f"{hour}:{minute}:{second}" if short else f"{hour}:{minute}:{second}.{millisecond}"
     def timestamp_to_zone(timestamp: datetime.datetime|int|str, zone: str) -> datetime.datetime:
@@ -3197,7 +3299,7 @@ class util:
             'giaddr',
             'hdlc',
             'icmp', 'ieee', 'ip', 'id',
-            'mac', 
+            'mac',
             'ok',
             'rarp', 'rfc',
             'siaddr', 'sha', 'spa',
@@ -3217,7 +3319,7 @@ class util:
                     return special
             return string.capitalize()
         return ' '.join([convert(substring.lower()) for substring in string.split('_')])
-    
+
     # u
     def uri_encode(object: dict) -> str:
         uriString = ''
@@ -3328,14 +3430,16 @@ class util:
         if not len(vector1) == len(vector2):
             return util.system_log(__file__, inspect.currentframe().f_lineno, f"ArrayLengthError: require vectors of identical dimensions")
         return [c1 - c2 for c1, c2 in zip(vector1, vector2)]
-    def vector_to_components(magnitude: float, direction: float) -> list[float]:
+    def vector_to_component_form(magnitude: float, direction: float) -> list[float]:
         x = util.vector_to_x(magnitude, direction)
         y = util.vector_to_y(magnitude, direction)
         return [x, y]
     def vector_to_direction(x: float, y: float) -> list[float]:
         return math.atan2(y, x) * util.RADIANS_TO_DEGREES
     def vector_to_magnitude(x: float, y: float) -> list[float]:
-        return math.sqrt(x**2 + y**2)
+        return abs(math.sqrt(x**2 + y**2))
+    def vector_to_magnitude_direction_form(x: float, y: float) -> list[float]:
+        return [util.vector_to_magnitude(x, y), util.vector_to_direction(x, y)]
     def vector_to_x(magnitude: float, direction: float) -> list[float]:
         return magnitude * math.cos(direction * util.DEGREES_TO_RADIANS)
     def vector_to_y(magnitude: float, direction: float) -> list[float]:
@@ -3350,15 +3454,6 @@ class util:
 
     # z
 
-    def _dict(value) -> dict:
-        return value
-    def _int(value) -> int:
-        return value
-    def _list(value) -> list:
-        return value
-    def _str(value) -> str:
-        return value
-
     # ascii functions
     # default bits per character (size) = 8
     def _dataT_(data, datatype: str):
@@ -3368,12 +3463,6 @@ class util:
             method = F"{datatype}2{type}"
             print(method, getattr(globals()['util'], method)(data))
     # binary
-    def __len__(data: str, length: int):
-        while True:
-            if len(data) % length == 0:
-                break
-            data = '0' + data
-        return data
     def bin2byt(bin: str) -> bytes:
         if len(bin) == 0: return bytes()
         length = math.ceil(len(bin)/8)
@@ -3384,7 +3473,7 @@ class util:
         if len(bin) == 0: return 0
         return int(bin, 2)
     def bin2hex(bin: str) -> str:
-        bin = util.__len__(bin, 4)
+        bin = util.pad_block(bin, 4, 'right', '0')
         hex = ''
         for i in range(0, len(bin), 4):
             hex += util.dec2hex(util.bin2dec(bin[i:i+4]))
@@ -3392,7 +3481,7 @@ class util:
     def bin2oct(bin: str) -> str:
         return util.dec2oct(util.bin2dec(bin))
     def bin2str(bin: str, size: int = 8) -> str: # 8 bpc
-        bin = util.__len__(bin, size)
+        bin = util.pad_block(bin, size, 'right', '0')
         str = ''
         for i in range(0, len(bin), size):
             str += util.dec2cha(util.bin2dec(bin[i:i+size]))
@@ -3400,7 +3489,7 @@ class util:
     def bin2bol(bin: str) -> bool:
         return bin == '1'
     def bin2decs(bin: str, size: int = 8) -> list:
-        bin = util.__len__(bin, size)
+        bin = util.pad_block(bin, size, 'right', '0')
         decs = []
         for i in range(0, len(bin), size):
             decs.append(util.bin2dec(bin[i:i+size]))
@@ -3423,7 +3512,7 @@ class util:
         return util.bin2oct(util.byt2bin(byt))
     def byt2str(byt: bytes, size: int = 8) -> str: # 8 bpc
         bin = util.byt2bin(byt)
-        bin = util.__len__(bin, size)
+        bin = util.pad_block(bin, size, 'right', '0')
         str = ''
         for i in range(0, len(bin), size):
             str += util.bin2cha(bin[i:i+size])
@@ -3514,68 +3603,36 @@ class util:
             decs.append(util.cha2dec(cha))
         return decs
 
-class array:
+class array(list):
     def __init__(self, *values):
-        self.data: list = []
+        super().__init__()
+        flat_values = []
         for value in values:
             if isinstance(value, array|list|tuple):
-                self.data.extend(value)
+                flat_values.extend(value)
+            elif hasattr(value, '__iter__') and not isinstance(value, bytes|dict|str):
+                flat_values.extend(list(value))
             else:
-                self.data.append(value)
-    def __add__(self, other):
-        return self.__class__(self.data, other)
-    def __contains__(self, item):
-        return item in self.data
-    """def __copy__(self):
-        inst = self.__class__.__new__(self.__class__)
-        inst.__dict__.update(self.__dict__)
-        inst.__dict__["data"] = self.__dict__["data"][:]
-        return inst"""
-    def __delitem__(self, index):
-        del self.data[index]
-    def __eq__(self, other):
-        return self.data == self.__cast(other)
-    def __ge__(self, other):
-        return self.data >= self.__cast(other)
+                flat_values.append(value)
+        self.extend(flat_values)
     def __getitem__(self, index):
+        result = super().__getitem__(index)
         if isinstance(index, slice):
-            return self.__class__(self.data[index])
-        else:
-            return self.data[index]
-    def __gt__(self, other):
-        return self.data > self.__cast(other)
+            return self.__class__(*result)
+        return result
     def __iadd__(self, other):
-        if isinstance(other, array):
-            self.data += other.data
-        elif isinstance(other, list):
-            self.data += other
-        elif isinstance(other, tuple):
-            self.data += list(other)
+        if isinstance(other, array|list|tuple):
+            self.extend(other)
         else:
-            self.data += [other]
+            self.append(other)
         return self
-    def __imul__(self, other):
-        self.data *= other
-        return self
-    def __le__(self, other):
-        return self.data <= self.__cast(other)
-    def __len__(self):
-        return len(self.data)
-    def __lt__(self, other):
-        return self.data < self.__cast(other)
-    def __mul__(self, other):
-        return self.__class__(self.data * other)
-    def __radd__(self, other):
-        return self.__class__(other, self.data)
     def __repr__(self) -> str:
-        return f'{repr(self.data)}'
-    def __setitem__(self, index, value):
-        self.data[index] = value
-    __rmul__ = __mul__
-    def __cast(self, other):
-        return other.data if isinstance(other, array) else other
-    
-    def fromdata(data: bytes|dict|list|str):
+        return super().__repr__()
+    def __str__(self):
+        return json.dumps(self)
+
+    @staticmethod
+    def fromdata(data):
         nArray = array()
         if data == None:
             return nArray
@@ -3594,337 +3651,215 @@ class array:
         elif util.istype(data, 'string'):
             nArray = array.fromstring(data)
         else:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"TypeError: variable-name=data variable-value={data} variable-type={type(data)} type=array|bytes-array|bytes-object|object|string-array|string-object|string")
+            raise Exception(f"TypeError: {type(data)} unsupported")
         return nArray
-    def fromobject(data: dict, delimiter: str = ': '):
-        return array([(f"{key}{delimiter}{value}") for key, value in data.items()])
+    @staticmethod
+    def fromobject(data: dict|object, delimiter=': '):
+        return array((f"{key}{delimiter}{value}") for key, value in data.items())
+    @staticmethod
     def fromstring(data: str):
         nArray = array()
-        # data = 'value'
-        if not ',' in data and not ':' in data:
-            for substring in data.strip(' ,').split(','):
-                nArray.append(substring)
-        # data = 'value,value,value...'
-        if ',' in data and not ':' in data:
-            for substring in data.strip(' ,').split(','):
-                nArray.append(substring)
-        # data = 'value:value:value...'
-        if not ',' in data and ':' in data:
-            for substring in data.strip(' :').split(':'):
-                nArray.append(substring)
+        if data == None:
+            return nArray
+        trimmed_data = data.strip(' ,:')
+        hasComma = ',' in trimmed_data
+        hasColon = ':' in trimmed_data
         # data = 'value,value:value,value:value:value,value...'
-        if ',' in data and ':' in data:
-            for substring in data.strip(' ,').split(','):
+        if hasComma and hasColon:
+            for substring in trimmed_data.split(','):
                 nArray.append(array(substring.strip(' :').split(':')))
+        # data = 'value,value,value...'
+        if hasComma and not hasColon:
+            nArray.extend(trimmed_data.split(','))
+        # data = 'value:value:value...'
+        if not hasComma and hasColon:
+            nArray.extend(trimmed_data.split(':'))
+        # data = 'value'
+        if not hasComma and not hasColon:
+            nArray.append(trimmed_data)
         return nArray
+    @staticmethod
     def generate(*args):
         size = len(args)
-        start = 0 if size == 1 else args[0]
-        stop = args[0] if size == 1 else args[1]
-        step = args[2] if size == 3 else (1 if start < stop else -1)
-        for i in range(start, stop, step):
-            yield i
-
-    # def append(self, value): self.data.append(value)
-    def clear(self):
-        self.data.clear()
-    def copy(self):
-        return self.__class__(self)
-    def count(self, value):
-        return self.data.count(value)
-    def extend(self, other):
-        if isinstance(other, array):
-            self.data.extend(other.data)
+        start = stop = step = 0
+        if size == 1:
+            stop, start, step = args[0], 0, 1
+        elif size == 2:
+            start, stop, step = args[0], args[1], 1
+        elif size == 3:
+            start, stop, step = args
         else:
-            self.data.extend(other)
-    # def index(self, value, *args): self.data.index(value, *args)
-    def insert(self, index, value):
-        self.data.insert(index, value)
-    def pop(self, index: int = -1):
-        return self.data.pop(index)
-    # def remove(self, value): self.data.remove(value)
-    def reverse(self):
-        self.data.reverse()
-    def sort(self, **kwargs):
-        self.data.sort(**kwargs)
-    
-    def any(self) -> bool:
+            raise Exception(f"TypeError: expects 1 to 3 arguments")
+        yield from range(start, stop, step)
+
+    def __callback(self, callback: Callable[..., bool|Any], value: T, index: int, self_ref: 'array') -> bool|Any:
+        try:
+            return callback(value, index, self_ref)
+        except TypeError:
+            try:
+                return callback(value, index)
+            except TypeError:
+                try:
+                    return callback(value)
+                except TypeError:
+                    raise Exception(f"ValueError: callback accepts 1 to 3 arguments")
+
+    def any(self):
         return any(self)
     def append(self, *values):
-        for value in values:
-            self.data.append(value)
-        return self
+        self.extend(values)
+    def clear(self):
+        del self[:]
     def clone(self):
-        if util.importModule('copy'): import copy
+        import copy
         return copy.deepcopy(self)
+    def copy(self, start: int = 0, end: int = None):
+        if end is None:
+            end = len(self)
+        return array(*self[start:end])
+    def count(self, value):
+        return super().count(value)
     def dump(self):
-        return util.dump(self.data)
-    def empty(self) -> bool:
-        return len(self) == 0
-    def every(self, callback) -> bool:
-        arguments = len(str(inspect.signature(callback)).strip('()').split(', '))
-        for index, value in enumerate(self):
-            if arguments == 1:
-                if not callback(value): return False
-            if arguments == 2:
-                if not callback(value, index): return False
-            if arguments == 3:
-                if not callback(value, index, self): return False
-        return True
+        return util.dump(self)
+    def empty(self):
+        return not self
+    def enumerate(self):
+        return enumerate(self)
+    def every(self, callback: Callable[..., bool]) -> bool:
+        return all(self.__callback(callback, v, i, self) for i, v in enumerate(self))
     def excludes(self, *values) -> bool:
-        for value in values:
-            if value in self:
-                return False
-        return True
-    def find(self, callback):
-        arguments = len(str(inspect.signature(callback)).strip('()').split(', '))
-        for index, value in enumerate(self):
-            if arguments == 1:
-                if callback(value): return value
-            if arguments == 2:
-                if callback(value, index): return value
-            if arguments == 3:
-                if callback(value, index, self): return value
+        return all(val not in self for val in values)
+    def find(self, callback: Callable[..., bool]) -> T|None:
+        for i, v in enumerate(self):
+            if self.__callback(callback, v, i, self):
+                return v
         return None
-    def findindex(self, callback) -> int|None:
-        arguments = len(str(inspect.signature(callback)).strip('()').split(', '))
-        for index, value in enumerate(self):
-            if arguments == 1:
-                if callback(value): return index
-            if arguments == 2:
-                if callback(value, index): return index
-            if arguments == 3:
-                if callback(value, index, self): return index
+    def findindex(self, callback: Callable[..., bool]):
+        for i, v in enumerate(self):
+            if self.__callback(callback, v, i, self):
+                return i
         return None
-    def findvalue(self, callback):
+    def findvalue(self, callback: Callable[..., bool]):
         return self.find(callback)
-    def filter(self, callback):
-        arguments = len(str(inspect.signature(callback)).strip('()').split(', '))
-        nArray = array()
-        for index, value in enumerate(self):
-            if arguments == 1:
-                if callback(value): nArray.append(value)
-            if arguments == 2:
-                if callback(value, index): nArray.append(value)
-            if arguments == 3:
-                if callback(value, index, self): nArray.append(value)
-        return nArray
-    def fill(self, value):
-        for index in range(len(self)):
-            self[index] = value
+    def filter(self, callback: Callable[..., bool]):
+        return self.__class__(*(v for i, v in enumerate(self) if self.__callback(callback, v, i, self)))
+    def fill(self, value: Any):
+        for i in range(len(self)):
+            self[i] = value
         return self
-    def get(self, index: int, defaultvalue = None):
-        if index < 0:
-            value = self[index + len(self)]
-        elif index >= len(self):
-            value = None
-        else:
-            value = self[index]
-        return defaultvalue if value == None else value
-    def getFirst(self):
+    def get(self, index: int, default_value: Any = None) -> Any:
+        try:
+            return self[index]
+        except IndexError:
+            return default_value
+    def getfirst(self):
         return self.get(0)
-    def getLast(self):
+    def getlast(self):
         return self.get(-1)
     def hash(self, mode: str = util.HASH_MD5) -> str:
-        data = util.json_encode(self.data)
-        if mode == util.HASH_MD5:
-            return util.hash_md5(data)
-        elif mode == util.HASH_SHA1:
-            return util.hash_sha1(data)
-        elif mode == util.HASH_SHA224:
-            return util.hash_sha224(data)
-        elif mode == util.HASH_SHA256:
-            return util.hash_sha256(data)
-        elif mode == util.HASH_SHA384:
-            return util.hash_sha384(data)
-        elif mode == util.HASH_SHA512:
-            return util.hash_sha512(data)
+        data = util.json_encode(self)
+        func = getattr(util, f"hash_{mode.lower()}", None)
+        if func:
+            return func(data)
         else:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"ValueError: variable-name=mode variable-value={mode}")
+            raise Exception(f"ValueError: unsupported hash mode: {mode}")
             return ''
     def includes(self, *values) -> bool:
-        for value in values:
-            if not value in self:
-                return False
-        return True
+        return all(val in self for val in values)
     def index(self, value, start: int = 0) -> int:
-        for index in range(start, len(self)):
-            if self[index] == value: return index
-        return -1
+        try:
+            return super().index(value, start)
+        except ValueError:
+            return -1
+    def insert(self, index, value):
+        super().insert(index, value)
     def join(self, delimiter: str = '') -> str:
-        return delimiter.join(self.data)
+        return delimiter.join(map(str, self))
     def json(self) -> str:
-        return util.json_encode(self.data)
-    def map(self, callback):
-        arguments = len(str(inspect.signature(callback)).strip('()').split(', '))
-        nArray = array()
-        for index, oldValue in enumerate(self):
-            if arguments == 1:
-                newValue = callback(oldValue)
-            if arguments == 2:
-                newValue = callback(oldValue, index)
-            if arguments == 3:
-                newValue = callback(oldValue, index, self)
-            nArray.append(oldValue if newValue == None else newValue)
-        return nArray
+        return util.json_encode(self)
+    def map(self, callback: Callable[..., Any]):
+        return self.__class__(*(self.__callback(callback, v, i, self) for i, v in enumerate(self)))
+    def pop(self, index: int = -1) -> Any:
+        return super().pop(index)
     def product(self) -> int:
-        if len(self) == 0:
-            return 0
+        if not self: return 0
         value = 1
         for number in self:
             value *= number
         return value
-    def push(self, *values):
-        for value in values:
-            self.append(value)
-        return self
-    def random(self, *index):
-        nArray = self.slice(*index)
-        return util.random(nArray.data)
-    def remove(self, *values): 
-        return self.removevalues(*values)
+    def random(self, *index_range):
+        if not self: return None
+        if index_range:
+            start = index_range[0]
+            end = index_range[1] if len(index_range) > 1 else len(self)
+            nArray = self[start:end]
+        else:
+            nArray = self
+        return util.random(nArray)
+    def remove(self, condition: Callable[..., bool]):
+        if callable(condition):
+            nArray = [v for i, v in enumerate(self) if not self.__callback(condition, v, i, self)]
+        else:
+            value = condition
+            nArray = [v for v in self if v != value]
+        self[:] = nArray
     def removeduplicates(self):
-        def filter(item, index):
-            return self.index(item) == index
-        nArray = self.filter(filter)
-        self.clear()
-        self.append(*nArray)
-    def removeindexes(self, *values):
-        values = [value for value in values]
-        positiveIndexes = [value for value in values if value >= 0]
-        positiveIndexes.sort(reverse=True)
-        negativeIndexes = [value for value in values if value < 0]
-        negativeIndexes.sort(reverse=False)
-        indexes = [*positiveIndexes, *negativeIndexes]
-        for index in indexes:
-            self.pop(index)
-        return self
+        self[:] = list(dict.fromkeys(self))
+    def removeindexes(self, *indices):
+        sorted_indices = sorted(indices, reverse=True)
+        for index in sorted_indices:
+            if index < len(self) and index >= -len(self):
+                del self[index]
     def removevalues(self, *values):
-        for value in values:
-            index = self.index(value)
-            if not index == -1:
-                self.pop(index)
-        return self
-    def replaceindex(self, index: int, value):
+        unique_values = set(values)
+        self[:] = [item for item in self if item not in unique_values]
+    def replaceindex(self, index: int, value: Any):
         self[index] = value
-        return self
-    def replacevalue(self, oldvalue, newvalue):
+    def replacevalue(self, oldvalue: Any, newvalue: Any):
         index = self.index(oldvalue)
-        if not index == None:
+        if index != -1:
             self[index] = newvalue
-        return self
-    def resize(self, newSize: int):
-        oldSize = self.size()
-        if oldSize > newSize:
-            self.splice(newSize, oldSize - newSize)
-        if oldSize <  newSize:
-            for i in range(newSize - oldSize):
-                self.append(None)
-        return self
-    def set(self, index, value):
-        self.data.insert(index, value)
-        return self
+    def resize(self, size):
+        old_size = len(self)
+        if size < old_size:
+            del self[size:]
+        elif size > old_size:
+            self.extend([None] * (size - old_size))
+    def set(self, index: int, value: Any):
+        self.insert(index, value)
     def shuffle(self):
-        nArray = array()
-        while len(self) > 0:
-            index = util.random(len(self)-1)
-            nArray.append(self[index])
-            self.pop(index)
-        self.data = nArray.data
-        return self
-    def size(self) -> int:
+        import random
+        random.shuffle(self)
+    def size(self):
         return len(self)
-    def slice(self, *args):
-        start = (args[0] if args[0] >= 0 else args[0] + len(self)) if len(args) > 0 else 0
-        stop = (args[1] if args[1] >= 0 else args[1] + len(self)) if len(args) > 1 else len(self)
-        nArray = array()
-        for i in range(start, stop):
-            if i >= len(self): continue
-            nArray.append(self[i])
-        return nArray
-    def some(self, callback) -> bool:
-        arguments = len(str(inspect.signature(callback)).strip('()').split(', '))
-        for index, value in enumerate(self):
-            if arguments == 1:
-                if callback(value): return True
-            if arguments == 2:
-                if callback(value, index): return True
-            if arguments == 3:
-                if callback(value, index, self): return True
-        return False
-    def splice(self, index, rcount, *values):
-        for i in range(rcount):
-            self.pop(index)
-        for index_, value in enumerate(values):
-            self.insert(index_ + index, value)
-        return self
-    def sum(self) -> int:
-        value = 0
-        for value_ in self:
-            value += value_
-        return value
+    def some(self, callback: Callable[..., bool]) -> bool:
+        return any(self.__callback(callback, v, i, self) for i, v in enumerate(self))
+    def sum(self):
+        return sum(self)
 
-    def add(self, *args): return self.push(*args)
-    def clr(self, *args): return self.clear(*args)
-    def cnt(self, *args): return self.count(*args)
-    def cpy(self, *args): return self.copy(*args)
-    def exc(self, *args): return self.excludes(*args)
-    def fnd(self, *args): return self.findindex(*args)
-    def fndi(self, *args): return self.find(*args)
-    def fndv(self, *args): return self.findvalue(*args)
-    def flt(self, *args): return self.filter(*args)
-    def idx(self, *args): return self.index(*args)
-    def inc(self, *args): return self.includes(*args)
-    def ins(self, *args): return self.insert(*args)
-    def ran(self, *args): return self.random(*args)
-    def rem(self, *args): return self.remove(*args)
-    def remi(self, *args): return self.removeindexes(*args)
-    def remv(self, *args): return self.removevalues(*args)
-    def rev(self, *args): return self.reverse(*args)
-    def shf(self, *args): return self.shuffle(*args)
-    def slc(self, *args): return self.slice(*args)
-    def spl(self, *args): return self.splice(*args)
-    def str(self, *args): return self.__repr__(*args)
-    def ___(self, *args): return self.___(*args)
-
-class object:
+class object(dict):
     def __init__(self, *values):
-        self.data: dict = {}
+        super().__init__()
         for value in values:
-            if isinstance(value, object):
-                self.data.update(dict((key, val) for key, val in value.data.items()))
-            elif isinstance(value, dict):
-                self.data.update(dict((key, val) for key, val in value.items()))
+            if isinstance(value, object|dict):
+                self.update(value)
             else:
-                self.data.update(object.fromdata(value))
+                self.update(object.fromdata(value))
     def __add__(self, other):
-        return self.__class__(self.data, other)
-    def __contains__(self, item):
-        return item in self.data
-    def __delitem__(self, key):
-        del self.data[key]
-    def __eq__(self, other):
-        return self.data == self.__cast(other)
-    def __getitem__(self, key):
-        return self.data[key]
+        return self.__class__(self, other)
+    def __eq__(self, other: Any):
+        return super().__eq__(other)
     def __iadd__(self, other):
-        if isinstance(other, object):
-            self.data.update(other.data)
-        elif isinstance(other, dict):
-            self.data.update(other)
+        if isinstance(other, object|dict):
+            self.update(other)
         return self
-    def __len__(self):
-        return len(self.data)
     def __radd__(self, other):
-        return self.__class__(other, self.data)
+        return self.__class__(other, self)
     def __repr__(self) -> str:
-        return f'{repr(self.data)}'
-    def __setitem__(self, key, value):
-        self.data[key] = value
-    def __cast(self, other):
-        return other.data if isinstance(other, object) else other
-    
-    def fromdata(data: dict|bytes|list|str):
+        return f'{super().__repr__()}'
+
+    @staticmethod
+    def fromdata(data):
         nObject = object()
         if data == None:
             return nObject
@@ -3941,171 +3876,148 @@ class object:
         elif util.istype(data, 'string'):
             nObject = object.fromstring(data)
         else:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"TypeError: variable-name=data variable-value={data} variable-type={type(data)} type=array|bytes-array|bytes-object|object|string-object|string")
+            raise Exception(f"TypeError: {type(data)} unsupported")
         return nObject
-    def fromarray(data: list|tuple):
+    @staticmethod
+    def fromarray(data: list):
         nObject = object()
+        if data == None:
+            return nObject
         # data = [['key','value'],['key','value']...]
-        if not False in [(util.istype(item, 'array') and len(item) == 2) for item in data]:
-            for index in range(0, len(data), 1):
-                nObject[data[index][0]] = data[index][1]
+        if all(util.istype(item, 'array') and len(item) == 2 for item in data):
+            for key, value in data:
+                nObject[key] = value
         # data = ['key','value','key','value'...]
-        elif (not False in [(util.istype(item, 'number|string')) for item in data]) and len(data) % 2 == 0:
+        elif len(data) % 2 == 0:
             for index in range(0, len(data), 2):
                 nObject[data[index]] = data[index + 1]
         else:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"TypeError: variable-name=data variable-value={data} variable-type={type(data)} type=array")
+            raise Exception(f"ValueError: array structure invalid")
         return nObject
-    def fromkeys(keys: list, value = None):
+    @staticmethod
+    def fromkeys(keys: list[int|str], value: Any = None):
         return object(dict.fromkeys(keys, value))
+    @staticmethod
     def fromstring(data: str, delimiterPairs: str = ',', delimiterPair: str = ':'):
-        return object(dict(substring.strip(f" {delimiterPair}").split(delimiterPair) for substring in data.strip(f" {delimiterPairs}").split(delimiterPairs)))
-    
-    def clear(self):
-        self.data.clear()
-    def copy(self):
-        return object(self.data.copy())
-    def get(self, key, defaultvalue = None):
-        return self.data.get(key, defaultvalue)
-    def items(self):
-        return self.data.items()
-    def keys(self) -> array:
-        return array(*self.data.keys())
-    def pop(self, key, defaultvalue = None):
-        return self.data.pop(key, defaultvalue)
-    def popitem(self):
-        return self.data.popitem()
-    def setdefault(self, key, defaultvalue = None):
-        return self.data.setdefault(key, defaultvalue)
-    def update(self, iterable):
-        self.data.update(iterable)
-    def values(self) -> list:
-        return [*self.data.values()]
-    
-    def append(self, key, value):
-        self.data[key] = value
-        return self
-    def clone(self):
+        nObject = object()
+        if data == None:
+            return nObject
+        for substring in data.strip(f" {delimiterPairs}{delimiterPairs}").split(delimiterPairs):
+            parts = substring.split(delimiterPair, 1)
+            #  ensure there is at least a key and a value, the rest is considered part of the value
+            if len(parts) == 2:
+                nObject[parts[0]] = parts[1]
+            # handle a single key with no value
+            elif len(parts) == 1 and parts[0]:
+                nObject[parts[0]] = None
+        return nObject
+
+    def append(self, key: Any, value: Any):
+        self[key] = value
+    def clear():
+        super().clear()
+    def clone(self) -> 'object':
         return util.clone(self)
-    def count(self) -> int:
-        return len(self)
+    def copy(self) -> 'object':
+        return object(super().copy())
+    def count(self, value: Any) -> int:
+        return self.values().count(value)
     def dump(self) -> str:
-        return util.dump(self.data)
+        return util.dump(self)
     def empty(self) -> bool:
-        return len(self.keys()) == 0
+        return not bool(self)
     def excludes(self, *values) -> bool:
         return self.excludeskeys(*values)
     def excludeskeys(self, *values) -> bool:
-        keys = self.keys()
-        for value in values:
-            if value in keys:
-                return False
-        return True
-    def excludesvalues(self, *values) -> bool:
-        values_ = self.values()
-        for value in values:
-            if value in values_:
-                return False
-        return True
+        return all(value not in self for value in values)
+    def excludesvalues(self, *values: Any) -> bool:
+        object_values = super().values()
+        return all(value not in object_values for value in values)
+    # def get(key: str, defaultvalue: Any = None) -> Any: return super().get(key, defaultvalue)
     def hash(self, mode: str = util.HASH_MD5) -> str:
-        data = util.json_encode(self.data)
-        if mode == util.HASH_MD5:
-            return util.hash_md5(data)
-        elif mode == util.HASH_SHA1:
-            return util.hash_sha1(data)
-        elif mode == util.HASH_SHA224:
-            return util.hash_sha224(data)
-        elif mode == util.HASH_SHA256:
-            return util.hash_sha256(data)
-        elif mode == util.HASH_SHA384:
-            return util.hash_sha384(data)
-        elif mode == util.HASH_SHA512:
-            return util.hash_sha512(data)
+        data = util.json_encode(self)
+        func = getattr(util, f"hash_{mode.lower()}", None)
+        if func:
+            return func(data)
         else:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"ValueError: variable-name=mode variable-value={mode}")
+            raise Exception(f"ValueError: unsupported hash mode: {mode}")
             return ''
-    def includes(self, *values: (int|str)) -> bool:
+    def includes(self, *values) -> bool:
         return self.includeskeys(*values)
-    def includeskeys(self, *values: (int|str)) -> bool:
-        keys = self.keys()
-        for value in values:
-            if value not in keys:
-                return False
-        return True
-    def includesvalues(self, *values) -> bool:
-        values_ = self.values()
-        for value in values:
-            if value not in values_:
-                return False
-        return True
+    def includeskeys(self, *values) -> bool:
+        return all(value in self for value in values)
+    def includesvalues(self, *values: Any) -> bool:
+        object_values = super().values()
+        return all(value in object_values for value in values)
     def iskey(self, key: str) -> bool:
-        return key in self.keys()
-    def istype(self, key, datatype: str) -> bool:
+        return key in self
+    def istype(self, key: Any, datatype: str) -> bool:
         return util.istype(self.get(key), datatype)
-    def isvalue(self, key: str, value) -> bool:
+    def isvalue(self, key: str, value: Any) -> bool:
         return self.get(key) == value
-    def isvaluein(self, key: str, value) -> bool:
-        return value in self.get(key)
+    def isvaluein(self, key: str, value: Any) -> bool:
+        target = self.get(key)
+        return isinstance(target, list) and value in target
     def json(self) -> str:
-        return util.json_encode(self.data)
+        return util.json_encode(self)
+    def keys(self) -> array:
+        return array(*super().keys())
     def lower(self):
-        object_ = self.copy()
-        for key, value in object_.items():
+        temp = {}
+        for key, value in self.items():
             if isinstance(key, str):
-                del self[key]
-                self[key.lower()] = value
-        return self
-    def order(self, *keys: (int|str)):
+                temp[key.lower()] = value
+            else:
+                temp[key] = value
+        self.clear()
+        self.update(temp)
+    def order(self, *keys):
         cObject = self.copy()
         self.clear()
         for key in keys:
             if key in cObject:
-                self[key] = cObject[key]
-        return self
-    def sort(self):
-        keys = self.keys()
-        keys.sort()
-        for key in keys:
-            value = self[key]
-            del self[key]
-            self[key] = value
-        return self
+                self[key] = cObject.pop(key)
+        # retain unlisted keys at the end
+        self.update(cObject)
     def remove(self, *values):
         return self.removekeys(*values)
     def removekeys(self, *values):
         for value in values:
-            if value in self.keys():
-                del self.data[value]
+            if value in self:
+                del self[value]
         return self
-    def removevalues(self, *values):
-        nObject = { }
-        for key, value in self.items():
-            if value not in values:
-                nObject[key] = value
-        self.data = nObject
-        return self
-    def replacekey(self, oldkey: int|str, newkey: int|str):
+    def removevalues(self, *values: Any):
+        values_remove = set(values)
+        new_data = {key: value for key, value in self.items() if value not in values_remove}
+        self.clear()
+        self.update(new_data)
+    def replacekey(self, oldkey: Any, newkey: Any):
         if oldkey in self:
-            value = self[oldkey]
-            del self[oldkey]
+            value = self.pop(oldkey)
             self[newkey] = value
-        return self
-    def replacevalue(self, value, newvalue):
-        for key in self.keys():
-            if self[key] == value:
+    def replacevalue(self, oldvalue: Any, newvalue: Any):
+        for key, val in self.items():
+            if val == oldvalue:
                 self[key] = newvalue
-        return self
-    def set(self, key: int|str, value):
-        self.data[key] = value
-        return self
+    def set(self, key, value: Any):
+        self[key] = value
     def size(self) -> int:
         return len(self)
+    def sort(self):
+        sorted_keys = sorted(self.keys())
+        temp_data = {}
+        for key in sorted_keys:
+            temp_data[key] = self[key]
+        self.clear()
+        self.update(temp_data)
     def toitems(self, dimensions: int = 1) -> array:
         nArray = array()
         if dimensions == 1:
+            # [key1,value1,key2,value2]
             for key, value in self.items():
                 nArray.append(key, value)
-        if dimensions == 2:
+        elif dimensions == 2:
+            # [[key1,value1],[key2,value2]]
             for key, value in self.items():
                 nArray.append(array(key, value))
         return nArray
@@ -4115,135 +4027,36 @@ class object:
             nArray.append(f"{key}{delimiterPair}{value}")
         return nArray.join(delimiterPairs)
     def upper(self):
-        object_ = self.copy()
-        for key, value in object_.items():
+        temp = {}
+        for key, value in self.items():
             if isinstance(key, str):
-                del self[key]
-                self[key.upper()] = value
-        return self
-
-    def clr(self, *args): return self.clear(*args)
-    def cnt(self, *args): return self.count(*args)
-    def cpy(self, *args): return self.copy(*args)
-    def exc(self, *args): return self.excludes(*args)
-    def exck(self, *args): return self.excludeskeys(*args)
-    def excv(self, *args): return self.excludesvalues(*args)
-    def inc(self, *args): return self.includes(*args)
-    def inck(self, *args): return self.includeskeys(*args)
-    def incv(self, *args): return self.includesvalues(*args)
-    def key(self, *args): return self.keys(*args)
-    def rem(self, *args): return self.remove(*args)
-    def remk(self, *args): return self.removekeys(*args)
-    def remv(self, *args): return self.removevalues(*args)
-    def setd(self, *args): return self.setdefault(*args)
-    def str(self, *args): return self.__repr__(*args)
-    def upd(self, *args): return self.update(*args)
-    def val(self, *args): return self.values(*args)
-    def ___(self, *args): return self.___(*args)
-
+                temp[key.upper()] = value
+            else:
+                temp[key] = value
+        self.clear()
+        self.update(temp)
+    def values(self) -> array:
+        return array(*super().values())
 # ___________________________________________________________________________________________________________________________________________________#
-
 class app:
+    """
+    Application
+    
+    """
     def __init__(self):
         pass
-    
+
     __arguments__: object|dict[str, str] = object()
     __configuration__: object|dict[str, int|str] = object()
     __variables__: object = object({
         # do not insert blank entries
     })
+    
     executionTimerEntries: dict[str, list]|object = object()
     executionTimerPerformance: dict[str, list]|object = object()
-    instance = None
-    isConfigurationFile = True
-    name: str
 
-    def main(path: str, arguments: list[str] = []) -> None:
-        print(f"{app.getProcessIdentifier()}.{util.path_info(path, 'filename')}.{__name__}\n")
-        # path: string = the path of client file, argument: __file__
-        # arguments: string[] = list of values passed into client, argument: sys.argv[1:]
-        # 
-        app.__variables__.update(util.variables)
-        path = path.lower()
-        app.variables('file', path)
-        app.variables('name', util.path_info(path, 'filename'))
-        app.variables('path', util.path_info(path, 'dirname'))
-        app.getArguments(arguments)
-        if os.path.isfile(f"{app.variables('path')}\\configuration.json"): 
-            app.__configuration__ = app.getConfiguration()
-        # call entry point of program
-        # main = getattr(globals()['Main'], 'main')
-        # main()
-
-    def arguments(key: str = None) -> str:
-        if key == None:
-            return app.__arguments__
-        if not app.__arguments__.iskey(key): util.system_log(__file__, inspect.currentframe().f_lineno, f"KeyError: object=app.arguments key={key}")
-        # automatic type conversion
-        data = app.__arguments__.get(key, None)
-        data = util.string_conversion_decode(data)
-        return data
-
-    def configuration(key: str = None, value = None, write: bool = False) -> dict|list|object|str:
-        if key == None:
-            return app.__configuration__
-        elif value == None:
-            if not app.__configuration__.iskey(key): util.system_log(__file__, inspect.currentframe().f_lineno, f"KeyError: object=app.configuration key={key}")
-            data = app.__configuration__.get(key, None)
-            data = util.string_conversion_decode(data)
-            return data
-        else:                
-            value = util.string_conversion_encode(value)
-            if app.__configuration__.iskey(key):
-                app.__configuration__.set(key, value)
-            else:
-                util.system_log(__file__, inspect.currentframe().f_lineno, f"KeyError: object=app.configuration key={key}")
-            if write: app.setConfiguration()
-            return app.configuration(key)
-
-    def confirm(message: str, onInvalidResponseMessage: str = 'invalid') -> bool:
-        message = message if message[-2:] == '?: ' else f"{message}?: "
-        while True:
-            value = input(message)
-            if not value == '': 
-                if value.lower() in ['y', 'yes', '1']:
-                    return True
-                if value.lower() in ['n', 'no', '0']:
-                    return False
-            print(onInvalidResponseMessage)
-
-    def copyToClipboard(text: str):
-        import pyperclip
-        try: pyperclip.copy(text)
-        except pyperclip.PyperclipException as e: print(f"ClipboardCopyError: {e}")
-
-    def executionTimerStart(identifier: str = util.identifier()) -> None:
-        app.executionTimerEntries.set(identifier, util.timestamp(util.TIMESTAMP_OPTION_MILLISECONDS))
-
-    def executionTimerEnd(identifier: str = None, log: bool = True) -> int:
-        if not identifier:
-            identifier = app.executionTimerEntries.keys().get(0)
-        if not app.executionTimerEntries.iskey(identifier): return -1
-        milliseconds = util.timestamp(util.TIMESTAMP_OPTION_MILLISECONDS) - app.executionTimerEntries.get(identifier)
-        app.executionTimerEntries.pop(identifier)
-        if app.executionTimerPerformance.iskey(identifier):
-            app.executionTimerPerformance.get(identifier).append(milliseconds)
-        else:
-            app.executionTimerPerformance.set(identifier, [milliseconds])
-        average = int(util.statistics_mean(app.executionTimerPerformance.get(identifier)))
-        if log: print(f"ExecutionTimer: identifier:{identifier} milliseconds:{milliseconds:04d} average:{average:04d}")
-        return milliseconds
-
-    def exit() -> None:
-        if util.importModule('sys'): import sys
-        sys.exit(0)
-
-    def getArguments(values: list[str]) -> object:
-        keys = list(range(0, len(values)))
-        for index, key in enumerate(keys):
-            app.__arguments__.set(key, values[index] if len(values) > index else None)
-    
-    def getConfiguration(path: str = '') -> object:
+    @staticmethod
+    def __getConfiguration(path: str = '') -> object:
         # read application's configuration file
         data = object()
         if os.path.isfile(path):
@@ -4260,7 +4073,7 @@ class app:
             data: bytes = util.file_read(f"{app.variables('path')}\\configuration.txt")
             data = object.fromstring(data.decode(), ': ', '\r\n')
         else:
-            util.system_log(__file__, inspect.currentframe().f_lineno, f"FileNotFoundError: path={app.variables('path')}\\configuration.json|txt")
+            print(f"FileNotFoundError: application configuration file not found")
         # find and replace configuration variable key with the variable value
         def setIfVariable(oldValue: str):
             if not isinstance(oldValue, str):
@@ -4280,28 +4093,82 @@ class app:
         assert isinstance(data, object)
         iterate(data)
         return data
+    @staticmethod
+    def __string_interpolation(string: str) -> str:
+        # embed variable directly within string
+        # find placeholders
+        STRING_INTERPOLATION_SYNTAX = r"$\{\w+\}"
+        for match in re.findall(STRING_INTERPOLATION_SYNTAX, string):
+            key = match[2:-1]
+            if not app.__variables__.iskey(key): continue
+            value = str(app.__variables__.get(key))
+            string = string.replace(match, value)
+        STRING_INTERPOLATION_SYNTAX = r"%\w+%"
+        for match in re.findall(STRING_INTERPOLATION_SYNTAX, string):
+            key = match[1:-1]
+            if not app.__variables__.iskey(key): continue
+            value = str(app.__variables__.get(key))
+            string = string.replace(match, value)
+        return string
 
+
+    def main(path: str, arguments: list[str] = []) -> None:
+        """
+        the path parameter holds the file path of application, use __file__
+        the arguments parameter holds arguments used in application, use sys.argv[1:]
+        """
+        print(f"{app.getProcessIdentifier()}.{util.path_info(path, 'filename')}.{__name__}\n")
+        app.__variables__.update(util.variables)
+        app.variables('file', path.lower())
+        app.variables('name', util.path_info(path.lower(), 'filename'))
+        app.variables('path', util.path_info(path.lower(), 'dirname'))
+        app.getArguments(arguments)
+        # load application's configuration file data
+        if os.path.isfile(f"{app.variables('path')}\\configuration.json"):
+            app.__configuration__ = app.__getConfiguration()
+    
+    def confirm(message: str, onInvalidResponseMessage: str = 'invalid') -> bool:
+        message = message if message[-2:] == '?: ' else f"{message}?: "
+        while True:
+            value = input(message)
+            if not value == '':
+                if value.lower() in ['y', 'yes', '1']:
+                    return True
+                if value.lower() in ['n', 'no', '0']:
+                    return False
+            print(onInvalidResponseMessage)
+    def copyToClipboard(text: str):
+        import pyperclip
+        try: pyperclip.copy(text)
+        except pyperclip.PyperclipException as e: print(f"ClipboardCopyError: {e}")
+    def executionTimerStart(identifier: str = util.identifier()) -> None:
+        app.executionTimerEntries.set(identifier, util.timestamp(util.TIMESTAMP_OPTION_MILLISECONDS))
+    def executionTimerEnd(identifier: str = None, log: bool = True) -> int:
+        if not identifier:
+            identifier = app.executionTimerEntries.keys().get(0)
+        if not app.executionTimerEntries.iskey(identifier): return -1
+        milliseconds = util.timestamp(util.TIMESTAMP_OPTION_MILLISECONDS) - app.executionTimerEntries.get(identifier)
+        app.executionTimerEntries.pop(identifier)
+        if app.executionTimerPerformance.iskey(identifier):
+            app.executionTimerPerformance.get(identifier).append(milliseconds)
+        else:
+            app.executionTimerPerformance.set(identifier, [milliseconds])
+        average = int(util.statistics_mean(app.executionTimerPerformance.get(identifier)))
+        if log: print(f"ExecutionTimer: identifier:{identifier} milliseconds:{milliseconds:04d} average:{average:04d}")
+        return milliseconds
+    def exit() -> None:
+        if util.importModule('sys'): import sys
+        sys.exit(0)
     def getCurrentWorkingDirectory() -> str:
         return os.getcwd()
-
-    def getGlobalVariables() -> dict[str]:
-        return globals()
-    
-    def getInstance():
-        return app.instance
-
     def getName() -> str:
         return app.variables('name')
-
     def getProcessIdentifier() -> int:
         return os.getpid()
-
+    def hasArguments() -> bool:
+        return any(app.__arguments__.values())
     def isArgument(key: str) -> bool:
         return app.__arguments__.iskey(key)
-    
-    def isArguments() -> bool:
-        return any(app.__arguments__.values())
-
     def isOnline(address: tuple[str, int] = ('8.8.8.8', 53)) -> bool:
         try:
             socket.setdefaulttimeout(1000)
@@ -4311,11 +4178,9 @@ class app:
             return False
         finally:
             socket.setdefaulttimeout(None)
-
     def prompt(message: str, defaultValue: str = None, onVerification = None, onInvalidResponseMessage: str = 'invalid') -> tuple[str, bool]:
         # onVerification: function|string
         message = message if message[-2:] == ': ' else f"{message}: "
-        # message = f"{message[:-2]} ({onVerification}): " if isinstance(onVerification, str) and onVerification.count('|') <= 5 else message
         message = message if defaultValue == None else f"{message[:-2]} ({defaultValue}): "
         while True:
             value = input(message)
@@ -4330,24 +4195,98 @@ class app:
                         verificationValues = [verificationValue for verificationValue in onVerification.strip(' ').strip('|').split('|')]
                         for verificationValue in verificationValues:
                             if verificationValue.startswith('{') and verificationValue.endswith('}'):
-                                if util.istype(value, verificationValue.strip('{}')): 
+                                if util.istype(value, verificationValue.strip('{}')):
                                     valid = True
                                     break
-                            elif verificationValue == value: 
+                            elif verificationValue == value:
                                 valid = True
                                 break
-                        if valid: 
+                        if valid:
                             return value, not value == defaultValue
                     if type(onVerification).__name__ == 'function':
                         if onVerification(value):
                             return value, not value == defaultValue
             print(onInvalidResponseMessage)
-
+    def setInterval(milliseconds: int, callback, *args, **kwargs) -> threading.Timer:
+        class Interval(threading.Thread):
+            def __init__(self, milliseconds: int, function, args, kwargs):
+                super().__init__()
+                self.milliseconds: int = milliseconds
+                self.function = function
+                self.args: tuple = args
+                self.kwargs: tuple = kwargs
+                self.finished: threading.Event = threading.Event()
+                self.start()
+            def cancel(self):
+                self.finished.set()
+            def run(self):
+                self.finished.wait(self.milliseconds / 1000)
+                if not self.finished.is_set():
+                    self.function(*self.args, **self.kwargs)
+                    self.run()
+        interval = Interval(milliseconds, callback, args, kwargs)
+        return interval
+    def setTimeout(milliseconds: int, callback, *args, **kwargs) -> threading.Timer:
+        timeout = threading.Timer(milliseconds / 1000, callback, args, kwargs)
+        timeout.start()
+        return timeout
+    
+    def argument(key: str = None) -> str:
+        if key == None:
+            return app.__arguments__
+        if not app.__arguments__.iskey(key): print(f"KeyError: application arguments key={key} nonexistent")
+        # automatic type conversion
+        data = app.__arguments__.get(key, None)
+        data = util.string_conversion_decode(data)
+        return data
+    def arguments(key: str = None) -> str:
+        return app.argument(key)
+    def configuration(key: str = None, value = None, write: bool = False) -> dict|list|object|str:
+        if key == None:
+            return app.__configuration__
+        elif value == None:
+            if not app.__configuration__.iskey(key): print(f"KeyError: application configuration key={key} nonexistent")
+            data = app.__configuration__.get(key, None)
+            data = util.string_conversion_decode(data)
+            return data
+        else:
+            value = util.string_conversion_encode(value)
+            if app.__configuration__.iskey(key):
+                app.__configuration__.set(key, value)
+            else:
+                print(f"KeyError: application configuration key={key} nonexistent")
+            if write: app.setConfiguration()
+            return app.configuration(key)
+    def variable(key: str = None, value = None) -> None|object|str:
+        if not key == None:
+            if key[0] == '%' and key[-1] == '%':
+                key = key[1:][:-1]
+        if key == None:
+            return app.__variables__
+        elif value == None:
+            data = app.__variables__.get(key, None)
+            # automatic type conversion
+            if util.istype(data, 'string-number'):
+                return int(data)
+            if util.istype(data, 'string-boolean'):
+                return util.boolean(data)
+            return data
+        else:
+            # automatic type conversion
+            if util.istype(value, 'number'):
+                value = str(value)
+            app.__variables__.set(key, value)
+    def variables(key: str = None, value = None) -> None|object|str:
+        return app.variable(key, value)
+    
+    def getArguments(values: list[str]) -> object:
+        keys = list(range(0, len(values)))
+        for index, key in enumerate(keys):
+            app.__arguments__.set(key, values[index] if len(values) > index else None)
     def setArguments(keys: list[str]) -> object:
         for index, key in enumerate(keys):
             app.__arguments__.set(key, app.__arguments__.get(index, None))
             app.__arguments__.pop(index)
-    
     def setConfiguration(data: dict = None) -> None:
         data: object = object(app.__configuration__) if data == None else object(data)
         # replace each configuration value containing a variable value with the variable's key
@@ -4374,74 +4313,17 @@ class app:
             data = '\r\n'.join((f"{key}: {value}") for key, value in data.items())
             util.file_write(f"{app.variables('path')}\\configuration.txt", data)
 
-    def setInterval(milliseconds: int, callback, *args, **kwargs) -> threading.Timer:
-        class Interval(threading.Thread):
-            def __init__(self, milliseconds: int, function, args, kwargs):
-                super().__init__()
-                self.milliseconds: int = milliseconds
-                self.function = function
-                self.args: tuple = args
-                self.kwargs: tuple = kwargs
-                self.finished: threading.Event = threading.Event()
-                self.start()
-            def cancel(self):
-                self.finished.set()
-            def run(self):
-                self.finished.wait(self.milliseconds / 1000)
-                if not self.finished.is_set():
-                    self.function(*self.args, **self.kwargs)
-                    self.run()
-        interval = Interval(milliseconds, callback, args, kwargs)
-        return interval
-
-    def setName(name: str) -> None:
-        app.variables('name', name)
-
-    def setTimeout(milliseconds: int, callback, *args, **kwargs) -> threading.Timer:
-        timeout = threading.Timer(milliseconds / 1000, callback, args, kwargs)
-        timeout.start()
-        return timeout
-
-    def variables(key: str = None, value = None) -> None|object|str:
-        if not key == None:
-            if key[0] == '%' and key[-1] == '%':
-                key = key[1:][:-1]
-        if key == None:
-            return app.__variables__
-        elif value == None:
-            data = app.__variables__.get(key, None)
-            # automatic type conversion
-            if util.istype(data, 'string-number'):
-                return int(data)
-            if util.istype(data, 'string-boolean'):
-                return util.boolean(data)
-            return data
-        else:
-            # automatic type conversion
-            if util.istype(value, 'number'):
-                value = str(value)
-            app.__variables__.set(key, value)
-    
-    # data
-    def clearData():
-        pass
-    def getData():
-        pass
-    def removeData():
-        pass
-    def setData():
-        pass
-
 class Logger(threading.Thread):
     def __init__(self, path: str = None):
         super().__init__()
+        from queue import Queue
         self.queue = Queue()
         self.path = path
         self.stopped = False
         self.start()
 
     def __out(self):
-        if self.path == None: 
+        if self.path == None:
             return
         if self.queue.empty():
             return
@@ -4461,7 +4343,6 @@ class Logger(threading.Thread):
             print(f"\n{entry}")
         if isinstance(entry, dict):
             print(f"\n{Logger.dump(entry)}")
-
     def put(self, entry: dict):
         timestamp = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)
         timestamp = f"{util.timestamp_date(timestamp)}T{util.timestamp_time(timestamp)}"
@@ -4470,7 +4351,6 @@ class Logger(threading.Thread):
         self.queue.put(entry_)
         print(f'\n{Logger.dump(entry_)}')
         return self
-
     def out(path: str, entry: dict):
         timestamp = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)
         timestamp = f"{util.timestamp_date(timestamp)}T{util.timestamp_time(timestamp)}"
@@ -4480,10 +4360,8 @@ class Logger(threading.Thread):
         if not path == None:
             stamp = util.timestamp_date(util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT))
             util.file_append_json(f"{path}\\{stamp}.json", entry_)
-
     def stop(self) -> None:
         self.stopped = True
-
     def dump(entry: dict) -> str:
         def get(value) -> str:
             if value == None:
@@ -4514,6 +4392,5 @@ class Logger(threading.Thread):
             if key == 'timestamp': continue
             string += f"{get(key)}: {get(val)}" + ('' if key == end else ', ')
         return string
-
 # ___________________________________________________________________________________________________________________________________________________#
 
