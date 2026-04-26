@@ -1,46 +1,57 @@
 /**
+ * @author Corey J. Taylor
+ * @version 1.0.0
+ */
+
+/**
  * @typedef {string} address
- * @typedef {any[]} array
  * @typedef {number} decimal
  * @typedef {"0"|"1"} bit
  * @typedef {string} binary
- * @typedef {Int8Array|Uint8Array} bytes
+ * @typedef {ArrayBuffer|Int8Array|Uint8Array} bytes
  * @typedef {string} hexadecimal
  * @typedef {string} octal
- * @typedef {Object<string, any>} object
  * @typedef {number} port
  * @typedef {Date|number|string} timestamp
  * 
- * @typedef {(...any) => void} Listener
+ * @typedef {function(...any): void} Listener
  *
  */
+// @ts-ignore
 Array.prototype.append = function (...items) {
     this.push(...items);
 }
+// @ts-ignore
 Array.prototype.clear = function () {
     this.length = 0;
 }
+// @ts-ignore
 Array.prototype.copy = function (start = 0, stop = this.length) {
-    return this.slice(start, end);
+    return this.slice(start, stop);
 }
+// @ts-ignore
 Array.prototype.count = function (value) {
     return this.filter(item => item === value).length;
 }
+// @ts-ignore
 Array.prototype.empty = function () {
     return this.length === 0;
 }
+// @ts-ignore
 Array.prototype.enumerate = function* () {
     for (let index = 0; index < this.length; index++) {
         yield [index, this[index]]
     }
 }
+// @ts-ignore
 Array.prototype.extend = function(iterable) {
     if (Array.isArray(iterable)) {
         this.push(...iterable);
         return this.length;
     }
     throw new Error(`TypeError: iterable parameter requires an array or iterable argument`);
-};
+}
+// @ts-ignore
 Array.prototype.get = function (index, defaultvalue = null) {
     let i = index < 0 ? this.length + index : index;
     if (i >= 0 && i < this.length) {
@@ -48,23 +59,29 @@ Array.prototype.get = function (index, defaultvalue = null) {
     }
     return defaultvalue;
 }
+// @ts-ignore
 Array.prototype.getfirst = function () {
     return this[0];
 }
+// @ts-ignore
 Array.prototype.getlast = function () {
     return this[this.length - 1];
 }
+// @ts-ignore
 Array.prototype.index = function (value, start = 0) {
     return this.indexOf(value, start);
 }
+// @ts-ignore
 Array.prototype.insert = function (index, value) {
     let start = Math.trunc(index);
     this.splice(start, 0, value);
 }
+// @ts-ignore
 Array.prototype.pop = function (index = -1) {
     let i = index < 0 ? this.length + index : index;
     return this.splice(i, 1)[0];
 }
+// @ts-ignore
 Array.prototype.remove = function (...values) {
     for (let value of values) {
         let index = this.indexOf(value);
@@ -75,20 +92,25 @@ Array.prototype.remove = function (...values) {
         }
     }
 }
+// @ts-ignore
 Array.prototype.set = function (index, value) {
     this.splice(index, 0, value);
 }
+// @ts-ignore
 Array.prototype.size = function () {
     return this.length;
 }
 
+// @ts-ignore
 String.prototype.capitalize = function () {
     if (this.length == 0) return this.toString();
     return this.charAt(0).toUpperCase() + this.slice(1).toLowerCase();
 }
+// @ts-ignore
 String.prototype.casefold = function () {
     return this.toLocaleLowerCase('en-US')
 }
+// @ts-ignore
 String.prototype.center = function (width, fillchar = ' ') {
     if (width <= this.length) return this.toString();
     let padding_length = width - this.length;
@@ -96,6 +118,7 @@ String.prototype.center = function (width, fillchar = ' ') {
     let padding_right = padding_length - padding_left;
     return fillchar.repeat(padding_left) + this.toString() + fillchar.repeat(padding_right);
 }
+// @ts-ignore
 String.prototype.count = function (sub, start = 0, end = this.length) {
     const regex = new RegExp(sub, 'g');
     let matches = this.slice(start, end).match(regex);
@@ -110,10 +133,12 @@ String.prototype.count = function (sub, start = 0, end = this.length) {
     // }
     // return count;
 }
+// @ts-ignore
 String.prototype.empty = function () {
     return this.length == 0
 }
-String.prototype.encode = function (encoding = 'utf-8') {
+// @ts-ignore
+String.prototype.encode = function (encoding = "utf-8") {
     // 1. Check if the TextEncoder API is available.
     if (typeof TextEncoder === 'undefined') {
         throw new Error("TextEncoder is unavailable");
@@ -121,10 +146,12 @@ String.prototype.encode = function (encoding = 'utf-8') {
     const encoder = new TextEncoder(encoding);
     return encoder.encode(this);
 }
+// @ts-ignore
 String.prototype.endswith = function (suffix, start = 0, end = this.length) {
     const str = this.slice(start, end);
     return str.endsWith(suffix);
 }
+// @ts-ignore
 String.prototype.expandtabs = function (tabsize = 4) {
     let size = Math.max(1, Math.floor(tabsize));
     let result = '';
@@ -146,11 +173,13 @@ String.prototype.expandtabs = function (tabsize = 4) {
     }
     return result;
 }
+// @ts-ignore
 String.prototype.find = function (sub, start = 0, end = this.length) {
     const str = this.slice(start, end);
     let index = str.indexOf(sub);
     return (index === -1) ? -1 : index + start;
 }
+// @ts-ignore
 String.prototype.format = function () {
     // determine the source of replacement values:
     const values = arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0] !== null ? arguments[0] : arguments;
@@ -177,6 +206,7 @@ String.prototype.format = function () {
         return replacement !== undefined && replacement !== null ? String(replacement) : ''; 
     });
 }
+// @ts-ignore
 String.prototype.format_map = function (mapping) {
     if (typeof mapping !== 'object' || mapping === null || Array.isArray(mapping)) {
         throw new Error(`TypeError: mapping parameter requires a non-null object`);
@@ -190,10 +220,10 @@ String.prototype.format_map = function (mapping) {
             return (replacement !== undefined && replacement !== null) ? String(replacement) : '';
         } else {
             throw new Error(`KeyError: '${key}' not found in mapping`);
-            return match;
         }
     });
 }
+// @ts-ignore
 String.prototype.index = function (sub, start = 0, end = this.length) {
     let index = this.find(sub, start, end);
     if (index === -1) {
@@ -201,49 +231,59 @@ String.prototype.index = function (sub, start = 0, end = this.length) {
     }
     return index;
 }
+// @ts-ignore
 String.prototype.isalnum = function () {
     if (this.length === 0) return false;
     return /^[\p{L}\p{N}]+$/u.test(this);
 }
+// @ts-ignore
 String.prototype.isalpha = function () {
     if (this.length === 0) return false;
     return /^[\p{L}]+$/u.test(this);
 }
+// @ts-ignore
 String.prototype.isdecimal = function () {
     if (this.length === 0) return false;
     return /^[\p{Nd}]+$/u.test(this);
 }
+// @ts-ignore
 String.prototype.isdigit = function () {
     if (this.length === 0) return false;
     return /^[\p{N}]+$/u.test(this);
 }
+// @ts-ignore
 String.prototype.isidentifier = function () {
     if (this.length === 0) return false;
     // check if the string starts with a number
-    if (/^\p{Nd}/u.test(s)) return false;
+    if (/^\p{Nd}/u.test(this)) return false;
     // check if it contains only valid identifier characters
-    if (!/^[\p{L}\p{Nl}\p{Nd}_]+$/u.test(s)) return false;
+    if (!/^[\p{L}\p{Nl}\p{Nd}_]+$/u.test(this)) return false;
     return true;
 }
+// @ts-ignore
 String.prototype.islower = function () {
     return /[a-z]/.test(this.toString()) && !/[A-Z]/.test(this.toString());
 }
+// @ts-ignore
 String.prototype.isnumeric = function () {
     if (this.length === 0) return false;
     return /^[\p{Nd}\p{Nl}\p{No}]+$/u.test(this);
 }
+// @ts-ignore
 String.prototype.isprintable = function () {
     if (this.length === 0) return false;
     return !/\p{C}/u.test(this);
 }
+// @ts-ignore
 String.prototype.isspace = function () {
     if (this.length === 0) return false;
     try {
-        return /^\p{White_Space}+$/u.test(s);
+        return /^\p{White_Space}+$/u.test(this);
     } catch (error) {
-        return /^\s+$/.test(s);
+        return /^\s+$/.test(this);
     }
 }
+// @ts-ignore
 String.prototype.istitle = function () {
     let previousCased = false; // Tracks if the previous character was a cased character
     let isTitle = true;
@@ -273,9 +313,11 @@ String.prototype.istitle = function () {
     }
     return isTitle && hasCased;
 }
+// @ts-ignore
 String.prototype.isupper = function () {
     return /[A-Z]/.test(this.toString()) && !/[a-z]/.test(this.toString());
 }
+// @ts-ignore
 String.prototype.join = function (iterable) {
     let array;
     try {
@@ -285,17 +327,21 @@ String.prototype.join = function (iterable) {
     }
     return array.join(this.toString());
 }
+// @ts-ignore
 String.prototype.ljust = function (width, fillchar = ' ') {
     return this.padEnd(width, fillchar);
 }
+// @ts-ignore
 String.prototype.lower = function () {
     return this.toLowerCase();
 }
+// @ts-ignore
 String.prototype.lstrip = function (chars = ' ') {
     if (chars === undefined) return this.trimStart();
     const regex = new RegExp(`^([${chars.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}])+`, 'g');
     return this.replace(regex, '');
 }
+// @ts-ignore
 String.prototype.maketrans = function (fromstr, tostr) {
     if (fromstr.length !== tostr.length) {
         throw new Error(`requires the replacement strings to have the same length`);
@@ -306,6 +352,7 @@ String.prototype.maketrans = function (fromstr, tostr) {
     }
     return translation_map;
 }
+// @ts-ignore
 String.prototype.partition = function (sep) {
     let index = this.indexOf(sep);
     if (index === -1) {
@@ -315,6 +362,7 @@ String.prototype.partition = function (sep) {
     const tail = this.substring(index + sep.length);
     return [head, sep, tail];
 }
+// @ts-ignore
 String.prototype.remove = function (...substrings) {
     let targets = Array.isArray(substrings) ? substrings : [substrings];
     // escape special regex characters in the target strings.
@@ -324,6 +372,7 @@ String.prototype.remove = function (...substrings) {
     const regex = new RegExp(targets.join('|'), 'g');
     return this.replace(regex, '');
 }
+// @ts-ignore
 String.prototype.removeprefix = function (prefix) {
     const str = this.toString();
     if (str.startsWith(prefix)) {
@@ -331,6 +380,7 @@ String.prototype.removeprefix = function (prefix) {
     }
     return str;
 }
+// @ts-ignore
 String.prototype.removesuffix = function (suffix) {
     const str = this.toString();
     if (str.endsWith(suffix)) {
@@ -338,14 +388,17 @@ String.prototype.removesuffix = function (suffix) {
     }
     return str;
 }
+// @ts-ignore
 String.prototype.reverse = function () {
     return this.split('').reverse().join('');
 }
+// @ts-ignore
 String.prototype.rfind = function (sub, start = 0, end = this.length) {
     const str = this.slice(start, end);
     let index = str.lastIndexOf(sub);
     return (index === -1) ? -1 : index + start;
 }
+// @ts-ignore
 String.prototype.rindex = function (sub, start = 0, end = this.length) {
     let index = this.rfind(sub, start, end);
     if (index === -1) {
@@ -353,9 +406,11 @@ String.prototype.rindex = function (sub, start = 0, end = this.length) {
     }
     return index;
 }
+// @ts-ignore
 String.prototype.rjust = function (width, fillchar = ' ') {
     return this.padStart(width, fillchar);
 }
+// @ts-ignore
 String.prototype.rpartition = function (sep) {
     let index = this.lastIndexOf(sep);
     if (index === -1) {
@@ -365,6 +420,7 @@ String.prototype.rpartition = function (sep) {
     const tail = this.substring(index + sep.length);
     return [head, sep, tail];
 }
+// @ts-ignore
 String.prototype.rsplit = function (sep, maxsplit = -1) {
     const str = this.toString();
     if (maxsplit === -1) return this.split(sep);
@@ -376,29 +432,32 @@ String.prototype.rsplit = function (sep, maxsplit = -1) {
     let parts_last = parts.slice(parts.length - maxsplit);
     return [parts_first.join(sep === null || sep === undefined ? ' ' : sep)].concat(parts_last);
 }
+// @ts-ignore
 String.prototype.rstrip = function (chars = ' ') {
     if (chars === undefined) return this.trimEnd();
     const regex = new RegExp(`([${chars.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}])+$`, 'g');
     return this.replace(regex, '');
 }
+// @ts-ignore
 String.prototype.size = function () {
     return this.length;
 }
+// @ts-ignore
 String.prototype.splitlines = function (keepends = false) {
     if (this.length === 0) return [];
-    const str = this.toString();
-    const regex = /(\r\n|\r|\n)/g;
-    let parts = str.split(regex);
     if (keepends) {
-        return parts.filter(line => line.length > 0);
+        const regex = /.*?(?:\r\n|\r|\n|\v|\f|\x1c|\x1d|\x1e|\x85|\u2028|\u2029)|.+$/g;
+        return this.match(regex) || [];
     } else {
-        return parts.filter(line => !regex.test(line) && line.length > 0);
+        return this.split(/\r\n|\r|\n|\v|\f|\x1c|\x1d|\x1e|\x85|\u2028|\u2029/g);
     }
 }
+// @ts-ignore
 String.prototype.startswith = function (prefix, start = 0, end = this.length) {
     const str = this.slice(start, end);
     return str.startsWith(prefix);
 }
+// @ts-ignore
 String.prototype.strip = function (chars = ' ') {
     if (chars === undefined) return this.trim();
     const regex = new RegExp(`[${chars.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}]`, 'g');
@@ -406,6 +465,7 @@ String.prototype.strip = function (chars = ' ') {
     stripped = this.replace(new RegExp(`^${regex.source}+`), ''); // remove leading
     return stripped.replace(new RegExp(`${regex.source}+$`), ''); // remove trailing
 }
+// @ts-ignore
 String.prototype.swapcase = function () {
     return this.replace(/./g, char => {
         if (char === char.toUpperCase()) {
@@ -415,12 +475,14 @@ String.prototype.swapcase = function () {
         }
     });
 }
+// @ts-ignore
 String.prototype.title = function () {
     return this.toLowerCase().split(' ').map(word => {
         if (word.length === 0) return '';
         return word.charAt(0).toUpperCase() + word.slice(1);
     }).join(' ');
 }
+// @ts-ignore
 String.prototype.translate = function (table) {
     let str = "";
     for (let char of this) {
@@ -428,9 +490,11 @@ String.prototype.translate = function (table) {
     }
     return str;
 }
+// @ts-ignore
 String.prototype.upper = function () {
     return this.toUpperCase();
 }
+// @ts-ignore
 String.prototype.zfill = function (width) {
     return this.padStart(width, '0');
 }
@@ -439,9 +503,7 @@ class util {
     constructor() {
     }
 
-    
-
-    // MATHEMATICS
+    // 
     /** @readonly @type {number} */
     static DEGREES_TO_RADIANS  = Math.PI / 180
     /** @readonly @type {number} */
@@ -449,23 +511,28 @@ class util {
     /** @readonly @type {number} kilometers to mean sea level elevation */
     static SPHERE_RADIUS = 6371000
 
+    /** @readonly @type {number} */
+    static semiMajorAxis = 6378137.0
+    /** @readonly @type {number} */
+    static semiMinorAxis = 6356752.3142
+
     // 
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT1 = "(?<decimal_degrees>(-|\\+)?([0-8]\\d)(\\.\\d+)?)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT2 = "(?<decimal_degrees>(-|\\+)?([0-8]?\\d)(\\.\\d+)?)(°|\\*)"
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT2 = "(?<decimal_degrees>(-|\\+)?([0-8]?\\d)(\\.\\d+)?)(\\*|°|º)"
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT1 = "(?<decimal_degrees>(-|\\+)?(0\\d\\d|1[0-7]\\d)(\\.\\d+)?)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT2 = "(?<decimal_degrees>(-|\\+)?(\\d\\d?|0\\d\\d|1[0-7]\\d)(\\.\\d+)?)(°|\\*)"
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT2 = "(?<decimal_degrees>(-|\\+)?(\\d\\d?|0\\d\\d|1[0-7]\\d)(\\.\\d+)?)(\\*|°|º)"
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1 = "(?<degrees>[0-8]\\d)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2 = "(?<degrees>[0-8]?\\d)(°|\\*)"
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2 = "(?<degrees>[0-8]?\\d)(\\*|°|º)"
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1 = "(?<degrees>0\\d\\d|1[0-7]\\d)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2 = "(?<degrees>\\d\\d?|0\\d\\d|1[0-7]\\d)(°|\\*)"
+    static GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2 = "(?<degrees>\\d\\d?|0\\d\\d|1[0-7]\\d)(\\*|°|º)"
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE = "(?<direction>N|S)"
     /** @readonly @type {string} */
@@ -473,20 +540,20 @@ class util {
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1 = "(?<decimal_minutes>(0\\d|[1-5]\\d)\\.\\d\\d)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2 = "(?<decimal_minutes>(0?\\d|[1-5]\\d)\\.\\d+)'"
+    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2 = "(?<decimal_minutes>(0?\\d|[1-5]\\d)\\.\\d+)('|′)"
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1 = "(?<minutes>0\\d|[1-5]\\d)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2 = "(?<minutes>0?\\d|[1-5]\\d)'"
+    static GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2 = "(?<minutes>0?\\d|[1-5]\\d)('|′)"
     /** @readonly @type {string} */
     static GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1 = "(?<seconds>(0\\d|[1-5]\\d)(\\.\\d+)?)"
     /** @readonly @type {string} */
-    static GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2 = "(?<seconds>(0?\\d|[1-5]\\d)(\\.\\d+)?)\""
-    // 
+    static GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2 = "(?<seconds>(0?\\d|[1-5]\\d)(\\.\\d+)?)(\"|″)"
+
     /** @readonly @type {string} */
-    static HASH_MD5 = 'md5'
+    static HASH_MD5    = 'md5'
     /** @readonly @type {string} */
-    static HASH_SHA1 = 'sha1'
+    static HASH_SHA1   = 'sha1'
     /** @readonly @type {string} */
     static HASH_SHA224 = 'sha224'
     /** @readonly @type {string} */
@@ -499,33 +566,31 @@ class util {
     /** @readonly @type {string} */
     static REFERENCE_TAG_ABBREVIATIONS = 'ABBREVIATIONS'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_ACRONYMS = 'ACRONYMS'
+    static REFERENCE_TAG_ACRONYMS      = 'ACRONYMS'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_DEFINITIONS = 'DEFINITIONS'
+    static REFERENCE_TAG_DEFINITIONS   = 'DEFINITIONS'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_LIST = 'LIST'
+    static REFERENCE_TAG_LIST          = 'LIST'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_NAME = 'NAME'
+    static REFERENCE_TAG_NAME          = 'NAME'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_OBJECT = 'OBJECT'
+    static REFERENCE_TAG_OBJECT        = 'OBJECT'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_QUESTIONS = 'QUESTIONS'
+    static REFERENCE_TAG_QUESTIONS     = 'QUESTIONS'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_SOURCE = 'SOURCE'
+    static REFERENCE_TAG_SOURCE        = 'SOURCE'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_SUBTITLE = 'SUBTITLE'
+    static REFERENCE_TAG_SUBTITLE      = 'SUBTITLE'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_TABLE = 'TABLE'
+    static REFERENCE_TAG_TABLE         = 'TABLE'
     /** @readonly @type {string} */
-    static REFERENCE_TAG_TITLE = 'TITLE'
+    static REFERENCE_TAG_TITLE         = 'TITLE'
 
-    // TABLE
     /** @readonly @type {string} */
     static TABLE_ORIENTATION_VERTICAL = 'vertical'
     /** @readonly @type {string} */
     static TABLE_ORIENTATION_HORIZONTAL = 'horizontal'
 
-    // DATE-TIME
     /** @readonly @type {string[]} */
     static TIME_DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     /** @readonly @type {string[]} */
@@ -534,34 +599,36 @@ class util {
     static TIME_QUARTERS = ['First', 'Second', 'Third', 'Fourth']
 
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_YEAR = "(?<year>19[7-9][0-9]|[2-9][0-9][0-9][0-9])"
+    static TIMESTAMP_PATTERN_YEAR        = "(?<year>19[7-9][0-9]|[2-9][0-9][0-9][0-9])"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_MONTH = "(?<month>0[1-9]|1[0-2])"
+    static TIMESTAMP_PATTERN_MONTH       = "(?<month>0[1-9]|1[0-2])"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_DAY = "(?<day>0[1-9]|1[0-9]|2[0-9]|3[0-2])"
+    static TIMESTAMP_PATTERN_DAY         = "(?<day>0[1-9]|1[0-9]|2[0-9]|3[0-2])"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_HOUR = "(?<hour>0[0-9]|1[0-9]|2[0-3])"
+    static TIMESTAMP_PATTERN_HOUR        = "(?<hour>0[0-9]|1[0-9]|2[0-3])"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_MINUTE = "(?<minute>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
+    static TIMESTAMP_PATTERN_MINUTE      = "(?<minute>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_SECOND = "(?<second>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
+    static TIMESTAMP_PATTERN_SECOND      = "(?<second>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
     /** @readonly @type {string} */
     static TIMESTAMP_PATTERN_MILLISECOND = "(?<millisecond>\\d\\d\\d)?"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_ZONE = "(?<zone>[A-I]|[K-Z])?"
+    static TIMESTAMP_PATTERN_ZONE        = "(?<zone>[A-I]|[K-Z])?"
 
     /** @readonly @type {string} */
-    static TIMESTAMP_OPTION_DICTIONARY = 'dictionary'
+    static TIMESTAMP_OPTION_DICTIONARY   = 'dictionary'
     /** @readonly @type {string} */
     static TIMESTAMP_OPTION_MILLISECONDS = 'milliseconds'
     /** @readonly @type {string} */
-    static TIMESTAMP_OPTION_OBJECT = 'object'
+    static TIMESTAMP_OPTION_OBJECT       = 'object'
     /** @readonly @type {string} */
-    static TIMESTAMP_OPTION_SECONDS = 'seconds'
+    static TIMESTAMP_OPTION_SECONDS      = 'seconds'
     /** @readonly @type {string} */
-    static TIMESTAMP_OPTION_STRING = 'string'
+    static TIMESTAMP_OPTION_STRING       = 'string'
+    /** @readonly @type {string} */
+    static TIMESTAMP_OPTION_TEXT         = 'text'
 
-    /** @readonly @type {{string:string}} */
+    /** @readonly @type {{[key:string]:string}} */
     static TIMEZONE_DESIGNATIONS = {
         'A': 'Etc/GMT-1',
         'B': 'Etc/GMT-2',
@@ -589,7 +656,7 @@ class util {
         'Y': 'Etc/GMT+12',
         'Z': 'GMT',
     }
-    /** @readonly @type {{string:number}} */
+    /** @readonly @type {{[key:string]:number}} */
     static TIMEZONE_DESIGNATION_OFFSETS = {
         'A': +1,
         'B': +2,
@@ -658,12 +725,13 @@ class util {
      * spherical   = (r, theta, phi)
      */
 
-    /** @param {string|number} value @param {string} pattern @returns {boolean} */
+    /** @param {string|number} value @param {RegExp|string} pattern @returns {boolean} */
     static ispattern(value, pattern) {
         return new RegExp(pattern).test(`${value}`)
     }
     /** @param {any} value @param {string} types @returns {boolean} */
     static istype(value, types) {
+        /** @param {*} value @param {string} type @returns {boolean} */
         function istype(value, type) {
             function toBinary(value, type) {
                 if (util.ispattern(value, /^(0|1)+$/)) {
@@ -750,7 +818,7 @@ class util {
             if (type == 'address-ipv4-local-unique' || type == 'address-internet_protocol_v4-local-unique') {
                 if (istype(value, 'address-ipv4')) {
                     value = toBinary(value, type)
-                    return value.slice(0, 8) == '10100000' | value.slice(0, 12) == '101011000001' || value.slice(0, 16) == '1100000010101000'
+                    return value.slice(0, 8) == '10100000' || value.slice(0, 12) == '101011000001' || value.slice(0, 16) == '1100000010101000'
                 }
             }
             if (type == 'address-ipv4-loopback' || type == 'address-internet_protocol_v4-loopback') {
@@ -1123,19 +1191,19 @@ class util {
                     return 0 <= Math.abs(Number(value)) && Math.abs(Number(value)) <= 90
                 }
                 if (istype(value, 'string')) {
-                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT2}`
+                    let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT2}`
                     return util.ispattern(value, `^${pattern}$`)
                 }
             }
             if (type == 'coordinates-geographic-latitude-ddm') {
                 if (istype(value, 'string')) {
-                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+                    let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
                     return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$`)
                 }
             }
             if (type == 'coordinates-geographic-latitude-dms') {
                 if (istype(value, 'string')) {
-                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+                    let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
                     return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$`)
                 }
             }
@@ -1149,19 +1217,19 @@ class util {
                     return 0 <= Math.abs(Number(value)) && Math.abs(Number(value)) <= 180
                 }
                 if (istype(value, 'string')) {
-                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT2}`
+                    let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT2}`
                     return util.ispattern(value, `^${pattern}$`)
                 }
             }
             if (type == 'coordinates-geographic-longitude-ddm') {
                 if (istype(value, 'string')) {
-                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+                    let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
                     return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$`)
                 }
             }
             if (type == 'coordinates-geographic-longitude-dms') {
                 if (istype(value, 'string')) {
-                    let pattern = !(value.includes('°') || value.includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+                    let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
                     return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$`)
                 }
             }
@@ -1170,6 +1238,9 @@ class util {
             }
             if (type == 'decimal') {
                 return istype(value, 'number') || istype(value, 'string-number')
+            }
+            if (type == 'degrees') {
+                return util.ispattern(value, /^(0?\d?\d|[1-2]\d\d|3[0-5]\d)(°(M|T))?$/)
             }
             if (type == 'element') {
                 return value instanceof Element || value instanceof AppElement
@@ -1199,9 +1270,9 @@ class util {
             if (type == 'number') {
                 return typeof value === 'number'
             }
-            if (type == 'number-float') {
+            if (type == 'number-decimal' || type == 'number-float') {
                 if (istype(value, 'number')) {
-                    return istype(`${value}`, 'string-number-float')
+                    return istype(`${value}`, 'string-number-decimal')
                 }
             }
             if (type == 'number-integer') {
@@ -1267,9 +1338,9 @@ class util {
                 }
             }
             if (type == 'string-number') {
-                return istype(value, 'string-number-float') || istype(value, 'string-number-integer')
+                return istype(value, 'string-number-decimal') || istype(value, 'string-number-integer')
             }
-            if (type == 'string-number-float') {
+            if (type == 'string-number-decimal' || type == 'string-number-float') {
                 if (istype(value, 'string')) {
                     return util.ispattern(value, /^(-|\+)?\d+\.\d+$/)
                 }
@@ -1298,51 +1369,59 @@ class util {
             }
             if (type == 'timestamp') {
                 if (istype(value, 'string')) {
-                    let pattern = ""
-                    if (value.includes('-')) {
-                        if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
-                        if (len(value) == 7 || len(value) == 8)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}`
-                        if (len(value) == 10 || len(value) == 11) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}`
-                        if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
-                        if (len(value) == 16 || len(value) == 17) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}`
-                        if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}`
-                        if (len(value) == 23 || len(value) == 24) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
+                    if (value.length >= 4) {
+                        let pattern = ""
+                        if (value.includes('-')) {
+                            if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
+                            if (len(value) == 7 || len(value) == 8)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}`
+                            if (len(value) == 10 || len(value) == 11) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}`
+                            if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
+                            if (len(value) == 16 || len(value) == 17) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}`
+                            if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}`
+                            if (len(value) == 23 || len(value) == 24) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
+                        }
+                        else {
+                            if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
+                            if (len(value) == 6 || len(value) == 7)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}`
+                            if (len(value) == 8 || len(value) == 9)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}`
+                            if (len(value) == 11 || len(value) == 12) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
+                            if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}`
+                            if (len(value) == 15 || len(value) == 16) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}`
+                            if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
+                        }
+                        return util.ispattern(value, `^${pattern}${util.TIMESTAMP_PATTERN_ZONE}$`)
                     }
-                    else {
-                        if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
-                        if (len(value) == 6 || len(value) == 7)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}`
-                        if (len(value) == 8 || len(value) == 9)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}`
-                        if (len(value) == 11 || len(value) == 12) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
-                        if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}`
-                        if (len(value) == 15 || len(value) == 16) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}`
-                        if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
-                    }
-                    return util.ispattern(value, `^${pattern}${util.TIMESTAMP_PATTERN_ZONE}$`)
                 }
             }
             if (type == 'timestamp-date') {
                 if (istype(value, 'string')) {
-                    if (value.includes('-')) {
-                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`)
-                    }
-                    else {
-                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                    if (value.length > 0) {
+                        if (value.includes('-')) {
+                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                        }
+                        else {
+                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                        }
                     }
                 }
             }
             if (type == 'timestamp-time') {
                 if (istype(value, 'string')) {
-                    if (value.includes('-')) {
-                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`)
-                    }
-                    else {
-                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                    if (value.length > 0) {
+                        if (value.includes('-')) {
+                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                        }
+                        else {
+                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                        }
                     }
                 }
             }
             if (type == 'timestamp-zone') {
                 if (istype(value, 'string')) {
-                    return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_ZONE}$`)
+                    if (value.length == 1) {
+                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_ZONE}$`)
+                    }
                 }
             }
             if (type.slice(-2, type.length) == '[]') {
@@ -1357,32 +1436,16 @@ class util {
             }
             return false
         }
-        if (value == null || value == undefined) {
-            return false
-        }
+        if (value === null || value === undefined) return false
         // 
-        let delimiter = null
-        if (types.includes('|')) {
-            delimiter = '|'
-        }
-        else if (types.includes('&')) {
-            delimiter = '&'
-        }
-        else {
-
-        }
+        let delimiters = ['&','|']
+        let delimiter = delimiters.find(delimiter => types.includes(delimiter))
+        if (delimiters.every(delimiter => types.includes(delimiter))) throw new Error(`ValueError: conflicting delimiters`)
         // 
         if (delimiter) {
-            let results = []
-            for (let type of types.split(delimiter)) {
-                results.push(istype(value, type))
-            }
-            if (delimiter == '|') {
-                return results.includes(true)
-            }
-            if (delimiter == '&') {
-                return !results.includes(false)
-            }
+            let results = types.split(delimiter).map(type => istype(value, type))
+            if (delimiter == '&') return all(results)
+            if (delimiter == '|') return any(results)
         } else {
             return istype(value, types)
         }
@@ -1391,14 +1454,8 @@ class util {
     static get(method, ...args) {
         return util[method](...args)
     }
-    /** @param {any} value @param {string} types @returns {boolean} */
-    static invalidateType(value, types) {
-        let valid = util.istype(value, types)
-        if (!valid) console.error(`TypeError: variable-name: variable-type:${typeof value}`)
-        return !valid
-    }
     // a
-    /** @param {address|number} value @returns {binary} */
+    /** @param {string|number} value @returns {string} */
     static address_binary(value) {
         if (util.istype(value, 'address&binary')) {
             return value
@@ -1452,27 +1509,9 @@ class util {
             throw new Error(`TypeError: require type address-ipv4 or address-ipv6`)
         }
     }
-    /** @deprecated @param {string|null} value @returns {string} */
-    static __address_ipv4(value = null) {
-        let output = ''
-        if (value == null) {
-            for (let i = 0; i < 4; i++) {
-                output += util.dec2bin(util.random(0, 255), 8)
-            }
-        } else {
-            if (value.includes('.')) {
-                value.split('.').forEach(octet => output += util.dec2bin(Number(octet), 8))
-            } else {
-                for (let i = 0; i < value.length; i += 8) {
-                    output += (output.length == 0 ? '' : '.') + util.bin2dec(value.slice(i, i + 8))
-                }
-            }
-        }
-        return output
-    }
     /** @param {string|null} value @returns {string} */
     static address_ipv4(value = null) {
-        /** @returns {void} */
+        /** @returns {string} */
         function generate() {
             // generate a random number and convert to 8-bit binary for each octet
             let binary = ''
@@ -1559,64 +1598,9 @@ class util {
         let ptr_prefix = digits.join(".")
         return `${ptr_prefix}.in-addr.arpa`
     }
-    /** @deprecated @param {string|null} value @returns {string} */
-    static __address_ipv6(value = null) {
-        let output = ''
-        if (value == undefined) {
-            for (let i = 0; i < 8; i++) {
-                output += util.dec2bin(util.random(0, 65535), 16)
-            }
-        } else if (value.includes(':')) {
-            if (value.length == 39) {
-                value.split(':').forEach(quartet => output += util.hex2bin(quartet))
-            } else {
-                let aArray = value.split(':').map((hex) => hex.rjust(4, '0'))
-                let bArray = []
-                let a = aArray.findIndex((hex) => hex == '0000')
-                for (let i = 0; i < aArray.length; i++) {
-                    bArray.push(util.hex2bin(aArray[i]))
-                    if (i == a) for (let j = 0; j < 8 - aArray.length; j++) {
-                        bArray.push(util.hex2bin('0000'))
-                    }
-                }
-                output = bArray.join('')
-            }
-        } else {
-            let aArray = []
-            for (let i = 0; i < 128; i += 16) {
-                let hex = util.bin2hex(value.slice(i, i + 16))
-                for (let j = 0; j < hex.length; j++) {
-                    if (hex[j] != '0' || j == 3) {
-                        hex = hex.slice(j)
-                        break
-                    }
-                }
-                aArray.push(hex)
-            }
-            let bArray = []
-            for (let i = 0; i < 8; i++) {
-                if ((i == 0 && aArray[i] == '0') || i != 0 && aArray[i - 1] != '0' && aArray[i] == '0') {
-                    bArray.push([i, 0])
-                }
-                if (aArray[i] == '0') {
-                    bArray[bArray.length - 1][1] += 1
-                }
-            }
-            bArray.sort((a, b) => b[1] - a[1])
-            if (bArray.length > 0 && bArray[0][1] > 1) {
-                for (let i = 0; i < 8; i++) {
-                    if (i == bArray[0][0]) {
-                        output += (output.slice(output.length - 1, output.length) == ':' ? '' : ':') + ':'
-                        i += bArray[0][1] - 1
-                    } else output += aArray[i] + (i == 7 ? '' : ':')
-                }
-            } else output = aArray.join(':')
-        }
-        return output
-    }
     /** @param {string|null} value @returns {string} */
     static address_ipv6(value = null) {
-        /** @returns {void} */
+        /** @returns {string} */
         function generate() {
             // generate a random number and convert to 16-bit binary for each hextet
             let binary = '';
@@ -1666,7 +1650,7 @@ class util {
             return toText(value);
         }
     }
-    /** @param {string} value @returns {string} */
+    /** @param {string} text @returns {string} */
     static address_ipv6_expand(text) {
         return util.address_ipv6_uncompress(text)
     }
@@ -1790,27 +1774,9 @@ class util {
         }
         return binary == util.address_ipv4_broadcast(network_identifier, subnetmask)
     }
-    /** @deprecated @param {string|null} value @returns {string} */
-    static __address_mac(value = null) {
-        let output = ''
-        if (value == undefined) {
-            for (let i = 0; i < 6; i++) {
-                output += util.dec2bin(util.random(0, 255), 8)
-            }
-        } else {
-            if (value.includes('-')) {
-                value.split('-').forEach(hex => output += util.hex2bin(hex))
-            } else {
-                for (let i = 0; i < value.length; i += 8) {
-                    output += (output.length == 0 ? '' : '-') + util.bin2hex(value.slice(i, i + 8))
-                }
-            }
-        }
-        return output
-    }
-    /** @deprecated @param {string|null} value @returns {string} */
+    /** @param {string|null} value @returns {string} */
     static address_mac(value = null) {
-        /** @returns {void} */
+        /** @returns {string} */
         function generate() {
             // generate a random number and convert to 8-bit binary for each octet
             let binary = ''
@@ -1858,7 +1824,7 @@ class util {
     /** @param {address} address @param {binary} network_prefix @returns {address} */
     static address_mac_to_ipv6_local_link(address, network_prefix) {
         if (network_prefix.length != 64) {
-            throw new Error(`StringLengthError: network_prefix requires 64 characters`)
+            throw new Error(`LengthError: 'network_prefix' requires 64 characters`)
         }
         let binary = util.address_binary(address)
         let interface_identifier = binary.slice(0, 24) + util.hex2bin('fffe') + binary.slice(24, 48)
@@ -1925,7 +1891,7 @@ class util {
             throw new Error(`TypeError: require type address or number`)
         }
     }
-    /** @param {address} network_identifier @param {address|number} netmask @param {number} subnets @returns {string[]} */
+    /** @param {address} network_identifier @param {address|number} netmask @param {number} subnets @returns {[string,string[]]} */
     static address_subnetting(network_identifier, netmask, subnets) {
         netmask = util.address_binary(netmask)
         subnets = Number(subnets)
@@ -1948,13 +1914,13 @@ class util {
                 break
             }
         }
-        if (network_extension_length == null) return []
+        if (network_extension_length == null) return [netmask, []]
         let network_identifiers = []
         let wildcardmask_prefix_length = 32 - (network_mask_prefix_length + network_extension_length)
         let subnetmask = '1'.repeat(network_mask_prefix_length) + '1'.repeat(network_extension_length) + '0'.repeat(wildcardmask_prefix_length)
         // cycle through bit combinations in network_extension
         for (let x = 0; x < (2 ** network_extension_length); x++) {
-            network_identifiers.append(network_identifier.slice(0, network_mask_prefix_length) + util.dec2bin(x, network_extension_length) + '0'.repeat(wildcardmask_prefix_length))
+            network_identifiers.push(network_identifier.slice(0, network_mask_prefix_length) + util.dec2bin(x, network_extension_length) + '0'.repeat(wildcardmask_prefix_length))
         }
         return [subnetmask, network_identifiers]
     }
@@ -1970,7 +1936,7 @@ class util {
         return binary.count('0')
     }
     /** @param {number} n @param {{ index:number, result:number }} results  @returns {number} */
-    static algorithm_fibonacci(n, results = {}) {
+    static algorithm_fibonacci(n, results = { index: 0, result: 0 }) {
         if (n == 0 || n == 1) {
             return n
         }
@@ -1995,7 +1961,7 @@ class util {
         }
     }
     /** @param {number} n @param {{ index:number, result:number }} results  @returns {number} */
-    static algorithm_tribonacci(n, results = {}) {
+    static algorithm_tribonacci(n, results = { index: 0, result: 0 }) {
         if (n == 0 || n == 1) {
             return 0
         }
@@ -2012,12 +1978,10 @@ class util {
     // b
     /** @param {string} value @returns {string} */
     static base64_encode(value) {
-        if (!util.istype(value, 'string')) return console.error(`TypeError: `, value)
         return window.btoa(value)
     }
     /** @param {string} value @returns {string} */
     static base64_decode(value) {
-        if (!util.istype(value, 'string')) return console.error(`TypeError: `, value)
         return window.atob(value)
     }
     /** @param {string} value @returns {boolean} */
@@ -2026,7 +1990,6 @@ class util {
     }
     /** @param {bytes|number} value @param {number} fractionDigits @returns {string} */
     static bytes_format(value, fractionDigits = 2) {
-        if (!util.istype(value, 'bytes|number')) return console.error(`TypeError: variable-name:value variable-type:${typeof value} type=bytes|number`)
         if (util.istype(value, 'bytes')) {
             value = util.byt2dec(value)
         }
@@ -2069,41 +2032,8 @@ class util {
         let yMax = Math.max(...ys)
         return (xMin <= x && x <= xMax) && (yMin <= y && y <= yMax)
     }
-    /** @param {number[]} point1 @param {number[]} point2 @returns {number} */
+    /** @param {number[]} points @returns {number[]} */
     static cartesian_polygon_centroid(points) {
-        // let xSum = 0;
-        // let ySum = 0;
-        // let area = 0;
-        // // iterate through the polygon's vertices
-        // for (let i = 0; i < points.length - 1; i++) {
-        //     let x1 = points[i][0];
-        //     let y1 = points[i][1];
-        //     let x2 = points[i + 1][0];
-        //     let y2 = points[i + 1][1];
-        //     // calculate the signed area of the triangle formed by the current vertex, the next vertex, and the origin
-        //     let a = x1 * y2 - x2 * y1;
-        //     area += a;
-        //     // update the sums of x and y coordinates, weighted by the triangle's area
-        //     xSum += (x1 + x2) * a;
-        //     ySum += (y1 + y2) * a;
-        // }
-        // // calculate the centroid coordinates
-        // area /= 2;
-        // let cx = xSum / (6 * area);
-        // let cy = ySum / (6 * area);
-        // return [cx, cy];
-
-        // let xSum = 0
-        // let ySum = 0
-        // for (let point of points) {
-        //     xSum += point[0]
-        //     ySum += point[1]
-        // }
-        // let xAverage = xSum / points.length
-        // let yAverage = ySum / points.length
-        // let centroid = [xAverage, yAverage]
-        // return centroid
-
         // initialize the centroid coordinates
         let x = 0;
         let y = 0;
@@ -2185,26 +2115,23 @@ class util {
         let elevation = 90 - degrees
         return elevation
     }
-    /** @param {number[]} point1 @param {number[]} point2 @returns {number} */
+    /** @param {number[]} point1 @param {number[]} point2 @returns {number[]} */
     static cartesian_to_midpoint(point1, point2) {
-        length1 = point1.length
-        length2 = point2.length
+        let length1 = point1.length
+        let length2 = point2.length
         if (length1 == 2 && length2 >= 2) {
             let [x1, y1] = point1
             let [x2, y2] = point2
-            midpoint = [(x1 + x2) / 2, (y1 + y2) / 2]
-            return midpoint
+            return [(x1 + x2) / 2, (y1 + y2) / 2]
         }
         if (length1 == 3 && length2 == 3) {
             let [x1, y1, z1] = point1
             let [x2, y2, z2] = point2
-            midpoint = [(x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2]
-            return midpoint
+            return [(x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2]
         }
     }
     /** @param {number[]} point1 @param {number[]} point2 @returns {number[]} */
     static cartesian_to_polar(point1, point2) {
-        // returns: radius, angle, height
         let [x1, y1, z1] = point1
         let [x2, y2, z2] = point2
         let dx = x2 - x1
@@ -2214,9 +2141,8 @@ class util {
         let theta = Math.atan2(dy, dx)
         return [r, theta]
     }
-    /** @param {number[]} point1 @param {number[]} point2 @returns {number[]} */
+    /** @param {number[]} point1 @param {number[]} point2 @returns {number} */
     static cartesian_to_slope(point1, point2) {
-        // returns: radius, angle, height
         let [x1, y1] = point1
         let [x2, y2] = point2
         let dx = x2 - x1
@@ -2225,7 +2151,6 @@ class util {
     }
     /** @param {number[]} point1 @param {number[]} point2 @returns {number[]} */
     static cartesian_to_spherical(point1, point2) {
-        // returns: radius, angle, height
         let [x1, y1, z1] = point1
         let [x2, y2, z2] = point2
         let dx = x2 - x1
@@ -2247,16 +2172,7 @@ class util {
     }
     /** @param {any} value @returns {any} */
     static clone(value) {
-        return JSON.parse(JSON.stringify(value))
-    }
-    /** @param {string} value @returns {number} */
-    static coordinate_conversions(value) {
-        if (!util.istype(value, 'string')) return console.error(`TypeError: `, value)
-        let semiMajorAxis = 6378137.0
-        let semiMinorAxis = 6356752.3142
-        if (value == 'semiMajorAxis') return semiMajorAxis
-        else if (value == 'semiMinorAxis') return semiMinorAxis
-        else return console.error(`TypeError: `, value)
+        return util.copy(value)
     }
     /** @param {any} value @returns {any} */
     static copy(value) {
@@ -2265,12 +2181,12 @@ class util {
     /** @param {{string:string}} value @returns {string} */
     static css_encode(value) {
         let string = ''
-        for (let [cssKey, cssValue] in enumerate(value)) {
-            string += (string.empty() ? '' : '; ') + cssKey + ': ' + cssValue
+        for (let [cssKey, cssValue] of enumerate(value)) {
+            string += (string == '' ? '' : '; ') + cssKey + ': ' + cssValue
         }
         return string
     }
-    /** @param {string} string @returns {{string:string}} */
+    /** @param {string} value @returns {{string:string}|{}} */
     static css_decode(value) {
         let object = {}
         for (let entry of value.strip(' ;').split(';')) {
@@ -2281,19 +2197,19 @@ class util {
         }
         return object
     }
-    /** @param {{}[]} value @returns {string} */
+    /** @todo @param {{}[]} value @returns {string} */
     static csv_encode(value) {
-
+        return ""
     }
-    /** @param {string} value @returns {{}[]} */
+    /** @todo @param {string} value @returns {{}[]} */
     static csv_decode(value) {
-        if (!util.istype(value, 'string')) return console.error(`TypeError: `, value)
+        return []
     }
     /** @param {number} r @param {number} azimuth @param {number} height @returns {number[]} */
     static cylindrical_to_cartesian(r, azimuth, height) {
         azimuth *= util.DEGREES_TO_RADIANS
-        let x = r * math.cos(azimuth)
-        let y = r * math.sin(azimuth)
+        let x = r * Math.cos(azimuth)
+        let y = r * Math.sin(azimuth)
         let z = height
         return [x, y, z]
     }
@@ -2329,12 +2245,10 @@ class util {
     }
     /** @param {{}[]} entries @param {...any} values @returns {{}[]} */
     static entries_filter(entries, ...values) {
-        if (!util.istype(entries, 'array')) return console.error(`TypeError: `, entries)
-        return util.filter_and(entries, ...values)
+        return util.entries_filter_and(entries, ...values)
     }
     /** @param {{}[]} entries @param {...any} values @returns {{}[]} */
     static entries_filter_and(entries, ...values) {
-        if (!util.istype(entries, 'array')) return console.error(`TypeError: `, entries)
         let filters = []
         for (let i = 0; i < values.length; i += 2) filters.push({ 'key': values[i], 'val': values[i + 1] })
         let filtered = []
@@ -2349,7 +2263,6 @@ class util {
     }
     /** @param {{}[]} entries @param {...any} values @returns {{}[]} */
     static entries_filter_or(entries, ...values) {
-        if (!util.istype(entries, 'array')) return console.error(`TypeError: `, entries)
         let filters = []
         for (let i = 0; i < values.length; i += 2) filters.push({ 'key': values[i], 'val': values[i + 1] })
         let filtered = []
@@ -2364,12 +2277,10 @@ class util {
     }
     /** @param {{}[]} entries @param {...any} values @returns {{}|null} */
     static entries_find(entries, ...values) {
-        if (!util.istype(entries, 'array')) return console.error(`TypeError: `, entries)
         return util.entries_find_and(entries, ...values)
     }
     /** @param {{}[]} entries @param {...any} values @returns {{}|null} */
     static entries_find_and(entries, ...values) {
-        if (!util.istype(entries, 'array')) return console.error(`TypeError: `, entries)
         let filters = []
         for (let i = 0; i < values.length; i += 2) filters.push({ 'key': values[i], 'val': values[i + 1] })
         for (let i = 0; i < entries.length; i++) {
@@ -2383,7 +2294,6 @@ class util {
     }
     /** @param {{}[]} entries @param {...any} values @returns {{}|null} */
     static entries_find_or(entries, ...values) {
-        if (!util.istype(entries, 'array')) return console.error(`TypeError: `, entries)
         let filters = []
         for (let i = 0; i < values.length; i += 2) filters.push({ 'key': values[i], 'val': values[i + 1] })
         for (let i = 0; i < entries.length; i++) {
@@ -2397,9 +2307,6 @@ class util {
     }
     /** @param {{}[]} entries @param {...any} values @returns {{}[]} */
     static entries_remove(entries = [], ...values) {
-        // values: array = [{ id:'' }] or [id]
-        if (!util.istype(entries, 'array')) return console.error(`TypeError: `, entries)
-        if (!util.istype(values, 'array')) return console.error(`TypeError: `, values)
         for (let i = 0; i < values.length; i++) {
             if (util.istype(values[i], 'object')) {
                 values[i] = values[i]['id']
@@ -2415,18 +2322,14 @@ class util {
     }
     /** @param {{}[]} entries @param {...any} values @returns {{}[]} */
     static entries_remove_filter(entries, ...values) {
-        if (!util.istype(entries, 'array')) return console.error(`TypeError: `, entries)
         let filtered = util.entries_filter_and(entries, ...values)
-        return util.remove(entries, ...filtered)
+        return util.entries_remove(entries, ...filtered)
     }
     // f
     /** @param {string} filename @param {bytes|string} data @param {string} type @returns {void} */
     static file_create(filename, data, type = 'text/plain') {
-        if (!util.istype(filename, 'string')) return console.error(`TypeError: `, filename)
-        if (util.istype(data, 'string')) data = util.str2byt(data)
+        if (typeof data === "string") data = util.str2byt(data)
         if (data instanceof ArrayBuffer) data = new Uint8Array(data)
-        if (!util.istype(data, 'bytes')) return console.error(`TypeError: `, data)
-        if (!util.istype(type, 'string')) return console.error(`TypeError: `, type)
         let element = document.createElement('a')
         let blob = new Blob([data], { type: type })
         let urlCreator = window.URL || window.webkitURL
@@ -2437,22 +2340,6 @@ class util {
         document.body.appendChild(element)
         element.click()
         document.body.removeChild(element)
-    }
-    /** @param {string} path @param {string} option @returns {Object|string} */
-    static file_path(path = null, option = null) {
-        if (!path && window) {
-            path = window.location.pathname
-        }
-        if (!util.istype(path, 'string')) return console.error(`TypeError: `, path)
-        let delimiter = path.includes('/') ? '/' : '\\'
-        let value = {
-            'dirname': path.includes(delimiter) ? path.slice(0, path.lastIndexOf(delimiter)) : null,
-            'basename': path.includes(delimiter) ? path.slice(path.lastIndexOf(delimiter) + 1) : null,
-            'extension': path.includes('.') ? path.slice(path.lastIndexOf('.') + 1) : null,
-            'filename': path.includes(delimiter) && path.includes('.') ? path.slice(path.lastIndexOf(delimiter) + 1, path.lastIndexOf('.')) : null
-        }
-        if (!option) return value
-        return value[option]
     }
     /** @param {string|string[]} file_extensions @param {(FileSystemFileHandle[]) => void} callback @returns {FileSystemFileHandle[]} */
     static file_picker(file_extensions, callback) {
@@ -2511,7 +2398,6 @@ class util {
     }
     /** @param {string} path @param {(ArrayBuffer) => void} callback @returns {void} */
     static file_read(path, callback) {
-        if (!util.istype(path, 'string')) return console.error(`TypeError: `, path)
         fetch(path).then((response) => response.arrayBuffer()).then(data => {
             callback(data)
         }).catch((error) => {
@@ -2519,156 +2405,7 @@ class util {
             callback(new ArrayBuffer())
         })
     }
-    /** @param {string} path @param {(Object) => void} callback @returns {void} */
-    static file_read_data(path, callback) {
-        let dataTypes = {
-            'list': {
-                'lines': 'multiple',
-                'type': 'object',
-            },
-            'name': {
-                'lines': 'single',
-                'type': 'string',
-            },
-            'reference': {
-                'lines': 'single',
-                'type': 'array',
-            },
-            'subtitle': {
-                'lines': 'single',
-                'type': 'string',
-            },
-            'table': {
-                'lines': 'multiple',
-                'type': 'object',
-            },
-            'title': {
-                'lines': 'single',
-                'type': 'string',
-            },
-        }
-        function isBlank(line) {
-            return line.trim() == ''
-        }
-        function hasKey(key, line) {
-            return line.indexOf(key) == 0
-        }
-        function getLines(lines, index) {
-            let value = ''
-            while (index < lines.length) {
-                let line = lines[index]
-                if (isBlank(line)) break
-                value += (value == '' ? '' : '\n') + line
-                index += 1
-            }
-            return [value, index]
-        }
-        function getValue(key, string) {
-            if (key == 'list') {
-                return string.split('\n').map((line) => line.trim())
-            }
-            if (key == 'name') {
-                return string
-            }
-            if (key == 'reference') {
-                return string.split(',').map((string) => string.trim())
-            }
-            if (key == 'subtitle') {
-                return string
-            }
-            if (key == 'table') {
-                function getHeaders(string, delimiter = '     ') {
-                    let headers = {}
-                    let delimiterLength = delimiter.length
-                    let stringLength = string.length
-                    let sIndex = 0
-                    let cIndex = 0
-                    while (cIndex < string.length) {
-                        if (cIndex == stringLength - 1) {
-                            let header = string.slice(sIndex, cIndex + 1).trim()
-                            headers[header] = [sIndex, -1]
-                        }
-                        if (string.slice(cIndex, cIndex + delimiterLength) == delimiter && string[cIndex + delimiterLength] != ' ') {
-                            let header = string.slice(sIndex, cIndex + delimiterLength - 1).trim()
-                            headers[header] = [sIndex, cIndex + delimiterLength - 1]
-                            sIndex = cIndex + delimiterLength
-                        }
-                        cIndex += 1
-                    }
-                    return headers
-                }
-                let entries = []
-                let lines = string.split('\n')
-                let headers = getHeaders(lines[0])
-                for (let index = 1; index < lines.length; index++) {
-                    let line = lines[index]
-                    entries.push({})
-                    for (let header in headers) {
-                        let indexes = headers[header]
-                        let sIndex = indexes[0]
-                        let eIndex = indexes[1] == -1 ? line.length : indexes[1]
-                        entries[entries.length - 1][header] = line.slice(sIndex, eIndex).trim()
-                    }
-                }
-                return entries
-            }
-            if (key == 'title') {
-                return string
-            }
-        }
-        function decode(string) {
-            let data = {}
-            let lines = string.replaceAll('\r', '').split('\n')
-            let index = 0
-            for (let key in dataTypes) {
-                let dataType = dataTypes[key]
-                if (dataType['type'] == 'array') {
-                    data[key] = []
-                }
-                if (dataType['type'] == 'object') {
-                    data[key] = {}
-                }
-                if (dataType['type'] == 'string') {
-                    data[key] = ''
-                }
-            }
-            while (index < lines.length) {
-                let line = lines[index]
-
-                for (let key in dataTypes) {
-                    let dataType = dataTypes[key]
-                    if (hasKey(key, line)) {
-                        let keyvalue = line.slice(key.length + 1, line.length).trim()
-                        let value = null
-                        if (dataType['lines'] == 'single') {
-                            value = getValue(key, keyvalue)
-                        }
-                        if (dataType['lines'] == 'multiple') {
-                            [value, index] = getLines(lines, index + 1)
-                            value = getValue(key, value)
-                        }
-                        if (dataType['type'] == 'array') {
-                            data[key].push(value)
-                        }
-                        if (dataType['type'] == 'object') {
-                            data[key][keyvalue] = value
-                        }
-                        if (dataType['type'] == 'string') {
-                            data[key] = value
-                        }
-                        break
-                    }
-                }
-                index += 1
-            }
-            return data
-        }
-        util.file_read_string(path, (data) => {
-            data = decode(data)
-            callback(data)
-        })
-    }
-    /** @param {string} path @param {(Array|Object) => void} callback @returns {void} */
+    /** @param {string} path @param {function(Array|Object): void} callback @returns {void} */
     static file_read_json(path, callback = (data) => { }) {
         fetch(path).then((response) => response.json()).then(data => {
             callback(data)
@@ -2677,21 +2414,18 @@ class util {
             callback([])
         })
     }
-    /** @param {string} path @param {(string[]) => void} callback @returns {void} */
+    /** @param {string} path @param {function(string[]): void} callback @returns {void} */
     static file_read_list(path, callback = (data) => { }) {
-        if (!util.istype(path, 'string')) return console.error(`TypeError: `, path)
         fetch(path).then((response) => response.text()).then(data => {
-            data = data.replaceAll('\r', '')
-            data = data.split('\n').map((string) => string.trim())
-            callback(data)
+            let arg = data.replaceAll('\r', '').split('\n').map((string) => string.trim())
+            callback(arg)
         }).catch((error) => {
             console.warn(error)
             callback([])
         })
     }
-    /** @param {string} path @param {(string) => void} callback @returns {void} */
+    /** @param {string} path @param {function(string): void} callback @returns {void} */
     static file_read_string(path, callback = (data) => { }) {
-        if (!util.istype(path, 'string')) return console.error(`TypeError: `, path)
         fetch(path).then((response) => response.text()).then(data => {
             data = data.replaceAll('\r', '')
             callback(data)
@@ -2700,7 +2434,7 @@ class util {
             callback('')
         })
     }
-    /** @param {FileSystemFileHandle} fileHandle @param {bytes} data @param {(string) => void} callback @returns {void} */
+    /** @param {FileSystemFileHandle} fileHandle @param {bytes} data @param {function(): void} callback @returns {void} */
     static file_write(fileHandle, data, callback = () => { }) {
         fileHandle.createWritable().then((writable) => {
             // writable = FileSystemWritableFileStream
@@ -2713,11 +2447,11 @@ class util {
     }
     // g
 
-    /** @param {...string} point @returns {string[]} */
+    /** @param {...string|number|string[]|number[]} point @returns {string[]} */
     static geographic_ddd_to_ddm(...point) {
         point = point.length == 1 ? point[0] : Array.from(point)
         if (!util.istype(point, 'coordinates-geographic-ddd')) {
-            throw new Error(`ValueError: invalid geographic coordinate format`)
+            throw new Error(`ValueError: geographic coordinate format invalid`)
         }
         let direction, degrees, minutes, seconds, decimal_minutes
         point = [Number(point[0]), Number(point[1])]
@@ -2753,11 +2487,11 @@ class util {
         let longitude = `${degrees.rjust(3, '0')}${decimal_minutes.rjust(5, '0')}${direction}`
         return [latitude, longitude]
     }
-    /** @param {...string} point @returns {string[]} */
+    /** @param {...string|number|string[]|number[]} point @returns {string[]} */
     static geographic_ddd_to_dms(...point) {
         point = point.length == 1 ? point[0] : Array.from(point)
         if (!util.istype(point, 'coordinates-geographic-ddd')) {
-            throw new Error(`ValueError: invalid geographic coordinate format`)
+            throw new Error(`ValueError: geographic coordinate format invalid`)
         }
         let direction, degrees, minutes, seconds
         point = [Number(point[0]), Number(point[1])]
@@ -2795,15 +2529,15 @@ class util {
         let longitude = `${degrees.rjust(3, '0')}${minutes.rjust(2, '0')}${seconds.rjust(2, '0')}${direction}`
         return [latitude, longitude]
     }
-    /** @param {...string} point @returns {string[]} */
+    /** @param {...string|string[]} point @returns {string[]} */
     static geographic_ddm_to_ddd(...point) {
         point = point.length == 1 ? point[0] : Array.from(point)
         if (!util.istype(point, 'coordinates-geographic-ddm')) {
-            throw new Error(`ValueError: invalid geographic coordinate format`)
+            throw new Error(`ValueError: geographic coordinate format invalid`)
         }
         let direction, degrees, minutes, decimal_degrees
         let pattern, match
-        pattern = !(point[0].includes('°') || point[0].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+        pattern = !(point[0].includes('*') || point[0].includes('°') || point[0].includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
         pattern = (point[0][0] == 'N' || point[0][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`
         match = point[0].match(pattern)
         direction = match.groups["direction"]
@@ -2812,8 +2546,8 @@ class util {
         decimal_degrees = (degrees + minutes/60).toFixed(6)
         decimal_degrees *= direction == 'N' ? 1 : -1
         let latitude = `${decimal_degrees}`
-        pattern = !(point[1].includes('°') || point[1].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
-        pattern = (point[1][0] == 'N' || point[1][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
+        pattern = !(point[1].includes('*') || point[1].includes('°') || point[1].includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+        pattern = (point[1][0] == 'E' || point[1][0] == 'W') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
         match = point[1].match(pattern)
         direction = match.groups["direction"]
         degrees = Number(match.groups["degrees"])
@@ -2823,15 +2557,15 @@ class util {
         let longitude = `${decimal_degrees}`
         return [latitude, longitude]
     }
-    /** @param {...string} point @returns {string[]} */
+    /** @param {...string|string[]} point @returns {string[]} */
     static geographic_ddm_to_dms(...point) {
         point = point.length == 1 ? point[0] : Array.from(point)
         if (!util.istype(point, 'coordinates-geographic-ddm')) {
-            throw new Error(`ValueError: invalid geographic coordinate format`)
+            throw new Error(`ValueError: geographic coordinate format invalid`)
         }
         let direction, degrees, minutes, decimal_degrees
         let pattern, match
-        pattern = !(point[0].includes('°') || point[0].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+        pattern = !(point[0].includes('*') || point[0].includes('°') || point[0].includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
         pattern = (point[0][0] == 'N' || point[0][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`
         match = point[0].match(pattern)
         direction = match.groups["direction"]
@@ -2840,8 +2574,8 @@ class util {
         decimal_degrees = (degrees + minutes/60)
         decimal_degrees *= direction == 'N' ? 1 : -1
         let latitude = `${decimal_degrees}`
-        pattern = !(point[1].includes('°') || point[1].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
-        pattern = (point[1][0] == 'N' || point[1][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
+        pattern = !(point[1].includes('*') || point[1].includes('°') || point[1].includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
+        pattern = (point[1][0] == 'E' || point[1][0] == 'W') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
         match = point[1].match(pattern)
         direction = match.groups["direction"]
         degrees = Number(match.groups["degrees"])
@@ -2851,15 +2585,15 @@ class util {
         let longitude = `${decimal_degrees}`
         return util.geographic_ddd_to_dms([latitude, longitude])
     }
-    /** @param {...string} point @returns {string[]} */
+    /** @param {...string|string[]} point @returns {string[]} */
     static geographic_dms_to_ddd(...point) {
         point = point.length == 1 ? point[0] : Array.from(point)
         if (!util.istype(point, 'coordinates-geographic-dms')) {
-            throw new Error(`ValueError: invalid geographic coordinate format`)
+            throw new Error(`ValueError: geographic coordinate format invalid`)
         }
         let degrees, minutes, seconds, direction, decimal_degrees
         let pattern, match
-        pattern = !(point[0].includes('°') || point[0].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+        pattern = !(point[0].includes('*') || point[0].includes('°') || point[0].includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
         pattern = (point[0][0] == 'N' || point[0][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`
         match = point[0].match(pattern)
         direction = match.groups["direction"]
@@ -2869,7 +2603,7 @@ class util {
         decimal_degrees = (degrees + minutes/60 + seconds/3600).toFixed(6)
         decimal_degrees *= direction == 'N' ? 1 : -1
         let latitude = `${decimal_degrees}`
-        pattern = !(point[1].includes('°') || point[1].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+        pattern = !(point[1].includes('*') || point[1].includes('°') || point[1].includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
         pattern = (point[1][0] == 'N' || point[1][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
         match = point[1].match(pattern)
         direction = match.groups["direction"]
@@ -2881,15 +2615,15 @@ class util {
         let longitude = `${decimal_degrees}`
         return [latitude, longitude]
     }
-    /** @param {...string} point @returns {string[]} */
+    /** @param {...string|string[]} point @returns {string[]} */
     static geographic_dms_to_ddm(...point) {
         point = point.length == 1 ? point[0] : Array.from(point)
         if (!util.istype(point, 'coordinates-geographic-dms')) {
-            throw new Error(`ValueError: invalid geographic coordinate format`)
+            throw new Error(`ValueError: geographic coordinate format invalid`)
         }
         let degrees, minutes, seconds, direction, decimal_minutes
         let pattern, match
-        pattern = !(point[0].includes('°') || point[0].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+        pattern = !(point[0].includes('*') || point[0].includes('°') || point[0].includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
         pattern = (point[0][0] == 'N' || point[0][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`
         match = point[0].match(pattern)
         direction = match.groups["direction"]
@@ -2899,8 +2633,8 @@ class util {
         degrees = `${degrees}`
         decimal_minutes = `${(minutes + seconds/60).toFixed(2)}`
         let latitude = `${degrees.rjust(2, '0')}${decimal_minutes.rjust(5, '0')}${direction}`
-        pattern = !(point[1].includes('°') || point[1].includes('*')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
-        pattern = (point[1][0] == 'N' || point[1][0] == 'S') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
+        pattern = !(point[1].includes('*') || point[1].includes('°') || point[1].includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
+        pattern = (point[1][0] == 'E' || point[1][0] == 'W') ? `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$` : `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`
         match = point[1].match(pattern)
         direction = match.groups["direction"]
         degrees = Number(match.groups["degrees"])
@@ -3142,15 +2876,64 @@ class util {
         }
         return rh(a) + rh(b) + rh(c) + rh(d)
     }
-    /** @param {string} value @returns {String} */
-    static hex_to_rgb(value) {
-        let start = value.includes('#') ? 1 : 0
-        let rgb = []
-        for (let i = start; i < start + 6; i += 2) {
-            let hex = value.slice(i, i + 2)
-            rgb.append(util.hex2dec(hex))
+    /** @param {string} color @returns {string} */
+    static hex_to_rgb(color) {
+        let hex = color.replace('#', '')
+        let r = parseInt(hex.substring(0, 2), 16)
+        let g = parseInt(hex.substring(2, 4), 16)
+        let b = parseInt(hex.substring(4, 6), 16)
+        return `rgb(${r}, ${b}, ${b})`
+    }
+    /** @param {string} color @returns {string} */
+    static hex_to_brightness(color) {
+        // calculate hex color perceived brightness or luma (W3C/WCAG ITU-R BT.709 - HD), not linearized
+        // normalized from 0 (darkest) to 1 (lightest)
+        let hex = color.replace('#', '')
+        // convert 3-digit hex to 6-digit
+        if (hex.length == 3) {
+            hex = hex.split('').map(char => char + char).join('')
         }
-        return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
+        let r = parseInt(hex.substring(0, 2), 16)
+        let g = parseInt(hex.substring(2, 4), 16)
+        let b = parseInt(hex.substring(4, 6), 16)
+        return (r * 0.2126 + g * 0.7152 + b * 0.0722) / 255
+    }
+    /** @param {string} color @returns {string} */
+    static hex_to_relative_luminance(color) {
+        // calculate hex color perceived brightness or luma (W3C/WCAG ITU-R BT.709 - HD), not linearized
+        // normalized from 0 (darkest) to 1 (lightest)
+        let hex = color.replace('#', '')
+        // convert 3-digit hex to 6-digit
+        if (hex.length == 3) {
+            hex = hex.split('').map(char => char + char).join('')
+        }
+        let r = parseInt(hex.substring(0, 2), 16)
+        let g = parseInt(hex.substring(2, 4), 16)
+        let b = parseInt(hex.substring(4, 6), 16)
+        function linearize(c) {
+            c = c / 255.0
+            return (c <= 0.03928) ? (c / 12.92) : (((c + 0.055) / 1.055) ** 2.4)
+        }
+        r = linearize(r)
+        g = linearize(g)
+        b = linearize(b)
+        return r * 0.2126 + g * 0.7152 + b * 0.0722
+    }
+    /** @param {string} color @param {number} brightness_factor @returns {string} */
+    static hex_from_brightness(color, brightness_factor) {
+        let hex = color.replace('#', '')
+        let rgb = [
+            parseInt(hex.substring(0, 2), 16),
+            parseInt(hex.substring(2, 4), 16),
+            parseInt(hex.substring(4, 6), 16)
+        ]
+        let adjustment = Math.max(-1.0, Math.min(1.0, (brightness_factor - 0.5) * 2));
+        let new_rgb = rgb.map(channel => {
+            let target = adjustment > 0 ? 255 : 0
+            let shifted = channel + (target - channel) * Math.abs(adjustment)
+            return Math.floor(shifted + 0.5)
+        })
+        return "#" + new_rgb.map(channel => channel.toString(16).padStart(2, '0')).join('')
     }
     /** @param {string} value @returns {Document} */
     static html_decode(value) {
@@ -3163,7 +2946,6 @@ class util {
     }
     /** @param {string} value @returns {string} */
     static html_entity_encode(value) {
-        if (!util.istype(value, 'string')) return console.error(`TypeError: `, value)
         for (let [character, name] of enumerate(util.CHARACTER_ENTITIES)) {
             value = value.replaceAll(character, name)
         }
@@ -3171,17 +2953,15 @@ class util {
     }
     /** @param {string} value @returns {string} */
     static html_entity_decode(value) {
-        if (!util.istype(value, 'string')) return console.error(`TypeError: `, value)
         for (let [character, name] of enumerate(util.CHARACTER_ENTITIES)) {
             value = value.replaceAll(name, character)
         }
         return value
     }
     // i
-    /** @param {string} value @returns {string} */
-    static identifier(value) {
+    /** @param {string|null} value @returns {string} */
+    static identifier(value = null) {
         if (value) {
-            if (!util.istype(value, 'string')) return console.error(`variable-name=value variable-value=${value} variable-type=${type(value)} type=string`)
             let nString = ''
             let allowedCharacters = '- 0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z _ a b c d e f g h i j k l m n o p q r s t u v w x y z'.split(' ')
             let notAllowedFirstCharacters = '0 1 2 3 4 5 6 7 8 9'.split(' ')
@@ -3197,7 +2977,7 @@ class util {
                     nString += character
                 }
             }
-            return nString.lower()
+            return nString.toLowerCase()
         } else {
             // ULID: 128-bit | 16-characters
             // GUID: 128-bit util.dec2hex(util.timestamp())
@@ -3241,7 +3021,6 @@ class util {
     }
     /** @param {number|string} value @returns {string} */
     static mathematics_expand_exponential(value) {
-        if (!util.istype(value, 'number|string')) return console.error(`TypeError: `, value)
         value = value.toString()
         return value.replace(/^([+-])?(\d+).?(\d*)[eE]([-+]?\d+)$/, (x, s, n, f, c) => {
             var l = +c < 0, i = n.length + +c, x = (l ? n : f).length,
@@ -3251,40 +3030,56 @@ class util {
         })
     }
     /** @param {number} value @returns {string} */
-    static mathematics_integer_to_float(value) {
-        if (util.istype(value, 'number-float')) {
+    static mathematics_integer_to_decimal(value) {
+        if (util.istype(value, 'number-decimal')) {
             return `${value}`
         }
         else if (util.istype(value, 'number-integer')) {
             return value.toFixed(1)
         }
     }
+    /** @param {number} value @returns {string} */
+    static mathematics_integer_to_float(value) {
+        return util.mathematics_integer_to_decimal(value)
+    }
     /** @param {string} value @param {number} base @returns {number} */
     static mathematics_length(value, base = 1) {
         return Number(value.length / base)
     }
-    /** @param {...number} values @returns {number} */
+    /** @param {any} arguemnt @returns {string} */
+    static mathematics_number_to_decimal_notation(arguemnt) {
+        let number = 0
+        if (util.istype(arguemnt, "number")) {
+            number = arguemnt
+        } else if (util.istype(arguemnt, "string")) {
+            number = Number(arguemnt)
+        } else {
+            number = 0
+        }
+        return `${number.toFixed(17)}`.replace(/\.?0+$/, '')
+    }
+    /** @param {...any} values @returns {any} */
     static mathematics_random(...values) {
         // 1 .list item
         if (util.istype(values[0], 'array')) {
             return values[0][Math.floor(Math.random() * values[0].length)]
         }
         // 2. number range
-        let range = values.length == 1 ? [0, values[0] + 1] : [values[0], values[1] + 1]
+        let number_range = values.length == 1 ? [0, values[0] + 1] : [values[0], values[1] + 1]
         if (values.length == 1 || values.length == 2) {
-            return Math.floor(Math.random() * (range[1] - range[0])) + range[0]
+            return Math.floor(Math.random() * (number_range[1] - number_range[0])) + number_range[0]
         }
         // 3. number range + round to nth place
         if (values.length == 3) {
             let placement = values[2]
             if (placement > 0) {
-                random_number = Math.floor(Math.random() * (range[1] - range[0])) + range[0]
+                random_number = Math.floor(Math.random() * (number_range[1] - number_range[0])) + number_range[0]
                 return util.mathematics_round(random_number, placement)
             }
             if (placement < 0) {
                 let multiple = 10**-placement
-                range = [parseInt(range[0]*multiple), parseInt(range[1]*multiple)]
-                random_number = Math.floor(Math.random() * (range[1] - range[0])) + range[0]
+                number_range = [parseInt(number_range[0]*multiple), parseInt(number_range[1]*multiple)]
+                random_number = Math.floor(Math.random() * (number_range[1] - number_range[0])) + number_range[0]
                 return util.mathematics_round(random_number, placement) / multiple
             }
         }
@@ -3309,9 +3104,7 @@ class util {
     }
     /** @param {number[][]} matrix1 @param {number[][]} matrix2 @returns {number[][]} */
     static matrix_addition(matrix1, matrix2) {
-        if (!util.istype(matrix1, 'array')) return console.error('TypeError: ', matrix1)
-        if (!util.istype(matrix2, 'array')) return console.error('TypeError: ', matrix2)
-        if (matrix1.length != matrix2.length) return console.error(`ArrayLengthError: variable-name=matrix2 variable-length=${matrix2.length} length=eq${matrix1.length}`)
+        if (matrix1.length != matrix2.length) new Error(`RangeError: matrix length mismiatch`)
         let rows = matrix1.length
         let columns = matrix1[0].length
         let nMatrix = new Array(rows).fill(new Array(columns).fill(0))
@@ -3324,9 +3117,7 @@ class util {
     }
     /** @param {number[][]} matrix1 @param {number[][]} matrix2 @returns {number[][]} */
     static matrix_combination(matrix1, matrix2) {
-        if (!util.istype(matrix1, 'array')) return console.error('TypeError: ', matrix1)
-        if (!util.istype(matrix2, 'array')) return console.error('TypeError: ', matrix2)
-        if (matrix1.length != matrix2.length) return console.error(`ArrayLengthError: variable-name=matrix2 variable-length=${matrix2.length} length=eq${matrix1.length}`)
+        if (matrix1.length != matrix2.length) new Error(`RangeError: matrix length mismiatch`)
         let rows = matrix1.length
         let columns = matrix1[0].length
         let nMatrix = new Array(rows).fill(new Array(columns).fill(0))
@@ -3334,9 +3125,7 @@ class util {
     }
     /** @param {number[][]} matrix1 @param {number[][]} matrix2 @returns {number[][]} */
     static matrix_multiplication(matrix1, matrix2) {
-        if (!util.istype(matrix1, 'array')) return console.error('TypeError: ', matrix1)
-        if (!util.istype(matrix2, 'array')) return console.error('TypeError: ', matrix2)
-        if (matrix1.length != matrix2.length) return console.error(`ArrayLengthError: variable-name=matrix2 variable-length=${matrix2.length} length=eq${matrix1.length}`)
+        if (matrix1.length != matrix2.length) new Error(`RangeError: matrix length mismiatch`)
         let rows = matrix1.length
         let columns = matrix1[0].length
         let nMatrix = new Array(rows).fill(new Array(columns).fill(0))
@@ -3353,9 +3142,7 @@ class util {
     }
     /** @param {number[][]} matrix1 @param {number[][]} matrix2 @returns {number[][]} */
     static matrix_subtraction(matrix1, matrix2) {
-        if (!util.istype(matrix1, 'array')) return console.error('TypeError: ', matrix1)
-        if (!util.istype(matrix2, 'array')) return console.error('TypeError: ', matrix2)
-        if (matrix1.length != matrix2.length) return console.error(`ArrayLengthError: variable-name=matrix2 variable-length=${matrix2.length} length=eq${matrix1.length}`)
+        if (matrix1.length != matrix2.length) new Error(`RangeError: matrix length mismiatch`)
         let rows = matrix1.length
         let columns = matrix1[0].length
         let nMatrix = new Array(rows).fill(new Array(columns).fill(0))
@@ -3384,13 +3171,12 @@ class util {
         if (!path && window) {
             path = window.location.pathname
         }
-        if (!util.istype(path, 'string')) return console.error(`TypeError: `, path)
         let delimiter = path.includes('/') ? '/' : '\\'
         let value = {
-            'dirname': path.includes(delimiter) ? path.slice(0, path.lastIndexOf(delimiter)) : null,
-            'basename': path.includes(delimiter) ? path.slice(path.lastIndexOf(delimiter) + 1) : null,
-            'extension': path.includes('.') ? path.slice(path.lastIndexOf('.') + 1) : null,
-            'filename': path.includes(delimiter) && path.includes('.') ? path.slice(path.lastIndexOf(delimiter) + 1, path.lastIndexOf('.')) : null
+            "dirname": path.includes(delimiter) ? path.slice(0, path.lastIndexOf(delimiter)) : null,
+            "basename": path.includes(delimiter) ? path.slice(path.lastIndexOf(delimiter)+1) : null,
+            "extension": path.includes('.') ? path.slice(path.lastIndexOf('.')+1) : null,
+            "filename": path.includes(delimiter) ? (path.includes('.') ? path.slice(path.lastIndexOf(delimiter)+1, path.lastIndexOf('.')) : path.slice(path.lastIndexOf(delimiter)+1)) : null,
         }
         if (!option) return value
         return value[option]
@@ -3408,118 +3194,15 @@ class util {
     static radians_to_degrees(radians) {
         return radians * util.RADIANS_TO_DEGREES
     }
-    /** @param {...number} values @returns {number} */
+    /** @param {...any} values @returns {number} */
     static random(...values) {
-        // includes lowest and highest
-        if (util.istype(values[0], 'array')) {
-            return values[0][Math.floor(Math.random() * values[0].length)]
-        }
-        let range = values.length == 1 ? [0, values[0] + 1] : [values[0], values[1] + 1]
-        let random_number = Math.floor(Math.random() * (range[1] - range[0])) + range[0]
-        if (values.length == 3) {
-            return Math.floor(random_number / values[2]) * values[2]
-        }
-        return random_number
-    }
-    /** @param {array|number} aValue @param {array|number} bValue @param {number} interval @returns {number} */
-    static range(aValue, bValue, interval = 1) {
-        let array = []
-        let start = 0
-        let end = typeof aValue === 'object' ? aValue.length : aValue
-        if (bValue != undefined) {
-            start = typeof aValue === 'object' ? aValue.length : aValue
-            end = typeof bValue === 'object' ? bValue.length : bValue
-        }
-        for (let i = start; i < end; i += interval) {
-            array.push(i)
-        }
-        return array
-    }
-    static reference_encode(object) {
-
-    }
-    static reference_decode(string) {
-        if (!util.istype(string, 'string')) return console.error(`TypeError: `, string)
-        if (string == '') return console.error(`TypeError: `, string)
-        // keys
-        let key_name = 'name:'
-        let key_title = 'title:'
-        let key_subtitle = 'subtitle:'
-        let key_reference = 'reference:'
-        let key_table = 'table:'
-        let cell_delimiter = '     '
-        // template
-        let reference = {
-            'name': '',
-            'title': '',
-            'subtitle': '',
-            'references': [],
-            'tables': [],
-        }
-        let tables = []
-        let table = null
-        let lines = string.replaceAll('\r', '').split('\n')
-        for (let i = 0; i < lines.length; i++) {
-            let line = lines[i]
-            // deprecated
-            if (i == 0 && line.slice(0, 2) == '//') {
-                reference['title'] = line.replace('//', '').trim()
-            }
-            // deprecated
-            if (i == 1 && line.slice(0, 2) == '//') {
-                reference['references'] = line.replace('//', '').trim().split(', ')
-            }
-            if (line.indexOf(key_name) == 0) {
-                reference['name'] = line.replace(key_name, '').trim()
-            }
-            if (line.indexOf(key_title) == 0) {
-                reference['title'] = line.replace(key_title, '').trim()
-            }
-            if (line.indexOf(key_subtitle) == 0) {
-                reference['subtitle'] = line.replace(key_subtitle, '').trim()
-            }
-            if (line.indexOf(key_reference) == 0) {
-                let data = line.replace(key_reference, '').trim()
-                reference['reference'] = data == '' ? [] : data.split(', ')
-            }
-            if (line.indexOf(key_table) == 0) {
-                let header_string = lines[i + 1].trim()
-                table = {
-                    'name': lines[i].replace(key_table, '').trim(),
-                    'headers': header_string.split(cell_delimiter).map((string) => string.trim()).filter(string => string.length > 0),
-                    'rows': [],
-                    'header_string': header_string
-                }
-                i += 1
-                continue
-            }
-            if (table) {
-                if (line == '' || i == lines.length - 1) {
-                    delete table['header_string']
-                    tables.push(util.clone(table))
-                    table = null
-                    continue
-                }
-                let row = new Array(table['headers'].length).fill('')
-                for (let string of lines[i].split(cell_delimiter).map((string) => string.trim()).filter(string => string.length > 0)) {
-                    for (let j = 0; j < table['headers'].length; j++) {
-                        if (table['header_string'].indexOf(table['headers'][j]) == lines[i].indexOf(string)) {
-                            row[j] = string
-                        }
-                    }
-                }
-                table['rows'].push(row)
-            }
-
-        }
-        reference['tables'] = tables
-        return reference
+        return util.mathematics_random(...values)
     }
     /** @param {string|RegExp} pattern @param {string} value @returns {boolean} */
     static regular_expression_match(pattern, value) {
         return util.ispattern(value, pattern)
     }
-    /** @param {string} string @returns {string} */
+    /** @param {number[]|string[]|string} value @returns {string} */
     static rgb2hex(value) {
         let hexadecimal = ''
         if (util.istype(value, 'array-number|array-string-number')) {
@@ -3545,7 +3228,7 @@ class util {
                 alpha = Math.round(alpha)
                 hexadecimal += util.dec2hex(alpha, 2)
             } else {
-                return console.error(`StringLengthError: variable-name=value variable-length=${value.length} length=eq3|eq4`)
+                new Error(`RangeError: length of 3 or 4 required for an array argument`)
             }
         }
         if (util.istype(value, 'string')) {
@@ -3573,7 +3256,7 @@ class util {
                 hexadecimal += util.dec2hex(alpha, 2)
             }
             else {
-                return console.error(`ValueError: variable-name=value variable-value=${value}`)
+                new Error(`ValueError: rgb pattern invalid`)
             }
         }
         return `#${hexadecimal}`
@@ -3584,19 +3267,17 @@ class util {
         return Math.round(number * multiplier) / multiplier
     }
     // s
-    /** @param {string} string @returns {string} */
-    static slashes_add(string) {
-        if (!util.istype(string, 'string')) return console.error(`TypeError: `, string)
-        return string.replaceAll('\'', "\\'").replaceAll('\"', '\\"').replaceAll('null', '\\null')
+    /** @param {string} value @returns {string} */
+    static slashes_add(value) {
+        return value.replaceAll('\'', "\\'").replaceAll('\"', '\\"').replaceAll('null', '\\null')
     }
-    /** @param {string} string @returns {string} */
-    static slashes_remove(string) {
-        if (!util.istype(string, 'string')) return console.error(`TypeError: `, string)
-        return string.replaceAll("\\'", '\'').replaceAll('\\"', '\"').replaceAll('\\null', 'null')
+    /** @param {string} value @returns {string} */
+    static slashes_remove(value) {
+        return value.replaceAll("\\'", '\'').replaceAll('\\"', '\"').replaceAll('\\null', 'null')
     }
     /** @param {number[]} point1 @param {number[]} point2 @returns {number} */
     static spherical_to_azimuth(point1, point2 = null) {
-        
+        return 0
     }
     /** @param {number} r @param {number} theta @param {number} phi @returns {number[]} */
     static spherical_to_cartesian(r, theta, phi) {
@@ -3613,60 +3294,27 @@ class util {
         let altitude = r - util.SPHERE_RADIUS
         return [latitude, longitude, altitude]
     }
-    /** @param {number[]} numbers @returns {number} */
-    static statistics_aggregate(numbers, operation) {
-        if (operation == 'average') {
-            return util.statistics_mean(numbers)
-        }
-        if (operation == 'count') {
-            return util.statistics_count(numbers)
-        }
-        if (operation == 'maximum') {
-            return util.statistics_maximum(numbers)
-        }
-        if (operation == 'median') {
-            return util.statistics_median(numbers)
-        }
-        if (operation == 'minimum') {
-            return util.statistics_minimum(numbers)
-        }
-        if (operation == 'mode') {
-            return util.statistics_mode(numbers)
-        }
-        if (operation == 'range') {
-            return util.statistics_range(numbers)
-        }
-        if (operation == 'standard deviation' || operation == 'stddev') {
-            return util.statistics_standard_deviation(numbers)
-        }
-        if (operation == 'sum') {
-            return util.statistics_sum(numbers)
-        }
-        if (operation == 'variation' || operation == 'var') {
-            return util.statistics_variation(numbers)
-        }
-    }
     /** @param {number[]} numbers1 @param {number[]} numbers2 @returns {number} */
     static statistics_correlation_coefficient(numbers1, numbers2) {
         if (numbers1.length !== numbers2.length) {
-            return console.error(`ArrayLengthError: variable-name=numbers2 variable-length=${numbers2.length} length=eq${numbers1.length}\nLists must have the same length.`)
+            new Error(`RangeError: array length mismatch`)
         }
-        let xMean = util.statisticsMean(numbers1);
-        let yMean = util.statisticsMean(numbers2);
-        let xStandardDeviation = util.statisticsStandardDeviation(numbers1);
-        let yStandardDeviation = util.statisticsStandardDeviation(numbers2);
+        let xMean = util.statistics_mean(numbers1);
+        let yMean = util.statistics_mean(numbers2);
+        let xStandardDeviation = util.statistics_standard_deviation(numbers1);
+        let yStandardDeviation = util.statistics_standard_deviation(numbers2);
         if (xStandardDeviation === 0 || yStandardDeviation === 0) {
             return 0.0;
         }
         let zScores1 = numbers1.map(number => (number - xMean) / xStandardDeviation);
         let zScores2 = numbers2.map(number => (number - yMean) / yStandardDeviation);
         let zScoresProduct = zScores1.map((zScore1, index) => zScore1 * zScores2[index]);
-        let zScoreSum = util.statisticsSum(zScoresProduct);
+        let zScoreSum = util.statistics_sum(zScoresProduct);
         return (1 / (numbers1.length - 1)) * zScoreSum;
     }
-    /** @param {number[]} numbers @returns {number} */
+    /** @todo @param {number[]} numbers @returns {number} */
     static statistics_correlation_matrix(numbers) {
-
+        return 0
     }
     /** @param {number[]} numbers @returns {number} */
     static statistics_count(numbers) {
@@ -3708,11 +3356,20 @@ class util {
         // find the numbers with the maximum frequency
         for (let number in frequencyCounts) {
             if (frequencyCounts[number] == maxFrequency) {
-                modes.append(number);
+                modes.push(number);
             }
         }
         // return number with greatest occurrence
         return modes[0];
+    }
+    /** @param {number[]} numbers @returns {number} */
+    static statistics_product(numbers) {
+        if (numbers.length == 0) return 0
+        let product = 1
+        for (let number of numbers) {
+            product *= number
+        }
+        return product
     }
     /** @param {number[]} numbers @returns {number} */
     static statistics_range(numbers) {
@@ -3764,7 +3421,28 @@ class util {
                 return string + fillChar.repeat(padding_length)
         }
     }
-    /** @param {array|boolean|number|object|string} value @returns {string} */
+    /** @param {string} value @returns {any} */
+    static string_conversion_decode(value) {
+        if (value == null) {
+            return value
+        }
+        else if (util.istype(value, 'string-array')) {
+            return util.json_decode(value)
+        }
+        else if (util.istype(value, 'string-boolean')) {
+            return value.toLowerCase() == 'true'
+        }
+        else if (util.istype(value, 'string-number')) {
+            return Number(value)
+        }
+        else if (util.istype(value, 'string-object')) {
+            return util.json_decode(value)
+        }
+        else {
+            return value
+        }
+    }
+    /** @param {any} value @returns {string} */
     static string_conversion_encode(value) {
         if (value == null) {
             return value
@@ -3785,34 +3463,39 @@ class util {
             return value
         }
     }
-    /** @param {string} value @returns {array|boolean|number|object|string} */
-    static string_conversion_decode(value) {
-        if (value == null) {
-            return value
-        }
-        else if (util.istype(value, 'string-array')) {
-            return util.json_decode(value)
-        }
-        else if (util.istype(value, 'string-boolean')) {
-            return value.lower() == 'true'
-        }
-        else if (util.istype(value, 'string-number')) {
-            return Number(value)
-        }
-        else if (util.istype(value, 'string-object')) {
-            return util.json_decode(value)
-        }
-        else {
-            return value
-        }
-    }
     // t
+    /** @param {string|string[]} data @param {string} delimiter @returns {object[]} */
+    static table_decode(data, delimiter) {
+        let rows = [  ]
+        let lines= []
+        if (util.istype(data, 'array-string')) {
+            lines = data
+        }
+        if (util.istype(data, 'string')) {
+            lines = data.splitlines()
+        }
+        lines = lines.filter(line => line.trim().length > 0)
+        let headers = lines[0].split(delimiter).map(substr => substr.trim()).filter(substr => substr.length > 0);
+        if (headers.length === 0) {
+            throw new Error(`ValueError: table headers not found`)
+        }
+        for (let index = 1; index < lines.length; index++) {
+            let row = lines[index].split(delimiter).map(substr => substr.trim()).filter(substr => substr.length > 0);
+            if (row.length !== headers.length) {
+                throw new Error(`RangeError: table row to header column count mismatch`)
+            }
+            rows.push(
+                Object.fromEntries(headers.map((header, index) => [header, row[index]]))
+            )
+        }
+        return rows
+    }
     /** @param {object[]} entries @param {string} orientation @param {string} delimiter @returns {string} */
     static table_encode(entries, orientation = 'vertical', delimiter = '     ') {
         if (entries == []) return ''
         let headers = []
         for (let key in entries[0]) {
-            headers.append(`${key}`)
+            headers.push(`${key}`)
         }
         let rows = entries.map((entry) => new object(entry).values())
         if (orientation == 'vertical' || orientation == 'v') {
@@ -3855,166 +3538,14 @@ class util {
         }
 
     }
-    /** @deprecated @param {string} string @param {string} delimiter @returns {object[]} */
-    static _table_decode(string, delimiter) {
-        if (!util.istype(string, 'string')) return console.error(`TypeError: `, string)
-        if (!util.istype(delimiter, 'string')) return console.error(`TypeError: `, delimiter)
-        let entries = []
-        function getHeadersData(string, delimiter) {
-            let object = {}
-            let sIndex = 0
-            let dLength = delimiter.length
-            let i = 0
-            while (i < string.length) {
-                if (i == string.length - 1) {
-                    let value = string.slice(sIndex, i + 1).trim()
-                    object[value] = [sIndex, -1]
-                }
-                if (string.slice(i, i + dLength) == delimiter && string[i + dLength] != ' ') {
-                    let value = string.slice(sIndex, i + dLength - 1).trim()
-                    object[value] = [sIndex, i + dLength - 1]
-                    sIndex = i + dLength
-                }
-                i += 1
-            }
-            return object
-        }
-        let lines = string.split('\n')
-        let headerData = getHeadersData(lines[0], delimiter)
-        for (let i = 1; i < lines.length; i++) {
-            let line = lines[i]
-            let entry = {}
-            for (let key in headerData) {
-                let indexes = headerData[key]
-                let sIndex = indexes[0]
-                let eIndex = indexes[1] == -1 ? line.length : indexes[1]
-                entry[key] = line.slice(sIndex, eIndex).strip(' ')
-            }
-            entries.append(entry)
-        }
-        return entries
-    }
-    /** @param {string} data @param {string} delimiter @returns {object[]} */
-    static table_decode(data, delimiter) {
-        // NOTE: each header name must be unique
-        let rows = [  ]
-        let lines
-        if (util.istype(data, 'array-string')) {
-            lines = data
-        }
-        if (util.istype(data, 'string')) {
-            lines = data.split(/\r?\n/)
-        }
-        lines = lines.filter(line => line.trim().length > 0)
-        let headers = lines[0].split(delimiter).filter(header => header.trim().length > 0)
-        if (headers.length === 0) {
-            throw new Error("Invalid table format: no headers found.")
-        }
-        for (let index = 1; index < lines.length; index++) {
-            let cells = lines[index].split(delimiter).filter(cell => cell.trim().length > 0)
-            if (cells.length !== headers.length) {
-                throw new Error("Invalid table format: row has incorrect number of columns.")
-            }
-            let row = Object.fromEntries(headers.map((header, index) => [header, cells[index]]))
-            rows.push(row)
-        }
-        return rows
-    } 
-    /** @param {Date|number|string} value @param {} option @returns {Date|number|string} */
-    static timestamp_legacy(value = null, option = '') {
-        function toString(date) {
-            let year = date.getFullYear().toString()
-            let month = (date.getMonth() + 1).toString().rjust(2, '0')
-            let dayOfMonth = date.getDate().toString().rjust(2, '0')
-            let hours = date.getHours().toString().rjust(2, '0')
-            let minutes = date.getMinutes().toString().rjust(2, '0')
-            let seconds = date.getSeconds().toString().rjust(2, '0')
-            let milliseconds = date.getMilliseconds().toString().ljust(3, '0')
-            return `${year}-${month}-${dayOfMonth}T${hours}:${minutes}:${seconds}.${milliseconds}`
-        }
-        let date = new Date() //new Date().toLocaleString("en-US", { timeZone: "UTC" })
-        let offset = (new Date().getTimezoneOffset() * 60)
-        if (value == 'seconds' || value == null) {
-            return Math.round((date.getTime() + offset) / 1000)
-        }
-        if (value == 'milliseconds') {
-            return date.getTime() + offset
-        }
-        if (value == 'object') {
-            return util.timestamp(util.timestamp('milliseconds'))
-        }
-        if (value == 'string') {
-            date = util.timestamp('object')
-            return toString(date)
-        }
-        if (typeof value === 'number') { // return date by default
-            if (value.toString().length <= 10) {
-                date.setTime((value * 1000) + (offset * 1000))
-            }
-            if (value.toString().length == 13) {
-                date.setTime(value + (offset * 1000))
-            }
-            if (option == 'seconds') return util.timestamp(date, 'seconds')
-            if (option == 'milliseconds') return util.timestamp(date, 'milliseconds')
-            if (option == 'object') return date
-            if (option == 'string') return toString(date)
-            return date
-        }
-        if (typeof value === 'object') { // return seconds by default
-            if (option == 'seconds') return Math.round((value.getTime() + offset) / 1000)
-            if (option == 'milliseconds') return value.getTime() + offset
-            if (option == 'object') return value
-            if (option == 'string') return toString(value)
-            return Math.round((value.getTime() + offset) / 1000)
-        }
-        if (typeof value === 'string') { // return date by default
-            let timezone_ = 'Z'
-            let date_ = [0, 1, 0]
-            let time_ = [0, 0, 0, 0]
-            if (includes(value.slice(-1), util.TIMEZONE_DESIGNATIONS)) {
-                timezone_ = value.slice(-1)
-                value = value.slice(0, -1)
-            }
-            let values = value.split('T')
-            if (value.includes('T')) {
-                for (let [index, value] of enumerate(values[0].split('-'))) {
-                    date_[index] = Number(value)
-                }
-                for (let [index, value] of enumerate(values[1].split(':'))) {
-                    if (value.includes('.')) {
-                        time_[2] = Number(value.slice(0, value.indexOf('.')))
-                        time_[3] = Number(value.slice(value.indexOf('.')+1))
-                    } else {
-                        time_[index] = Number(value)
-                    }
-                }
-            } else {
-                for (let [index, value] of enumerate(values[0].split('-'))) {
-                    date_[index] = Number(value)
-                }
-            }
-            date.setFullYear(date_[0])
-            date.setMonth(date_[1] - 1)
-            date.setDate(date_[2])
-            date.setHours(time_[0])
-            date.setMinutes(time_[1])
-            date.setSeconds(time_[2])
-            date.setMilliseconds(time_[3])
-            if (option == 'seconds') return util.timestamp(date, 'seconds')
-            if (option == 'milliseconds') return util.timestamp(date, 'milliseconds')
-            if (option == 'object') return date
-            if (option == 'string') return util.timestamp(date, 'string')
-            return date
-        }
-    }
-    /** @param {Date|number|string} value @param {} convert_to @returns {Date|number|string} */
+    /** @param {Date|number|string} value @param {string} convert_to @returns {Date|number|string|Object} */
     static timestamp(value = null, convert_to = null) {
-        /** @param {Date} date @param {string|null} option @returns {Date|number|string} */
+        /** @param {Date} date @param {string|null} option @returns {Date|number|string|Object} */
         function convert(date, option) {
             if (option == null) {
                 return date
             }
-            if (option.lower() == util.TIMESTAMP_OPTION_DICTIONARY) {
+            if (option.toLowerCase() == util.TIMESTAMP_OPTION_DICTIONARY) {
                 return {
                     "year"       : date.getFullYear(),
                     "month"      : date.getMonth()+1,
@@ -4026,16 +3557,16 @@ class util {
                     "zone"       : 'Z'
                 }
             }
-            if (option.lower() == util.TIMESTAMP_OPTION_MILLISECONDS) {
+            if (option.toLowerCase() == util.TIMESTAMP_OPTION_MILLISECONDS) {
                 return date.getTime() + offset
             }
-            if (option.lower() == util.TIMESTAMP_OPTION_OBJECT) {
+            if (option.toLowerCase() == util.TIMESTAMP_OPTION_OBJECT) {
                 return date
             }
-            if (option.lower() == util.TIMESTAMP_OPTION_SECONDS) {
+            if (option.toLowerCase() == util.TIMESTAMP_OPTION_SECONDS) {
                 return Math.round((date.getTime() + offset) / 1000)
             }
-            if (option.lower() == util.TIMESTAMP_OPTION_STRING) {
+            if (option.toLowerCase() == util.TIMESTAMP_OPTION_STRING) {
                 let year = date.getFullYear().toString()
                 let month = (date.getMonth() + 1).toString().rjust(2, '0')
                 let dayOfMonth = date.getDate().toString().rjust(2, '0')
@@ -4048,14 +3579,13 @@ class util {
         }
         /** @param {string} value @returns {boolean} */
         function isOption(value) {
-            let option = value.lower()
-            return option == util.TIMESTAMP_OPTION_DICTIONARY || option == util.TIMESTAMP_OPTION_MILLISECONDS || option == util.TIMESTAMP_OPTION_OBJECT || option == util.TIMESTAMP_OPTION_SECONDS || option == util.TIMESTAMP_OPTION_STRING
+            let option = value.toLowerCase()
+            return option == util.TIMESTAMP_OPTION_DICTIONARY || option == util.TIMESTAMP_OPTION_MILLISECONDS || option == util.TIMESTAMP_OPTION_OBJECT || option == util.TIMESTAMP_OPTION_SECONDS || option == util.TIMESTAMP_OPTION_STRING || option == util.TIMESTAMP_OPTION_TEXT
         }
-        /** @param {string} value @returns {{string:string}} */
+        /** @param {string} value @returns {{[key:string]:string}} */
         function getString(value) {
             let pattern = ""
             if (value.includes('-')) {
-                // print(`DepreciationError: legacy timestamp format "YYYY-MM-DDTHH:MM:SS" depreciated`)
                 if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
                 if (len(value) == 7 || len(value) == 8)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}`
                 if (len(value) == 10 || len(value) == 11) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}`
@@ -4084,20 +3614,31 @@ class util {
         else if (util.istype(value, 'date')) {
             return convert(value, convert_to)
         }
-        else if (util.istype(value, 'number')) {
-            if (len(`${value}`) == 10) {
+        else if (typeof value === "number") {
+            if (`${value}`.length <= 10) {
                 date.setTime((value * 1000) + (offset * 1000))
             }
-            if (len(`${value}`) == 13) {
+            else if (`${value}`.length == 13) {
                 date.setTime(value + (offset * 1000))
+            }
+            else {
+                throw new Error(`ValueError: timestamp specifications inadequate`)
             }
             return convert(date, convert_to)
         }
-        else if (util.istype(value, 'string')) {
+        else if (typeof value === "string") {
             if (isOption(value)) {
                 return convert(date, value)
             }
-            else if (getString(value)) {
+            else if (util.istype(value, 'string-number-integer') && `${value}`.length == 10) {
+                date.setTime((Number(value) * 1000) + (offset * 1000))
+                return convert(date, convert_to)
+            }
+            else if (util.istype(value, 'string-number-integer') && `${value}`.length == 13) {
+                date.setTime(Number(value) + (offset * 1000))
+                return convert(date, convert_to)
+            }
+            else if (value.length > 0 && getString(value)) {
                 let groups = getString(value)
                 let year        = "year"        in groups ? Number(groups["year"])        : 1970
                 let month       = "month"       in groups ? Number(groups["month"])       : 1
@@ -4119,7 +3660,7 @@ class util {
                 return convert(date, convert_to)
             }
             else {
-                console.error(`ValueError: variable-name=value variable-value=${value}`)
+                throw new Error(`ValueError: timestamp specifications inadequate`)
             }
         }
     }
@@ -4140,7 +3681,7 @@ class util {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getDate().toString().rjust(2, '0')
     }
-    /** @param {Date|number|string} timestamp @returns {nuumber} */
+    /** @param {Date|number|string} timestamp @returns {number} */
     static timestamp_day_of_year(timestamp) {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         let first_day_of_year = new Date(timestamp.getFullYear(), 0, 0)
@@ -4148,11 +3689,11 @@ class util {
         let day = 1000 * 60 * 60 * 24
         return Math.floor(diffierence / day)
     }
-    /** @param {Date|number|string} timestamp1 @param {Date|number|string} timestamp2 @param {boolean} short @returns {string} */
-    static timestamp_difference(timestamp1, timestamp2 = util.timestamp(util.TIMESTAMP_OPTION_SECONDS), short = true) {
-        timestamp1 = util.timestamp(timestamp1, util.TIMESTAMP_OPTION_SECONDS)
-        timestamp2 = util.timestamp(timestamp2, util.TIMESTAMP_OPTION_SECONDS)
-        let difference = Math.abs(timestamp2 - timestamp1)
+    /** @param {Date|number|string} timestamp_start @param {Date|number|string} timestamp_end @param {boolean} short @returns {string} */
+    static timestamp_difference(timestamp_start, timestamp_end = util.timestamp(util.TIMESTAMP_OPTION_SECONDS), short = true) {
+        timestamp_start = util.timestamp(timestamp_start, util.TIMESTAMP_OPTION_SECONDS)
+        timestamp_end = util.timestamp(timestamp_end, util.TIMESTAMP_OPTION_SECONDS)
+        let difference = Math.abs(timestamp_end - timestamp_start)
         if (difference == 0) return 'Now'
         if (difference <= 1) return short ? '1sec': '1 second'
         if (difference <= 2) return short ? '2sec' : '2 seconds'
@@ -4202,18 +3743,18 @@ class util {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getHours().toString().rjust(2, '0')
     }
-    /** @param {Date|number|string} timestamp @returns {nuumber} */
+    /** @param {Date|number|string} timestamp @returns {number} */
     static timestamp_julian_date(timestamp) {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         let timezoneOffset = 0
         return ((timestamp.getTime() - timezoneOffset) / 86400000 + 2440587.5).toFixed(1)
     }
-    /** @param {Date|number|string} timestamp @returns {nuumber} */
+    /** @param {Date|number|string} timestamp @returns {number} */
     static timestamp_julian_day(timestamp) {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return Math.floor(util.timestamp_julian_date(timestamp))
     }
-    /** @param {Date|number|string} timestamp @returns {nuumber} */
+    /** @param {Date|number|string} timestamp @returns {number} */
     static timestamp_julian_day_of_year(timestamp) {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         let first_day_of_year = new Date(timestamp.getFullYear(), 0, 0)
@@ -4263,7 +3804,7 @@ class util {
         let milliseconds = timestamp.getMilliseconds().toString().ljust(3, '0')
         return short ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}:${seconds}.${milliseconds}`
     }
-    /** @param {timestamp} timestamp @param {string} zone @returns {Date} */
+    /** @todo @param {timestamp} timestamp @param {string} zone @returns {Date} */
     static timestamp_to_zone(timestamp, zone) {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         let zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[zone]
@@ -4282,9 +3823,8 @@ class util {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getFullYear().toString()
     }
-    /** @param {string} string @returns {string} */
-    static title(string) {
-        if (!util.istype(string, 'string')) return console.error(`TypeError: `, string)
+    /** @param {string} value @returns {string} */
+    static title(value) {
         let uppers = [
             'arcnet', 'arp', 'atm',
             'ciaddr', 'chaddr',
@@ -4311,30 +3851,36 @@ class util {
         let specials = [
             'ICMPv6', 'InARP', 'IPv4', 'IPv6'
         ]
+        let isVowel = (char) => /[aeiouy]/i.test(char);
+        /** @param {String} string @returns {String} */
         function convert(string) {
             if (string == '') return string
-            if (lowers.includes(string)) return string
-            if (uppers.includes(string)) return string.upper()
+            if (string.length <= 4) {
+                if (string.length == 3 && isVowel(string[1])) return string.capitalize()
+                if (string.length == 4 && (isVowel(string[1]) || isVowel(string[2]))) return string.capitalize()
+                return string.toUpperCase() // abbreviaions
+            }
+            if (lowers.includes(string)) return string.toLowerCase()
+            if (uppers.includes(string)) return string.toUpperCase()
             for (let special of specials) {
-                if (special.lower() == string) {
+                if (special.toLowerCase() == string) {
                     return special
                 }
             }
+            if (string.includes('-')) {
+                return string.split('-').map((substring) => convert(substring)).join('-')
+            }
             return string.capitalize()
         }
-        return string.split('_').map((substring) => convert(substring.lower())).join(' ')
+        return value.split('_').map((substring) => convert(substring.toLowerCase())).join(' ')
     }
     // u
-    /** @param {Object} value @returns {string} */
-    static uri_encode(object) {
-        if (!util.istype(object, 'object')) return console.error(`TypeError: `, object)
-        let uriString = ''
-        return uriString
+    /** @todo @param {{string:string}} value @returns {string} */
+    static uri_encode(value) {
+        return ""
     }
     /** @param {string} relative @param {string} absolute @returns {Object} */
     static uri_decode(relative, absolute = null) {
-        if (!util.istype(relative, 'string')) return console.error(`TypeError: `, relative)
-        if (absolute && !util.istype(absolute, 'string')) return console.error(`TypeError: `, absolute)
         // example: http://username:password@hostname:9090/path?arg=value#anchor
         // relative path: relative-part [ ? query ] [ # fragment ] (cannot begin with '/')
         // absolute path: scheme ":" hierarchal-part [ "?" query ]
@@ -4370,15 +3916,15 @@ class util {
         }
         let target_partial = target
         if (target.includes('://')) {
-            uriObject['scheme'] = target.slice(0, target.index('://'))
-            target_partial = target.slice(target.index('://') + 3, target.length)
+            uriObject['scheme'] = target.slice(0, target.indexOf('://'))
+            target_partial = target.slice(target.indexOf('://') + 3, target.length)
         }
         if (target.includes('@')) {
-            string = target_partial.slice(0, target_partial.index('@'))
+            let string = target_partial.slice(0, target_partial.indexOf('@'))
             let strings = string.split(':')
             uriObject['username'] = strings[0]
             uriObject['password'] = strings[1]
-            target_partial = target_partial.slice(target_partial.index('@') + 1, target_partial.length)
+            target_partial = target_partial.slice(target_partial.indexOf('@') + 1, target_partial.length)
         }
         let index = getFirstIndex(target_partial, ['/', '?', '#'])
         if (index == null) {
@@ -4390,8 +3936,8 @@ class util {
             target_partial = target_partial.slice(index, target_partial.length)
         }
         if (uriObject['authority'].includes(':')) {
-            uriObject['host'] = uriObject['authority'].slice(0, uriObject['authority'].index(':') + 1)
-            uriObject['port'] = uriObject['authority'].slice(uriObject['authority'].index(':') + 1, uriObject['authority'].length)
+            uriObject['host'] = uriObject['authority'].slice(0, uriObject['authority'].indexOf(':') + 1)
+            uriObject['port'] = uriObject['authority'].slice(uriObject['authority'].indexOf(':') + 1, uriObject['authority'].length)
         }
         else {
             uriObject['host'] = uriObject['authority']
@@ -4433,82 +3979,38 @@ class util {
         }
         return uriObject
     }
-    /** @param {Object} object @returns {string} */
-    static uri_query_encode(object) {
-        let queries = []
-        for (let [queryKey, queryValue] in enumerate(object)) {
-            queries.append(`${queryKey}=${queryValue}`)
-        }
-        return queries.join('&')
-    }
-    /** @param {string} string @returns {Object} */
+    /** @param {string} string @returns {{string:string}|{}} */
     static uri_query_decode(string) {
         let object = {}
         if (!string.includes('=')) return object
         string = string.includes('?') ? string.slice(string.indexOf('?') + 1, string.length) : string
         for (let pair of string.split('&')) {
-            let [queryKey, queryValue] = pair.split('=')
-            object[queryKey] = queryValue
+            let [query_key, query_value] = pair.split('=')
+            object[query_key] = query_value
         }
         return object
+    }
+    /** @param {{string:string}} object @returns {string} */
+    static uri_query_encode(object) {
+        let queries = []
+        for (let [query_key, query_value] of enumerate(object)) {
+            queries.push(`${query_key}=${query_value}`)
+        }
+        return queries.join('&')
     }
     // v
     /** @param {number} x @param {number} y @param {number} z @returns {number} */
     static volume(x, y, z) {
-        if (!util.istype(x, 'number')) return console.error(`TypeError: `, x)
-        if (!util.istype(y, 'number')) return console.error(`TypeError: `, y)
-        if (!util.istype(z, 'number')) return console.error(`TypeError: `, z)
         return x * y * z
     }
     // w
 
     // x
-    /** @deprecated @param {string} method @param {Object} headers @param {number|Object|string} body @param {function(XMLHttpRequest): void} oncomplete @param {function(ProgressEvent): void} onprogress @returns {void} */
-    static xhr(method, url, headers = {}, body = null, oncomplete = (request) => { }, onprogress = (event) => { }) {
-        if (!util.istype(method, 'string')) return console.error(`TypeError: `, method)
-        if (!util.istype(url, 'string')) return console.error(`TypeError: `, url)
-        if (headers != null && !util.istype(headers, 'object')) return console.error(`TypeError: `, headers)
-        // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/send
-        let request = new XMLHttpRequest()
-        request.onreadystatechange = (event) => {
-            if (request.readyState == 4) {
-                if (request.status.toString()[0] != 2) {
-                    console.error(request)
-                }
-                oncomplete(request)
-            }
-        }
-        request.onprogress = (event) => {
-            // event=ProgressEvent
-            /*if (event.lengthComputable) {
-                let percent = (event.loaded / event.total) * 100
-            } else {
-                // Unable to compute progress information since the total size is unknown
-            }*/
-            onprogress(event)
-        }
-        request.open(method, url, true)
-        if (headers) {
-            for (let name in headers) {
-                request.setRequestHeader(name, headers[name])
-            }
-        }
-        if (util.istype(body, 'array|object')) {
-            body = util.json_encode(body)
-        }
-        request.send(body)
-        // NOTE: send(...) body(Document | XMLHttpRequestBodyInit | null) XMLHttpRequestBodyInit(Blob | BufferSource | FormData | URLSearchParams | string)
-    }
-    /** @param {XMLHttpRequest} request @param {string|{string:string}} value @returns {XMLHttpRequest} */
-    static xhr_headers_encode(request, value) {
-
-    }
     /** @param {string|XMLHttpRequest} value @returns {Object} */
     static xhr_headers_decode(value) {
         if (value instanceof XMLHttpRequest) {
             value = value.getAllResponseHeaders()
         }
-        if (!util.istype(value, 'string')) return console.error(`TypeError: `, value)
         let headers = {}
         if (value.includes('\r\n')) {
             for (let pairString of value.split('\r\n')) {
@@ -4531,13 +4033,13 @@ class util {
     /** @param {number|XMLHttpRequest} value  @returns {boolean} */
     static xhr_successful(value) {
         if (value instanceof XMLHttpRequest) {
-            return value.status.toString()[0] == 2
+            return String(value.status)[0] == '2'
         }
         else if (util.istype(value, 'number')) {
-            return value.toString()[0] == 2
+            return String(value)[0] == '2'
         }
         else {
-            return console.error(`TypeError: `, value)
+            new Error(`TypeError: require type XMLHttpRequest or Number`)
         }
     }
     // y
@@ -4546,19 +4048,10 @@ class util {
 
     // ascii functions
     // default bits per character (bpc) (size) = 8
-    static _dataT_(data, datatype) {
-        let types = 'bin byt cha dec hex oct str'.split(' ')
-        for (let type in types) {
-            if (type == datatype) continue
-            method = `${datatype}2${type}`
-            print(method, util[method](data))
-        }
-    }
     // binary
     /** @param {string} bin @returns {Uint8Array} */
     static bin2byt(bin) {
-        if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
-        if (bin.length == 0) return new Uint8Array()
+        if (bin.length == 0) return new Uint8Array([])
         bin = util.pad_block(bin, 8, 'right', '0')
         let decs = []
         for (let i = 0; i < bin.length; i += 8) {
@@ -4568,34 +4061,28 @@ class util {
     }
     /** @param {string} bin @returns {string} */
     static bin2cha(bin) {
-        if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
         return util.dec2cha(util.bin2dec(bin))
     }
     /** @param {string} bin @returns {number} */
     static bin2dec(bin) {
-        if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
         if (bin.length == 0) return 0
         return parseInt(bin, 2)
     }
     /** @param {string} bin @returns {string} */
     static bin2hex(bin) {
-        if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
         bin = util.pad_block(bin, 4, 'right', '0')
         let hex = ''
         for (let i = 0; i < bin.length; i += 4) {
             hex += util.dec2hex(util.bin2dec(bin.slice(i, i + 4)))
         }
         return hex
-        // return util.dec2hex(util.bin2dec(bin), bin.length / 4) does not work for large numbers (exponential)
     }
     /** @param {string} bin @returns {string} */
     static bin2oct(bin) {
-        if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
         return util.dec2oct(util.bin2dec(bin))
     }
     /** @param {string} bin @param {number} size @returns {string} */
     static bin2str(bin, size = 8) { // 8 bpc
-        if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
         bin = util.pad_block(bin, size, 'right', '0')
         let str = ''
         for (let i = 0; i < bin.length; i += size) {
@@ -4605,12 +4092,10 @@ class util {
     }
     /** @param {string} bin @returns {boolean} */
     static bin2bol(bin) {
-        if (!util.istype(bin, 'binary') || bin.length > 1) return console.error(`TypeError: `, bin)
         return bin == '1'
     }
     /** @param {string} bin @param {number} size @returns {number[]} */
     static bin2decs(bin, size = 8) {
-        if (!util.istype(bin, 'binary')) return console.error(`TypeError: `, bin)
         bin = util.pad_block(bin, size, 'right', '0')
         let decs = []
         for (let i = 0; i < bin.length; i += size) {
@@ -4620,17 +4105,12 @@ class util {
     }
     /** @param {string} bin @returns {string} */
     static bin2hexs(bin) {
-        return '0x' + util.bin2hex(bin).upper()
+        return '0x' + util.bin2hex(bin).toUpperCase()
     }
     // byte (Uint8Array)
     /** @param {ArrayBuffer|Uint8Array} byt @returns {string} */
     static byt2bin(byt) {
         if (byt instanceof ArrayBuffer) byt = new Uint8Array(byt)
-        if (!util.istype(byt, 'bytes')) return console.error(`TypeError: `, byt)
-        // Int8Array range -128 to 127
-        // Uint8Array range 0 to 255
-        // dec 0  127  128  129  255 256
-        // byt 0  127  -128 -127 -1  0
         let bin = ''
         for (let dec of byt) {
             bin += util.dec2bin(dec, 8)
@@ -4640,19 +4120,16 @@ class util {
     /** @param {ArrayBuffer|Uint8Array} byt @returns {number} */
     static byt2dec(byt) {
         if (byt instanceof ArrayBuffer) byt = new Uint8Array(byt)
-        if (!util.istype(byt, 'bytes')) return console.error(`TypeError: `, byt)
         return util.bin2dec(util.byt2bin(byt))
     }
     /** @param {ArrayBuffer|Uint8Array} byt @returns {string} */
     static byt2cha(byt) {
         if (byt instanceof ArrayBuffer) byt = new Uint8Array(byt)
-        if (!util.istype(byt, 'bytes')) return console.error(`TypeError: `, byt)
         return util.bin2cha(util.byt2bin(byt))
     }
     /** @param {ArrayBuffer|Uint8Array} byt @returns {string} */
     static byt2hex(byt) {
         if (byt instanceof ArrayBuffer) byt = new Uint8Array(byt)
-        if (!util.istype(byt, 'bytes')) return console.error(`TypeError: `, byt)
         let hex = ''
         for (let dec of byt) {
             hex += util.dec2hex(dec, 2)
@@ -4662,13 +4139,11 @@ class util {
     /** @param {ArrayBuffer|Uint8Array} byt @returns {string} */
     static byt2oct(byt) {
         if (byt instanceof ArrayBuffer) byt = new Uint8Array(byt)
-        if (!util.istype(byt, 'bytes')) return console.error(`TypeError: `, byt)
         return util.bin2oct(util.byt2bin(byt))
     }
-    /** @param {ArrayBuffer|Uint8Array} @param {number} size @returns {string} */
+    /** @param {ArrayBuffer|Uint8Array} byt @param {number} size @returns {string} */
     static byt2str(byt, size = 8) { // 8 bpc
         if (byt instanceof ArrayBuffer) byt = new Uint8Array(byt)
-        if (!util.istype(byt, 'bytes')) return console.error(`TypeError: `, byt)
         let bin = util.byt2bin(byt)
         bin = util.pad_block(bin, size, 'right', '0')
         let str = ''
@@ -4680,75 +4155,63 @@ class util {
     // character
     /** @param {string} cha @returns {string} */
     static cha2bin(cha, len = null) {
-        if (!util.istype(cha, 'string')) return console.error(`TypeError: `, cha)
         return util.dec2bin(util.cha2dec(cha), len)
     }
     /** @param {string} cha @returns {Uint8Array} */
     static cha2byt(cha) {
-        if (!util.istype(cha, 'string')) return console.error(`TypeError: `, cha)
         return util.dec2byt(util.cha2dec(cha))
     }
     /** @param {string} cha @returns {number} */
     static cha2dec(cha) {
-        if (!util.istype(cha, 'string')) return console.error(`TypeError: `, cha)
         return cha.charCodeAt(0)
     }
     /** @param {string} cha @returns {string} */
     static cha2hex(cha) {
-        if (!util.istype(cha, 'string')) return console.error(`TypeError: `, cha)
         return util.dec2hex(util.cha2dec(cha))
     }
     /** @param {string} cha @returns {string} */
     static cha2oct(cha) {
-        if (!util.istype(cha, 'string')) return console.error(`TypeError: `, cha)
         return util.dec2oct(util.cha2dec(cha))
     }
     /** @param {string} cha @param {number} size @returns {string} */
     static cha2str(cha, size = 8) { // 8 bpc
-        if (!util.istype(cha, 'string')) return console.error(`TypeError: `, cha)
         return util.bin2str(util.cha2bin(cha), size)
     }
     // decimal
     /** @param {number} dec @param {number} len @returns {string} */
     static dec2bin(dec, len = null) {
-        if (!util.istype(dec, 'number|string-number')) return console.error(`TypeError: `, dec)
         let bin = Number(dec).toString(2)
         if (len == null || len <= bin.length) return bin
         return ('0'.repeat(len - bin.length)).concat(bin)
     }
     /** @param {number} dec @returns {Uint8Array} */
     static dec2byt(dec) {
-        if (!util.istype(dec, 'number|string-number')) return console.error(`TypeError: `, dec)
         return util.bin2byt(util.dec2bin(dec))
     }
     /** @param {number} dec @returns {string} */
     static dec2cha(dec) {
-        if (!util.istype(dec, 'number|string-number')) return console.error(`TypeError: `, dec)
         return String.fromCharCode(Number(dec))
     }
     /** @param {number} dec @param {number} len @returns {string} */
     static dec2hex(dec, len = null) {
-        if (!util.istype(dec, 'number|string-number')) return console.error(`TypeError: `, dec)
         let hex = Number(dec).toString(16)
         if (len == null || len <= hex.length) return hex
         return ('0'.repeat(len - hex.length)).concat(hex)
     }
     /** @param {number} dec @param {number} len @returns {string} */
     static dec2oct(dec, len = null) {
-        if (!util.istype(dec, 'number|string-number')) return console.error(`TypeError: `, dec)
         let oct = Number(dec).toString(8)
         if (len == null || len <= oct.length) return oct
         return ('0'.repeat(len - oct.length)).concat(oct)
     }
     /** @param {number} dec @param {number} size @returns {string} */
     static dec2str(dec, size = 8) { // 8 bpc
-        if (!util.istype(dec, 'number|string-number')) return console.error(`TypeError: `, dec)
         return util.bin2str(util.dec2bin(dec), size)
     }
-    /** @param {number} dec @param {number} len @returns {string} */
+    /** @param {number[]} decs @param {number} len @returns {string} */
     static decs2bin(decs, len = null) { // 8 size
         let bin = ''
-        for (let dec in decs) {
+        for (let dec of decs) {
             bin += util.dec2bin(dec, len)
         }
         return bin
@@ -4756,12 +4219,10 @@ class util {
     // hexadecimal
     /** @param {string} hex @returns {string} */
     static hex2bin(hex) {
-        if (!util.istype(hex, 'hexadecimal')) return console.error(`TypeError: `, hex)
         return util.dec2bin(util.hex2dec(hex), hex.length * 4)
     }
     /** @param {string} hex @returns {Uint8Array} */
     static hex2byt(hex) {
-        if (!util.istype(hex, 'hexadecimal')) return console.error(`TypeError: `, hex)
         hex = util.pad_block(hex, 2, 'right', '0')
         let decs = []
         for (let i = 0; i < hex.length; i += 2) {
@@ -4771,59 +4232,48 @@ class util {
     }
     /** @param {string} hex @returns {string} */
     static hex2cha(hex) {
-        if (!util.istype(hex, 'hexadecimal')) return console.error(`TypeError: `, hex)
         return util.dec2cha(util.hex2dec(hex))
     }
     /** @param {string} hex @returns {number} */
     static hex2dec(hex) {
-        if (!util.istype(hex, 'hexadecimal')) return console.error(`TypeError: `, hex)
         return parseInt(hex, 16)
     }
     /** @param {string} hex @returns {string} */
     static hex2oct(hex) {
-        if (!util.istype(hex, 'hexadecimal')) return console.error(`TypeError: `, hex)
         return util.dec2oct(util.hex2dec(hex))
     }
     /** @param {string} hex @returns {string} */
     static hex2str(hex, size = 8) { // 8 bpc
-        if (!util.istype(hex, 'hexadecimal')) return console.error(`TypeError: `, hex)
         return util.bin2str(util.hex2bin(hex), size)
     }
     // octal
     /** @param {string} oct @param {number} len @returns {string} */
     static oct2bin(oct, len = null) {
-        if (!util.istype(oct, 'octal')) return console.error(`TypeError: `, oct)
         return util.dec2bin(util.oct2dec(oct), len)
     }
     /** @param {string} oct @returns {Uint8Array} */
     static oct2byt(oct) {
-        if (!util.istype(oct, 'octal')) return console.error(`TypeError: `, oct)
         return util.bin2byt(util.oct2bin(oct))
     }
     /** @param {string} oct @returns {string} */
     static oct2cha(oct) {
-        if (!util.istype(oct, 'octal')) return console.error(`TypeError: `, oct)
         return util.dec2cha(util.oct2dec(oct))
     }
     /** @param {string} oct @returns {number} */
     static oct2dec(oct) {
-        if (!util.istype(oct, 'octal')) return console.error(`TypeError: `, oct)
         return parseInt(oct, 8)
     }
     /** @param {string} oct @returns {string} */
     static oct2hex(oct) {
-        if (!util.istype(oct, 'octal')) return console.error(`TypeError: `, oct)
         return util.dec2hex(util.oct2dec(oct))
     }
     /** @param {string} oct @param {number} size @returns {string} */
     static oct2str(oct, size = 8) { // 8 bpc
-        if (!util.istype(oct, 'octal')) return console.error(`TypeError: `, oct)
         return util.bin2str(util.oct2bin(oct), size)
     }
     // string
     /** @param {string} str @param {number} size @returns {string} */
     static str2bin(str, size = 8) { // 8 bpc
-        if (!util.istype(str, 'string')) return console.error(`TypeError: `, str)
         let bin = ''
         for (let dec of util.str2decs(str)) {
             bin += util.dec2bin(dec, size)
@@ -4832,22 +4282,18 @@ class util {
     }
     /** @param {string} str @param {number} size @returns {Uint8Array} */
     static str2byt(str, size = 8) { // 8 bpc
-        if (!util.istype(str, 'string')) return console.error(`TypeError: `, str)
         return util.bin2byt(util.str2bin(str, size))
     }
     /** @param {string} str @param {number} size @returns {string} */
     static str2cha(str, size = 8) { // 8 bpc
-        if (!util.istype(str, 'string')) return console.error(`TypeError: `, str)
         return util.dec2cha(util.str2dec(str))
     }
     /** @param {string} str @param {number} size @returns {number} */
     static str2dec(str, size = 8) { // 8 bpc
-        if (!util.istype(str, 'string')) return console.error(`TypeError: `, str)
         return util.bin2dec(util.str2bin(str, size))
     }
     /** @param {string} str @param {number} size @returns {string} */
     static str2hex(str, size = 8) { // 8 bpc
-        if (!util.istype(str, 'string')) return console.error(`TypeError: `, str)
         let hex = ''
         for (let dec of util.str2decs(str)) {
             hex += util.dec2hex(dec, size / 4)
@@ -4856,12 +4302,10 @@ class util {
     }
     /** @param {string} str @param {number} size @returns {string} */
     static str2oct(str, size = 8) { // 8 bpc
-        if (!util.istype(str, 'string')) return console.error(`TypeError: `, str)
         return util.dec2oct(util.str2dec(str, size))
     }
     /** @param {string} str @returns {number[]} */
     static str2decs(str) {
-        if (!util.istype(str, 'string')) return console.error(`TypeError: `, str)
         let decs = []
         for (let cha of str) {
             decs.push(util.cha2dec(cha))
@@ -4914,16 +4358,55 @@ class array extends Array {
         }
         return nArray
     }
+    /** @param {any[]|string} data @param {boolean} remove_whitespace @returns {array} */
+    static fromitems(data, remove_whitespace = false) {
+        // data string example: item1val1:item1val2:item1val3,item2val1:item2val2:item2val3
+        let nArray = new array()
+        let hasComma = data.includes(',')
+        let hasColon = data.includes(':')
+        let item_size = 0
+        if (util.istype(data, 'array')) {
+            for (let item of data) {
+                if (util.istype(item, 'array')) {
+                    nArray.append(item)
+                }
+                else if (util.istype(item, 'string')) {
+                    nArray.append(array.fromstring(item, ':', remove_whitespace))
+                }
+            }
+        }
+        else if (util.istype(data, 'string')) {
+            for (let item of array.fromstring(data, ',', remove_whitespace)) {
+                nArray.append(array.fromstring(item, ':', remove_whitespace))
+            }
+        }
+        else {
+            throw new Error(`TypeError: failed to parse data`)
+        }
+        return nArray
+    }
     /** @param {{string:any}} data @param {string} delimiter @returns {array} */
     static fromobject(data, delimiter = ': ') {
         let nArray = new array()
-        for (let [key, value] in enumerate(data)) {
+        for (let [key, value] of enumerate(data)) {
             nArray.append(`${key}${delimiter}${value}`)
         }
         return nArray
     }
+    /** @param {string} data @param {string} delimiter @param {boolean} remove_whitespace @returns {array} */
+    static fromstring(data, delimiter = ',', remove_whitespace = false) {
+        let nArray = new array()
+        if (data === null || data === undefined) {
+            return nArray
+        }
+        for (let substring of data.strip(' ').split(delimiter)) {
+            let item = remove_whitespace ? substring.strip(' ') : substring
+            nArray.append(item)
+        }
+        return nArray
+    }
     /** @param {string} data @returns {array} */
-    static fromstring(data) {
+    static _fromstring(data) {
         let nArray = new array()
         if (data === null || data === undefined) {
             return nArray
@@ -4962,7 +4445,7 @@ class array extends Array {
         } else if (size === 3) {
             [start, stop, step] = args
         } else {
-            throw new Error(`TypeError: expects 1 to 3 arguments`);
+            throw new Error(`TypeError: require 1 to 3 arguments`);
         }
         if (step > 0) {
             for (let index = start; index < stop; index += step) {
@@ -4974,6 +4457,7 @@ class array extends Array {
             }
         }
     }
+
     /** @returns {boolean} */
     any() {
         return this.some(value => !!value)
@@ -4998,7 +4482,7 @@ class array extends Array {
     empty() {
         return this.length === 0
     }
-    /** @returns {Generator<number, T>} */
+    /** @returns {Generator<[number,any], void>} */
     *enumerate() {
         for (let index = 0; index < this.length; index++) {
             yield [index, this[index]]
@@ -5039,7 +4523,7 @@ class array extends Array {
         try {
             return util[`hash_${mode.toLowerCase()}`](data)
         } catch (error) {
-            throw Error(`ValueError: unsupported hash mode: ${mode}`)
+            throw Error(`ValueError: hash mode '${mode}' unsupported`)
         }
     }
     /** @returns {string} */
@@ -5158,7 +4642,10 @@ class object extends Object {
     constructor(...values) {
         super()
         for (let value of values) {
-            if (util.istype(value, 'object')) {
+            if (value === null || value === undefined) {
+
+            }
+            else if (value instanceof Object && !(value instanceof Array)) {
                 this.update(value)
             }
             else {
@@ -5225,19 +4712,29 @@ class object extends Object {
         }
         return nObject
     }
-    /** @param {string} data @param {string} delimiterPairs @param {string} delimiterPair @returns {object} */
-    static fromstring(data, delimiterPairs = ',', delimiterPair = ':') {
+    /** @param {string} data @param {string} delimiterPairs @param {string} delimiterPair @param {boolean} remove_whitespace @returns {object} */
+    static fromstring(data, delimiterPairs = ',', delimiterPair = ':', remove_whitespace = false) {
         let nObject = new object()
-        for (let substring of data.strip(` ${delimiterPairs}${delimiterPair}`).split(delimiterPairs)) {
-            let parts = substring.split(delimiterPair)
+        if (data === null || data === undefined) {
+            return nObject
+        }
+        for (let substr of data.strip(' ').strip(`${delimiterPairs}${delimiterPair}`).split(delimiterPairs)) {
+            let parts = substr.split(delimiterPair)
+            let key, value
             // ensure there is at least a key and a value, the rest is considered part of the value
+            // handle single key and single value
             if (parts.length >= 2) {
-                nObject.set(parts[0], parts[1]);
+                key   = parts[0]
+                value = parts[1]
             }
             // handle a single key with no value
             else if (parts.length === 1 && parts[0]) {
-                nObject.set(parts[0], null)
+                key   = parts[0]
+                value = null
             }
+            key = remove_whitespace ? key.strip(' ') : key
+            value = remove_whitespace && !(value == null) ? value.strip(' ') : value
+            nObject.set(key, value)
         }
         return nObject
     }
@@ -5268,7 +4765,7 @@ class object extends Object {
     empty() {
         return this.size() === 0
     }
-    /** @returns {Generator<[any, any], void, unknown>} */
+    /** @returns {Generator<[string, any], void>} */
     *enumerate() {
         for (let [key, value] of Object.entries(this)) {
             yield [key, value]
@@ -5297,7 +4794,7 @@ class object extends Object {
         try {
             return util[`hash_${mode.toLowerCase()}`](data)
         } catch (error) {
-            throw Error(`ValueError: unsupported hash mode: ${mode}`)
+            throw Error(`ValueError: hash mode '${mode}' unsupported`)
         }
     }
     /** @param {...any} values @returns {boolean} */
@@ -5313,19 +4810,19 @@ class object extends Object {
         let object_values = this.values()
         return values.every(value => object_values.includes(value))
     }
-    /** @param {string} key @returns {boolean} */
+    /** @param {any} key @returns {boolean} */
     iskey(key) {
         return key in this
     }
-    /** @param {any} key @param {string} datatype @returns {boolean} */
+    /** @param {any} key @param {any} datatype @returns {boolean} */
     istype(key, datatype) {
         return util.istype(this.get(key), datatype)
     }
-    /** @param {string} key @param {any} value @returns {boolean} */
+    /** @param {any} key @param {any} value @returns {boolean} */
     isvalue(key, value) {
         return this.get(key) == value
     }
-    /** @param {string} key @param {any} value @returns {boolean} */
+    /** @param {any} key @param {any} value @returns {boolean} */
     isvaluein(key, value) {
         let target = this.get(key)
         return Array.isArray(target) && target.includes(value)
@@ -5485,13 +4982,8 @@ class app {
     }
 
     /** @readonly @type {{string:string}} */
-    static GLOBAL_VARIABLES = {
+    static CONFIGURATION = {
         "apperance_mode": app.APPERANCE_MODE_DARK,
-        "color-accent"  : '#aa0000',
-        "color-default" : '#191919',
-        "color-header"  : '#323232',
-        "color-select"  : '#4b4b4b',
-        "color-text"    : '#ffffff',
         "repository"    : '/repository',
     }
 
@@ -5513,9 +5005,9 @@ class app {
     static MOUSE_BUTTON_WHEEL = 1
     /** @readonly @type {number} */
     static MOUSE_BUTTON_RIGHT = 2
-    /** @readonly @type {{string:string}} */
+    /** @readonly @type {{[key:string]:string}} */
     static EVENT_INTERFACES = { "afterprint": "onAfterPrint", "afterscriptexecute": "onAfterScriptExecute", "appinstalled": "onAppInstalled", "beforeinstallprompt": "onBeforeInstallPrompt", "beforeprint": "onBeforePrint", "beforescriptexecute": "onBeforeScriptExecute", "beforeunload": "onBeforeUnload", "blur": "onBlur", "click": "onClick", "copy": "onCopy", "cut": "onCut", "devicemotion": "onDeviceMotion", "deviceorientation": "onDeviceOrientation", "error": "onError", "focus": "onFocus", "fullscreenchange": "onFullScreenChange", "fullscreenerror": "onFullScreenError", "gamepadconnected": "onGamePadConnected", "gamepaddisonnected": "onGamePadDisonnected", "hashchange": "onHashChange", "input": "onInput", "keydown": "onKeyDown", "keyup": "onKeyUp", "languagechange": "onLanguageChange", "message": "onMessage", "messageerror": "onMessageError", "mousedown": "onMouseDown", "mouseenter": "onMouseEnter", "mouseleave": "onMouseLeave", "mousemove": "onMouseMove", "mouseout": "onMouseOut", "mouseover": "onMouseOver", "mouseup": "onMouseUp", "offline": "onOffline", "online": "onOnline", "pagehide": "onPageHide", "pagereveal": "onPageReveal", "pageshow": "onPageShow", "pageswap": "onPageSwap", "paste": "onPaste", "pointercancel": "onPointerCancel", "pointerdown": "onPointerDown", "pointerlockchange": "onPointerLockChange", "pointerlockerror": "onPointerLockError", "popstate": "onPopState", "prerenderingchange": "onPrerenderingChange", "readystatechange": "onReadyStateChange", "rejectionhandled": "onRejectionHandled", "resize": "onResize", "scroll": "onScroll", "scrollend": "onScrollEnd", "securitypolicyviolation": "onSecurityPolicyViolation", "selectionchange": "onSelectionChange", "storage": "onStorage", "touchend": "onTouchEnd", "touchmove": "onTouchMove", "touchstart": "onTouchStart", "unhandledrejection": "onUnhandledRejection", "visibilitychange": "onVisibilityChange", "wheel": "onWheel" }
-    /** @readonly @type {{string:string}} */
+    /** @readonly @type {{[key:string]:string}} */
     static LANGUAGE_CODES = { "ab": "abkhazian", "aa": "afar", "af": "afrikaans", "ak": "akan", "sq": "albanian", "am": "amharic", "ar": "arabic", "an": "aragonese", "hy": "armenian", "as": "assamese", "av": "avaric", "ae": "avestan", "ay": "aymara", "az": "azerbaijani", "bm": "bambara", "ba": "bashkir", "eu": "basque", "be": "belarusian", "bn": "bengali (bangla)", "bh": "bihari", "bi": "bislama", "bs": "bosnian", "br": "breton", "bg": "bulgarian", "my": "burmese", "ca": "catalan", "ch": "chamorro", "ce": "chechen", "ny": "chichewa, chewa, nyanja", "zh": "chinese", "zh-hans": "chinese (simplified)", "zh-hant": "chinese (traditional)", "cv": "chuvash", "kw": "cornish", "co": "corsican", "cr": "cree", "hr": "croatian", "cs": "czech", "da": "danish", "dv": "divehi, dhivehi, maldivian", "nl": "dutch", "dz": "dzongkha", "en": "english", "eo": "esperanto", "et": "estonian", "ee": "ewe", "fo": "faroese", "fj": "fijian", "fi": "finnish", "fr": "french", "ff": "fula, fulah, pulaar, pular", "gl": "galician", "gd": "gaelic (scottish)", "gv": "manx", "ka": "georgian", "de": "german", "el": "greek", "kl": "kalaallisut, greenlandic", "gn": "guarani", "gu": "gujarati", "ht": "haitian creole", "ha": "hausa", "he": "hebrew", "hz": "herero", "hi": "hindi", "ho": "hiri motu", "hu": "hungarian", "is": "icelandic", "io": "ido", "ig": "igbo", "id, in": "indonesian", "ia": "interlingua", "ie": "interlingue", "iu": "inuktitut", "ik": "inupiak", "ga": "irish", "it": "italian", "ja": "japanese", "jv": "javanese", "kn": "kannada", "kr": "kanuri", "ks": "kashmiri", "kk": "kazakh", "km": "khmer", "ki": "kikuyu", "rw": "kinyarwanda (rwanda)", "rn": "kirundi", "ky": "kyrgyz", "kv": "komi", "kg": "kongo", "ko": "korean", "ku": "kurdish", "kj": "kwanyama", "lo": "lao", "la": "latin", "lv": "latvian (lettish)", "li": "limburgish ( limburger)", "ln": "lingala", "lt": "lithuanian", "lu": "luga-katanga", "lg": "luganda, ganda", "lb": "luxembourgish", "mk": "macedonian", "mg": "malagasy", "ms": "malay", "ml": "malayalam", "mt": "maltese", "mi": "maori", "mr": "marathi", "mh": "marshallese", "mo": "moldavian", "mn": "mongolian", "na": "nauru", "nv": "navajo", "ng": "ndonga", "nd": "northern ndebele", "ne": "nepali", "no": "norwegian", "nb": "norwegian bokmål", "nn": "norwegian nynorsk", "ii": "sichuan yi", "oc": "occitan", "oj": "ojibwe", "cu": "old church slavonic, old bulgarian", "or": "oriya", "om": "oromo (afaan oromo)", "os": "ossetian", "pi": "pāli", "ps": "pashto, pushto", "fa": "persian (farsi)", "pl": "polish", "pt": "portuguese", "pa": "punjabi (eastern)", "qu": "quechua", "rm": "romansh", "ro": "romanian", "ru": "russian", "se": "sami", "sm": "samoan", "sg": "sango", "sa": "sanskrit", "sr": "serbian", "sh": "serbo-croatian", "st": "sesotho", "tn": "setswana", "sn": "shona", "sd": "sindhi", "si": "sinhalese", "ss": "swati", "sk": "slovak", "sl": "slovenian", "so": "somali", "nr": "southern ndebele", "es": "spanish", "su": "sundanese", "sw": "swahili (kiswahili)", "sv": "swedish", "tl": "tagalog", "ty": "tahitian", "tg": "tajik", "ta": "tamil", "tt": "tatar", "te": "telugu", "th": "thai", "bo": "tibetan", "ti": "tigrinya", "to": "tonga", "ts": "tsonga", "tr": "turkish", "tk": "turkmen", "tw": "twi", "ug": "uyghur", "uk": "ukrainian", "ur": "urdu", "uz": "uzbek", "ve": "venda", "vi": "vietnamese", "vo": "volapük", "wa": "wallon", "cy": "welsh", "wo": "wolof", "fy": "western frisian", "xh": "xhosa", "yi, ji": "yiddish", "yo": "yoruba", "za": "zhuang, chuang", "zu": "zulu" }
     
     /** @type {object} */
@@ -5528,7 +5020,7 @@ class app {
     static name = ''
     /** @type {object} */
     static options = new object()
-    /** @type {Dialog} */
+    /** @type {DialogProgress} */
     static progressDialog
     /** @type {string[]} */
     static progressesRunning = []
@@ -5536,123 +5028,131 @@ class app {
     static progressTimeout = 3000
     /** @type {boolean} */
     static touchable = true
-    
+
+    /** @type {{[key:string]:{string:any[]}}} */
+    static cascading_menu_chain = {}
+
     /** @param {string|{string:string}} options @returns {void} */
     static start(options = null) {
-        app.setAppeatanceMode(app.APPERANCE_MODE_DARK)
-        app.options = object.fromdata(options)
-        app.identifier = app.options.get('identifier', util.identifier())
-        app.name = app.options.get('name', util.path_info(window.location.pathname, 'filename'))
+        let color_primary = app.getColor()
+        app.setColor(color_primary)
+        let color_accent = app.getColorAccent()
+        app.setColorAccent(color_accent)
+        if (app.isRunningLocal()) {
+			app.configuration("repository", "file:///c:/projects/_repository")
+		}
+        app.options    = object.fromdata(options)
+        app.identifier = app.options.get("identifier", util.identifier())
+        app.name       = app.options.get("name", util.path_info(window.location.pathname, "filename"))
         app.progressDialog = app.createProgressDialog()
-        app.progressDialog.setStyle(DialogProgress.STYLE_SPINNER)
+        app.progressDialog.setType(Dialog.TYPE_PROGRESS_SPINNER)
         // insert google fonts icon source
         let element = document.createElement('link')
-        element.rel = 'preload'
-        element.rel = 'stylesheet'
-        element.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200'
+        element.rel  = "preload"
+        element.rel  = "stylesheet"
+        // element.href = "https://fonts.googleapis.com/icon?family=Material+Icons"
+        element.href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         document.head.appendChild(element)
         // 
-        app.listeners1()
-        if (window.document.readyState === 'complete') {
-            app.listeners2()
-        }
+        app.#addEventListeners1()
+        console.log(`application{name=${app.name}, options=${app.options}}`)
     }
-    /** @private @returns {void} */
-    static listeners1() {
+    /** @returns {void} */
+    static #addEventListeners1() {
         /** @param {Event} event @returns {void} */
         window.onafterprint = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onAfterPrint) {
                 window.onAfterPrint(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.onappinstalled = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onAppInstalled) {
                 window.onAppInstalled(event)
             }
         }
         /** @param {BeforeInstallPromptEvent} event @returns {void} */
         window.onbeforeinstallprompt = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onBeforeInstallPrompt) {
                 window.onBeforeInstallPrompt(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.onbeforeprint = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onBeforePrint) {
                 window.onBeforePrint(event)
             }
         }
         /** @param {BeforeUnloadEvent} event @returns {void} */
         window.onbeforeunload = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onBeforeUnload) {
                 window.onBeforeUnload(event)
             }
         }
         /** @param {FocusEvent} event @returns {void} */
         window.onblur = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onBlur) {
                 window.onBlur(event)
             }
         }
         /** @param {ClipboardEvent} event @returns {void} */
         window.oncopy = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onCopy) {
                 window.onCopy(event)
             }
         }
         /** @param {ClipboardEvent} event @returns {void} */
         window.oncut = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onCut) {
                 window.onCut(event)
             }
         }
         /** @param {DeviceMotionEvent} event @returns {void} */
         window.ondevicemotion = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onDeviceMotion) {
                 window.onDeviceMotion(event)
             }
         }
         /** @param {DeviceOrientationEvent} event @returns {void} */
         window.ondeviceorientation = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onDeviceOrientation) {
                 window.onDeviceOrientation(event)
             }
         }
         /** @param {DeviceOrientationEvent} event @returns {void} */
         window.deviceorientationabsolute = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onDeviceOrientationAbsolute) {
                 window.onDeviceOrientationAbsolute(event)
             }
         }
         /** @param {ErrorEvent} event @returns {void} */
         window.onerror = (event, source, lineno, colno, error) => {
-            app.onEventListenerInterface(event.type, null)
+            app.#onEventListenerInterface(event.type, null)
             if (window.onError) {
                 window.onError(event)
             }
         }
         /** @param {FocusEvent} event @returns {void} */
         window.onfocus = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onFocus) {
                 window.onFocus(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.ongamepadconnected = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onGamePadConnected) {
                 window.onGamePadConnected(event)
             }
@@ -5665,105 +5165,112 @@ class app {
         }
         /** @param {HashChangeEvent} event @returns {void} */
         window.onhashchange = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onHashChange) {
                 window.onHashChange(event)
             }
         }
+        /** @param {KeyboardEvent} event @returns {void} */
+        window.onkeydown = (event) => {
+            app.#onEventListenerInterface(event.type, event)
+            if (window.onKeyDown) {
+                window.onKeyDown(event)
+            }
+        }
+        /** @param {KeyboardEvent} event @returns {void} */
+        window.onkeyup = (event) => {
+            app.#onEventListenerInterface(event.type, event)
+            if (window.onKeyUp) {
+                window.onKeyUp(event)
+            }
+        }
         /** @param {HashChangeEvent} event @returns {void} */
         window.onlanguagechange = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onLanguageChange) {
                 window.onLanguageChange(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.onload = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onLoad) {
                 window.onLoad(event)
             }
         }
         /** @param {MessageEvent} event @returns {void} */
         window.onmessage = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onMessage) {
                 window.onMessage(event)
             }
         }
         /** @param {MessageEvent} event @returns {void} */
         window.onmessageerror = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onMessageError) {
                 window.onMessageError(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.onoffline = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onOffline) {
                 window.onOffline(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.ononline = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onOnline) {
                 window.onOnline(event)
             }
         }
         /** @param {PageTransitionEvent} event @returns {void} */
         window.onpagehide = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPageHide) {
                 window.onPageHide(event)
             }
         }
         /** @param {PageRevealEvent} event @returns {void} */
         window.onpagereveal = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPageReveal) {
                 window.onPageReveal(event)
             }
         }
         /** @param {PageTransitionEvent} event @returns {void} */
         window.onpageshow = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPageShow) {
                 window.onPageShow(event)
             }
         }
         /** @param {PageSwapEvent} event @returns {void} */
         window.onpageswap = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPageSwap) {
                 window.onPageSwap(event)
             }
         }
-        /** @param {ClipboardEvent} event @returns {void} */
-        window.onpaste = (event) => {
-            app.onEventListenerInterface(event.type, event)
-            if (window.onPaste) {
-                window.onPaste(event)
-            }
-        }
         /** @param {PopStateEvent} event @returns {void} */
         window.onpopstate = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPopState) {
                 window.onPopState(event)
             }
         }
         /** @param {PromiseRejectionEvent} event @returns {void} */
         window.onrejectionhandled = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onRejectionHandled) {
                 window.onRejectionHandled(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.onresize = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             // refresh contents of background element
             for (let element of document.getElementsByClassName('content-background')) {
                 let parentElement = app.element(element.parentElement)
@@ -5777,45 +5284,66 @@ class app {
         }
         /** @param {StorageEvent} event @returns {void} */
         window.onstorage = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onStorage) {
                 window.onStorage(event)
             }
         }
         /** @param {PromiseRejectionEvent} event @returns {void} */
         window.onunhandledrejection = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onUnhandledRejection) {
                 window.onUnhandledRejection(event)
             }
         }
+        if (window.document.readyState === 'complete') {
+            app.#addEventListeners2()
+        }
         /** @param {Event} event @returns {void} */
         window.document.onreadystatechange = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onReadyStateChange) {
                 window.onReadyStateChange(event)
             }
             if (window.document.readyState === 'complete') {
-                app.listeners2()
+                app.#addEventListeners2()
             }
         }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            let appearance_mode = event.matches ? "dark" : "light"
+            // TODO: update website appearance mode provided allowed (user permission)
+        })
     }
-    /** @private @returns {void} */
-    static listeners2() {
-        app.#icons()
+    /** @returns {void} */
+    static #addEventListeners2() {
+        app.#setIcons()
         if (app.options.get('input-validation', 'true') == 'true') {
             app.inputValidation()
         }
+        // required for updates to apperance mode
+        let observer = new MutationObserver((mutation_list, observer) => {
+            for (let mutation of mutation_list) {
+                if (mutation.type === "childList") {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) {
+                            // set icon(s) source upon appeding element to body
+                            app.#setIcons(node)
+                        }
+                    });
+                }
+            }
+        })
+        observer.observe(window.document.body, { childList: true, subtree: true })
         /** @param {Event} event @returns {void} */
         window.document.onafterscriptexecute = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onAfterScriptExecute) {
                 window.onAfterScriptExecute(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onbeforescriptexecute = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onBeforeScriptExecute) {
                 window.onBeforeScriptExecute(event)
             }
@@ -5823,14 +5351,14 @@ class app {
         /** @param {PointerEvent} event @returns {void} */
         window.document.onclick = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onClick) {
                 window.onClick(event, app.element(event.target))
             }
         }
         /** @param {PointerEvent} event @returns {void} */
         window.document.oncontextmenu = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onContextMenu) {
                 window.onContextMenu(event, app.element(event.target))
             }
@@ -5838,21 +5366,21 @@ class app {
         /** @param {PointerEvent} event @returns {void} */
         window.document.ondblclick = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onDoubleClick) {
                 window.onDoubleClick(event, app.element(event.target))
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onfullscreenchange = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onFullScreenChange) {
                 window.onFullScreenChange(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onfullscreenerror = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onFullScreenError) {
                 window.onFullScreenError(event)
             }
@@ -5860,56 +5388,24 @@ class app {
         /** @param {InputEvent} event @returns {void} */
         window.document.oninput = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onInput) {
                 window.onInput(event, app.element(event.target))
-            }
-        }
-        /** @param {KeyboardEvent} event @returns {void} */
-        window.document.onkeydown = (event) => {
-            if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
-            if (window.onKeyDown) {
-                window.onKeyDown(event)
-            }
-        }
-        /** @param {KeyboardEvent} event @returns {void} */
-        window.document.onkeyup = (event) => {
-            if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
-            if (window.onKeyUp) {
-                window.onKeyUp(event)
             }
         }
         /** @param {MouseEvent} event @returns {void} */
         window.document.onmousedown = (event) => {
             app.mouseButtons[event.button] = true
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onMouseDown) {
                 window.onMouseDown(event, app.element(event.target))
             }
         }
         /** @param {MouseEvent} event @returns {void} */
-        window.document.onmouseenter = (event) => {
-            if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
-            if (window.onMouseEnter) {
-                window.onMouseEnter(event, app.element(event.target))
-            }
-        }
-        /** @param {MouseEvent} event @returns {void} */
-        window.document.onmouseleave = (event) => {
-            if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
-            if (window.onMouseLeave) {
-                window.onMouseLeave(event, app.element(event.target))
-            }
-        }
-        /** @param {MouseEvent} event @returns {void} */
         window.document.onmousemove = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onMouseMove) {
                 window.onMouseMove(event, app.element(event.target))
             }
@@ -5917,7 +5413,7 @@ class app {
         /** @param {MouseEvent} event @returns {void} */
         window.document.onmouseout = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onMouseOut) {
                 window.onMouseOut(event, app.element(event.target))
             }
@@ -5925,7 +5421,7 @@ class app {
         /** @param {MouseEvent} event @returns {void} */
         window.document.onmouseover = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onMouseOver) {
                 window.onMouseOver(event, app.element(event.target))
             }
@@ -5934,77 +5430,84 @@ class app {
         window.document.onmouseup = (event) => {
             app.mouseButtons[event.button] = false
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onMouseUp) {
                 window.onMouseUp(event, app.element(event.target))
             }
         }
+        /** @param {ClipboardEvent} event @returns {void} */
+        window.document.onpaste = (event) => {
+            app.#onEventListenerInterface(event.type, event)
+            if (window.onPaste) {
+                window.onPaste(event)
+            }
+        }
         /** @param {PointerEvent} event @returns {void} */
         window.document.onpointercancel = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPointerCancel) {
                 window.onPointerCancel(event)
             }
         }
         /** @param {PointerEvent} event @returns {void} */
         window.document.onpointerdown = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPointerDown) {
                 window.onPointerDown(event, app.element(event.target))
             }
         }
         /** @param {PointerEvent} event @returns {void} */
         window.document.onpointerenter = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPointerEnter) {
                 window.onPointerEnter(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onpointerlockchange = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPointerLockChange) {
                 window.onPointerLockChange(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onpointerlockerror = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPointerLockError) {
                 window.onPointerLockError(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onprerenderingchange = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onPrerenderingChange) {
                 window.onPrerenderingChange(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onscroll = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onScroll) {
                 window.onScroll(event, app.element(event.target))
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onscrollend = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onScrollEnd) {
                 window.onScrollEnd(event, app.element(event.target))
             }
         }
         /** @param {SecurityPolicyViolationEvent} event @returns {void} */
         window.document.onsecuritypolicyviolation = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onSecurityPolicyViolation) {
                 window.onSecurityPolicyViolation(event)
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onselectionchange = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onSelectionChange) {
                 window.onSelectionChange(event)
             }
@@ -6012,7 +5515,7 @@ class app {
         /** @param {TouchEvent} event @returns {void} */
         window.document.ontouchend = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onTouchEnd) {
                 window.onTouchEnd(event, app.element(event.target))
             }
@@ -6020,7 +5523,7 @@ class app {
         /** @param {TouchEvent} event @returns {void} */
         window.document.ontouchmove = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onTouchMove) {
                 window.onTouchMove(event, app.element(event.target))
             }
@@ -6028,14 +5531,14 @@ class app {
         /** @param {TouchEvent} event @returns {void} */
         window.document.ontouchstart = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onTouchStart) {
                 window.onTouchStart(event, app.element(event.target))
             }
         }
         /** @param {Event} event @returns {void} */
         window.document.onvisibilitychange = (event) => {
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onVisibilityChange) {
                 window.onVisibilityChange(event)
             }
@@ -6043,23 +5546,124 @@ class app {
         /** @param {WheelEvent} event @returns {void} */
         window.document.onwheel = (event) => {
             if (app.isTouchDisabled()) return
-            app.onEventListenerInterface(event.type, event)
+            app.#onEventListenerInterface(event.type, event)
             if (window.onWheel) {
                 window.onWheel(event, app.element(event.target))
             }
         }
     }
+    /**@param {string} type @param {Event} event @returns {void} */
+    static #onEventListenerInterface(type, event) {
+        // evnets that do nit require a specific target, global listeners
+        let global_event_types = ["error","keydown","hashchange","load","offline","online","scroll","unload"]
+        if (event == null) return
+        if (event.target == window.document) return
+        let element = app.element(event.target)
+        if (app.eventListenerInterfaces[type]) {
+            for (let [instance, withinView] of app.eventListenerInterfaces[type]) {
+                if (global_event_types.includes(type)) {
+                    instance.onEventListenerInterface(event)
+                }
+                else if (withinView) {
+                    if (element.isEqualTo(instance.view, true)) {
+                        instance.onEventListenerInterface(event, element)
+                    }
+                }
+                else {
+                    instance.onEventListenerInterface(event, element)
+                }
+            }
+        }
+    }
 
-    // Apperance Mode
+    // configration
+    /** @param {string} key @param {string} value @returns {void} */
+    static configuration(key, value = null) {
+        if (key === null || key === undefined) {
+            return app.CONFIGURATION
+        }
+        // get value
+        else if (value === null || value === undefined) {
+            if (!(key in app.CONFIGURATION) && !key.startsWith('--')) {
+                console.error(`KeyError: application configuration '${key}' nonexistent`)
+            }
+            else {
+                if (key.startsWith('--')) {
+                    value = app.getStyleProperty(':root', key)
+                } else {
+                    value = app.CONFIGURATION[key]
+                }
+            }
+            return value
+        }
+        // set value
+        else {
+            if (!(key in app.CONFIGURATION) && !key.startsWith('--')) {
+                console.error(`KeyError: application configuration '${key}' nonexistent`)
+            }
+            else {
+                if (key.startsWith('--')) {
+                    app.setStyleProperty(':root', key, value)
+                } else {
+                    app.CONFIGURATION[key] = value
+                }
+            }
+            return value
+        }
+    }
     /** @returns {string} */
     static getAppeatanceMode() {
-        return app.GLOBAL_VARIABLES["apperance_mode"]
+        return app.configuration("apperance_mode")
     }
-    /**  @param {string} mode @returns {void} */
+    /** @returns {string} */
+    static getColor() {
+        return app.getData("color-primary", app.getStyleProperty(":root", "--color-primary"))
+    }
+    /** @returns {string} */
+    static getColorAccent() {
+        return app.getData("color-accent", app.getStyleProperty(":root", "--color-accent"))
+    }
+    /** @param {string} mode @returns {void} */
     static setAppeatanceMode(mode) {
-        app.GLOBAL_VARIABLES["apperance_mode"] = mode
+        app.configuration("apperance_mode", mode)
     }
-    // Device
+    /** @param {string} color @returns {void} */
+    static setColor(color) {
+        let hex = color.replace(/^#/, '')
+        let r = parseInt(hex.substring(0, 2), 16)
+        let g = parseInt(hex.substring(2, 4), 16)
+        let b = parseInt(hex.substring(4, 6), 16)
+        let brightness = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 255
+        let color_primary = "#" + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0')
+        app.setStyleProperty(':root', '--color-primary', color_primary)
+        app.setStyleProperty(':root', '--color-secondary', util.hex_from_brightness(color_primary, brightness > 0.5 ? 0.45 : 0.55))
+        app.setStyleProperty(':root', '--color-select', util.hex_from_brightness(color_primary, brightness > 0.5 ? 0.4 : 0.6))
+        app.setStyleProperty(':root', '--color-text', (brightness > 0.6 ? "#000000" : "#ffffff"))
+        app.setAppeatanceMode(brightness > 0.6 ? app.APPERANCE_MODE_LIGHT : app.APPERANCE_MODE_DARK)
+        app.setData("color-primary", color_primary)
+        app.#setIcons()
+    }
+    /** @param {string} color @returns {void} */
+    static setColorAccent(color) {
+        let hex = color.replace(/^#/, '')
+        let r = parseInt(hex.substring(0, 2), 16)
+        let g = parseInt(hex.substring(2, 4), 16)
+        let b = parseInt(hex.substring(4, 6), 16)
+        let brightness = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 255
+        app.setStyleProperty(':root', '--color-accent', color)
+        app.setStyleProperty(':root', '--color-text-accent', (brightness > 0.6 ? "#000000" : "#ffffff"))
+        app.setData("color-accent", color)
+    }
+    // device
+    /** @returns {string} */
+    static getDeviceApperanceMode() {
+        let isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (isDarkMode) {
+            return app.APPERANCE_MODE_DARK
+        } else {
+            return app.APPERANCE_MODE_LIGHT
+        }
+    }
     /** @returns {number} */
     static getDeviceMemory() {
         // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/deviceMemory
@@ -6105,11 +5709,11 @@ class app {
     static isRunningRemote() {
         return window.location.protocol == 'http:' || window.location.protocol == 'https:'
     }
-    // Document
-    /** @param {string|{string:string}} values @returns {HTMLScriptElement} */
+    // Document|Element
+    /** @param {string|{string:string}} attributes @returns {HTMLScriptElement} */
     static addScript(attributes) {
         let script = window.document.createElement('script')
-        for (let [key, value] in enumerate(object.fromdata(attributes))) {
+        for (let [key, value] of enumerate(object.fromdata(attributes))) {
             script[key] = value
         }
         window.document.body.appendChild(script)
@@ -6131,8 +5735,13 @@ class app {
     /** @param {string} selector @param {string} propertyKey @returns {string} */
     static getStyleProperty(selector, propertyKey) {
         let element = window.document.querySelector(selector)
-        let styleDeclaration = window.getComputedStyle(element)
-        return styleDeclaration.getPropertyValue(propertyKey)
+        if (element) {
+            let styleDeclaration = window.getComputedStyle(element)
+            return styleDeclaration.getPropertyValue(propertyKey)
+        }
+        else {
+            throw new Error(`query selector failed, unabled to find target element`)
+        }
     }
     /** @returns {number} */
     static getWidth() {
@@ -6142,6 +5751,53 @@ class app {
     /** @returns {void} */
     static hide() {
         app.element('body').hide()
+    }
+    /** @param {Element} element @returns {void} */
+    static inputValidation(element = null) {
+        let replaceable = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;'
+        }
+        let elements = []
+        if (element) {
+            elements.append(element)
+        } else {
+            for (let element of document.getElementsByTagName('input')) {
+                if (includes(element.type, 'email|password|text|url')) {
+                    elements.append(element)
+                }
+            }
+            for (let element of document.getElementsByTagName('textarea')) {
+                elements.append(element)
+            }
+        }
+        for (let index = 0; index < elements.length; index++) {
+            let element = elements[index]
+            if (!element.hasAttribute('maxlength')) {
+                element.setAttribute('maxlength', '100')
+            }
+            if (!element.hasAttribute('autocomplete')) {
+                element.setAttribute('autocomplete', 'off')
+            }
+            element.addEventListener('input', (event) => {
+                for (let key in replaceable) {
+                    event.target.value = event.target.value.replace(key, '')
+                }
+            })
+        }
+    }
+    /** @param {string} selector @param {string} propertyKey @param {string} priority @returns {void} */
+    static isStyleProperty(selector, propertyKey, priority = '') {
+        let element = window.document.querySelector(selector)
+        if (element) {
+            let styleDeclaration = window.getComputedStyle(element)
+            let propertyValue = styleDeclaration.getPropertyValue(propertyKey)
+            return !(propertyValue === "")
+        }
+        else {
+            throw new Error(`query selector failed, unabled to find target element`)
+        }
     }
     /** @returns {boolean} */
     static isTouchEnabled() {
@@ -6170,15 +5826,6 @@ class app {
     /** @returns {void} */
     static show() {
         app.element('body').show()
-    }
-    // Global Variables
-    /** @param {string} key @returns {any} */
-    static getGlobalVariable(key) {
-        return app.GLOBAL_VARIABLES[key]
-    }
-    /** @param {string} key @returns {void} */
-    static setGlobalVariable(key, value) {
-        app.GLOBAL_VARIABLES[key] = value
     }
     // Mouse
     /** @param {number} button @returns {boolean} */
@@ -6232,10 +5879,9 @@ class app {
     // System
     /** @param {string} types @param {View} instance @param {boolean} withinView @returns {void} */
     static addEventListenerInterface(types, instance, withinView = true) {
-        for (let type of types.strip(' |').split('|')) {
-            type = type.strip(' ')
+        for (let type of array.fromstring(types, '|', true)) {
             if (!app.isEventInterface(type)) {
-                console.warn(`ValueError: variable-name=types variable-value=${type}`)
+                console.warn(`ValueError: event listener '${type}' invalid`)
                 continue
             }
             if (!app.eventListenerInterfaces[type]) {
@@ -6243,9 +5889,6 @@ class app {
             }
             app.eventListenerInterfaces[type].append([instance, withinView])
         }
-    }
-    /** @param {Window} window_ @returns {void} */
-    static addWindow(window_) {
     }
     /** @param {any} message @param {string} targetOrigin @param {[]} transfer @returns {void} */
     static broadcast(message, targetOrigin = "*", transfer = null) {
@@ -6277,26 +5920,19 @@ class app {
         // https://developer.mozilla.org/en-US/docs/Web/API/Window/fullScreen
         element = app.element(element).getElement()
         if (value) {
-            if (element.requestFullscreen) {
-                element.requestFullscreen()
-            } else if (element.mozRequestFullScreen) { // Firefox
-                element.mozRequestFullScreen()
-            } else if (element.webkitRequestFullscreen) { // Chrome, Safari & Opera
-                element.webkitRequestFullscreen()
-            } else if (element.msRequestFullscreen) { // IE/Edge
-                element.msRequestFullscreen()
-            }
+            element.requestFullscreen()
         } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen()
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen()
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen()
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen()
-            }
+            document.exitFullscreen()
         }
+    }
+    /** @returns {Promise} */
+    static getClipboardText() {
+        if (navigator && navigator.clipboard && navigator.clipboard.readText) {
+            return navigator.clipboard.readText().catch(error => {
+                console.error('Failed to read clipboard:', error);
+            });
+        }
+        return console.error('Clipboard API is not available.')
     }
     /** @returns {string} */
     static getLanguage() {
@@ -6326,6 +5962,15 @@ class app {
             callback(permissionStatus.state)
         })
     }
+    /** @param {string} type @returns {boolean} */
+    static isEventInterface(type) {
+        for (let [interface_type, interface_function_name] of enumerate(app.EVENT_INTERFACES)) {
+            if (type.lower() == interface_type) {
+                return true
+            }
+        }
+        return false
+    }
     /** @param {string} path @param {() => void} callback @returns {void} */
     static loadScript(path, callback = () => { }) {
 
@@ -6333,12 +5978,9 @@ class app {
     /** @param {string|URL} url @param {string} target @param {string} features @returns {Window|null} */
     static open(url, target = null, features = null) {
         // https://developer.mozilla.org/en-US/docs/Web/API/Window/open
-        if (excludes(target, 'chromeTab|chromeWindow|_blank|mozillaTab|mozillaWindow|_parent|_self|_to|_unfencedTop')) { console.error(`ValueError: variable-name=target variable-value=${target}`) }
         if (features) {
-            for (let feature of features.strip(' ,').split(',')) {
-                let [featureKey, featureValue] = feature.strip(' ').split('=')
-                if (excludes(featureKey, 'attributionsrc|height|innerHeight|innerWidth|left|noopener|noreferrer|popup|screenX|screenY|top|width')) { console.error(`ValueError: variable-name=featureKey variable-value=${featureKey}`) }
-                if (excludes(featureValue, 'yes|true|n|{string-number}')) { console.error(`ValueError: variable-name=featureValue variable-value=${featureValue}`) }            
+            for (let feature of array.fromstring(features, ',', true)) {
+                let [featureKey, featureValue] = feature.split('=')
             }
         }
         return window.open(url, target, features)
@@ -6347,22 +5989,72 @@ class app {
     static sendMessage(message, targetOrigin = "*", transfer = null) {
         window.postMessage(message, targetOrigin, transfer)
     }
+    /** @param {string} data @returns {Promise|void} */
+    static setClipboardText(data) {
+        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(data)
+        }
+        return console.error('Clipboard API is not available.')
+    }
     /** @param {string} language @returns {void} */
     static setLanguage(language) {
     }
     
 
     // Initilization Functions
-    /** @param {any} value @param {(any, any) => void} listener @returns {DataBinding} */
+    /** @param {any} value @param {function(any, any): void} listener @returns {DataBinding} */
     static createBinding(value = null, listener = null) {
         return new DataBinding(value, listener)
+    }
+    /** @param {Menu} menu @param {{string:string}} menu_data @returns {{string:Item}} */
+    static createCascadingMenu(menu, menu_data) {
+        let menus = {}
+        let menuitems = {}
+        /** @param {List} parent_menu @param {Item} item @param {{string:string}} menu_data @returns {{string:}[]} */
+        function createSubmenu(parent_menu, item, menu_data) {
+            let menu = app.createPopupMenu()
+            if (window.onMenuItemClickListener) {
+                menu.setOnMenuItemClickListener(window.onMenuItemClickListener)
+            }
+            menu.setAnchorSide(
+                parent_menu instanceof MenuBar ? Popup.SIDE_BOTTOM : Popup.SIDE_RIGHT
+            )
+            menu.setAutoDismiss(false)
+            menu.setDepth(parent_menu.getDepth()+1)
+            menu.setDismissOnTouchInside(false)
+            menu.setDismissOnTouchOutside(false)
+            item.setLink(menu)
+            menus[menu.getIdentifier()] = menu
+            for (let [item_data, submenu_data] of enumerate(menu_data)) {
+                let menuitem = menu.addItem(item_data)
+                menuitems[menuitem.getTag()] = menuitem
+                if (!submenu_data) continue
+                createSubmenu(menu, menuitem, submenu_data)
+            }
+            return menu
+        }
+        if (window.onMenuItemClickListener) {
+            menu.setOnMenuItemClickListener(window.onMenuItemClickListener)
+        }
+        menus[menu.getIdentifier()] = menu
+        for (let [item_data, submenu_data] of enumerate(menu_data)) {
+            let menuitem = menu.addItem(item_data)
+            menuitems[menuitem.getTag()] = menuitem
+            if (!submenu_data) continue
+            createSubmenu(menu, menuitem, submenu_data)
+        }
+        app.cascading_menu_chain[menu.getIdentifier()] = {
+            'menus': menus,
+            "chain": {},
+        }
+        return [menus, menuitems]
     }
     /** @returns {void} */
     static createMediaPlayer() {
         return
     }
     /** @returns {ApplicationProgrammingInterface} */
-    static createServer() {
+    static createHTTPClientSession() {
         return new ApplicationProgrammingInterface()
     }
     /** @returns {void} */
@@ -6384,125 +6076,119 @@ class app {
     
 
     // View
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Button} */
     static createButton(attributes) {
         let view = new Button(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Calender} */
     static createCalender(attributes) {
         let view = new Calender(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Canvas} */
     static createCanvas(attributes) {
         let view = new Canvas(attributes)
         return view
     }
-    /** @deprecated @param {{string:string}|string} attributes @returns {View} */
-    static createCheckBox(attributes) {
-        let view = new Checkbox(attributes)
-        return view
-    }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Checkbox} */
     static createCheckbox(attributes) {
         let view = new Checkbox(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Divider} */
     static createDivider(attributes) {
         let view = new Divider(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Drawer} */
     static createDrawer(attributes) {
         let view = new Drawer(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Icon} */
     static createIcon(attributes) {
         let view = new Icon(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
-    static createImage(attributes) {
-        let view = new Image(attributes)
-        return view
-    }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Item} */
     static createItem(attributes) {
         let view = new Item(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {List} */
     static createList(attributes) {
         let view = new List(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Menu} */
     static createMenu(attributes) {
         let view = new Menu(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {MenuBar} */
     static createMenuBar(attributes) {
         let view = new MenuBar(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Popup} */
     static createPopup(attributes) {
         let view = new Popup(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {PopupMenu} */
     static createPopupMenu(attributes) {
         let view = new PopupMenu(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {ProgressBar} */
     static createProgressBar(attributes) {
         let view = new ProgressBar(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {RadioButton} */
     static createRadioButton(attributes) {
         let view = new RadioButton(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {RadioGroup} */
     static createRadioGroup(attributes) {
         let view = new RadioGroup(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Scroller} */
     static createScroller(attributes) {
         let view = new Scroller(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {SeekBar} */
     static createSeekBar(attributes) {
         let view = new SeekBar(attributes)
         return view
     }
     /** @param {string|string[][]} items @returns {AppElement} */
     static createSelect(items) {
-        let itemsData = array.fromdata(items)
         let view = app.element('select')
-        for (let itemData of itemsData) {
-            let [title, value] = itemData
+        for (let item_data of array.fromitems(items)) {
+            let [title, value] = item_data
             let option = app.element('option')
-            option.text(title)
-            option.value(value)
+            if (value === undefined) {
+                option.innerHTML(title)
+                option.value(title)
+            } else {
+                option.innerHTML(title)
+                option.value(value)
+            }
             view.appendChild(option)
         }
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Selector} */
     static createSelector(attributes) {
         let view = new Selector(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Search} */
     static createSearch(attributes) {
         let view = new Search(attributes)
         return view
@@ -6511,69 +6197,82 @@ class app {
     static createSpinner(items) {
         return app.createSelect(items)
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Switch} */
     static createSwitch(attributes) {
         let view = new Switch(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Tab} */
     static createTab(attributes) {
         let view = new Tab(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Tabs} */
     static createTabs(attributes) {
         let view = new Tabs(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Table} */
     static createTable(attributes) {
         let view = new Table(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Toggle} */
     static createToggle(attributes) {
         let view = new Toggle(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Toolbar} */
     static createToolbar(attributes) {
         let view = new Toolbar(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Video} */
     static createVideo(attributes) {
         let view = new Video(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {ViewSwitcher} */
     static createViewSwitcher(attributes) {
         let view = new ViewSwitcher(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {WebView} */
     static createWebView(attributes) {
         let view = new WebView(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
-    static createWindow(attributes) {
-        let view = new Window(attributes)
+    /** @param {{string:string}|string} attributes @returns {Widget} */
+    static createWidget(attributes) {
+        let view = new Widget(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    
+    /** @param {{string:string}|string} attributes @returns {Dialog} */
     static createDialog(attributes) {
         let view = new Dialog(attributes)
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {Dialog} */
     static createConfirmDialog(attributes) {
         let view = new Dialog(attributes)
-        view.setPositiveButton('OK')
-        view.setNegativeButton('CANCEL')
+        view.setPositiveButton(Dialog.BUTTON_TEXT_POSITIVE)
+        view.setNegativeButton(Dialog.BUTTON_TEXT_NEGATIVE)
         return view
     }
-    /** @param {{string:string}|string} attributes @param {string|string[][]} items @returns {View} */
+    /** @param {{string:string}|string} attributes @returns {[Dialog, AppElement]} */
+    static createInputDialog(attributes) {
+        let view = new Dialog(attributes)
+        let input = app.element('textarea').attribute('rows: 1').style('padding-bottom: 10px;') //.style('text-wrap: auto;')
+        input.addListener('input', (event, element) => {
+            let lines = element.value().splitlines()
+            let rows = Math.max(lines.length, 1)
+            element.setAttribute('rows', rows)
+        })
+        view.getBody().appendChild(input)
+        return [view, input]
+    }
+    /** @param {{string:string}|string} attributes @param {string|string[][]} items @returns {Dialog} */
     static createListDialog(attributes, items) {
         let view = new Dialog(attributes)
         let list = app.createList(attributes)
@@ -6581,30 +6280,20 @@ class app {
         view.setBody(list.getView())
         return view
     }
-    /** @param {{string:string}|string} attributes @returns {View} */
-    static createProgressDialog(attributes) {
+    /** @param {{string:string}|string|null} attributes @returns {DialogProgress} */
+    static createProgressDialog(attributes = null) {
         let view = new DialogProgress(attributes)
+        return view
+    }
+    /** @param {{string:string}|string} attributes @param {string} text @returns {Dialog} */
+    static createTextDialog(attributes, text) {
+        let view = new Dialog(attributes)
+        view.setPositiveButton(Dialog.BUTTON_TEXT_POSITIVE)
+        view.getBody().innerHTML(text)
         return view
     }
     
     // Uncategorized
-     /** @param {string} type @param {Event} event @returns {void} */
-    static onEventListenerInterface(type, event) {
-        if (event == null) return
-        if (event.target == window.document) return
-        let element = app.element(event.target)
-        if (app.eventListenerInterfaces[type]) {
-            for (let [instance, withinView] of app.eventListenerInterfaces[type]) {
-                if (withinView) {
-                    if (element.isEqualTo(instance.view, true)) {
-                        instance.onEventListenerInterface(event, element)
-                    }
-                } else {
-                    instance.onEventListenerInterface(event, element)
-                }
-            }
-        }
-    }
     /** @param {string} identifier @returns {void} */
     static progressStart(identifier) {
         app.progressesRunning.append(identifier)
@@ -6624,7 +6313,7 @@ class app {
                 app.progressesRunning.pop(index)
             }
             else {
-                console.warn(`KeyError: variable-name=app.progressesRunning key=${identifier}: running progress identifier not found.`)
+                console.warn(`KeyError: application running process '${identifier}' not found`)
             }
         }
         else {
@@ -6643,103 +6332,45 @@ class app {
     }
     /** @param {string} name @returns {string} */
     static getIcon(name) {
-        // requires the following in HTML <head>:
-        // <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        // <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-        if (app.isOnline()) {
-            let size = 48;
-            let color = '#FFFFFF';
-            let canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            let ctx = canvas.getContext('2d');
-            // set font style for the icon
-            // ctx.font = `${size}px Material Icons`;
-            ctx.font = `${size}px Material Symbols Outlined`;
-            ctx.fillStyle = color;
-            ctx.strokeStyle = color;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            // draw the icon onto the canvas
-            ctx.fillText(name, canvas.width / 2, canvas.height / 2);
-            // convert canvas to PNG data URL
-            let dataURL = canvas.toDataURL('image/png');
-            return dataURL
+        if (app.isOnline() && false) {
         }
         else {
-            return app.directory('images') + name 
+            let path = `${app.configuration("repository")}/icons/${app.configuration("apperance_mode")}`
+            let filename = name.removesuffix('.png')
+            return `${path}/${filename}.png`
         }
     }
     /** @returns {string} */
     static getIdentifier() {
         return app.identifier
     }
-    /** @param {Element} element @returns {void} */
-    static inputValidation(element = null) {
-        let replaceable = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;'
-        }
-        let elements = []
-        if (element) {
-            elements.append(element)
-        } else {
-            for (let element of document.getElementsByTagName('input')) {
-                if (includes(element.type, 'email|password|text|url')) {
-                    elements.append(element)
-                }
-            }
-            for (let element of document.getElementsByTagName('textarea')) {
-                elements.append(element)
-            }
-        }
-        for (let index = 0; index < elements.length; index++) {
-            let element = elements[index]
-            if (!element.hasAttribute('maxlength')) {
-                element.setAttribute('maxlength', '100')
-            }
-            if (!element.hasAttribute('autocomplete')) {
-                element.setAttribute('autocomplete', 'off')
-            }
-            element.addEventListener('input', (event) => {
-                for (let key in replaceable) {
-                    event.target.value = event.target.value.replace(key, '')
-                }
-            })
-        }
-    }
-    /** @param {KeyboardEvent} event @param {string} value @returns {boolean} */
+    /** @param {KeyboardEvent} event @param {string[]|string} value @returns {boolean} */
     static isKey(event, value) {
         if (!(event instanceof KeyboardEvent)) {
             return false
         }
-        for (let key of value.strip(' |').split('|')) {
-            key = key.strip(' ')
+        let keys = util.istype(value, 'string') ? array.fromstring(value, '|', true) : value
+        for (let key of keys) {
             if (key.lower() == event.code.lower() || key.lower() == event.key.lower()) {
                 return true
             }
         }
         return false
     }
-    /** @param {string} type @returns {boolean} */
-    static isEventInterface(type) {
-        for (let [interfaceType, interfaceName] of enumerate(app.EVENT_INTERFACES)) {
-            if (type.lower() == interfaceType.lower() || type.lower() == interfaceName.lower()) {
-                return true
-            }
-        }
-        return false
-    }
+    
 
-    /** @returns {void} */
-    static #icons() {
-        for (let element of document.getElementsByTagName('img')) {
-            if (!element.hasAttribute('icon')) continue
-            let icon_name = element.getAttribute('icon')
-            let path = `${app.getGlobalVariable("repository")}/icons/${app.getAppeatanceMode()}`
-            let filename = icon_name.removesuffix('.png')
-            element.src = `${path}/${filename}.png`
+    /** @param {HTMLElement} parent @returns {void} */
+    static #setIcons(parent = document) {
+        for (let element of parent.getElementsByTagName('img')) {
+            if (element.getAttribute("view") == "icon" && element.hasAttribute("icon")) {
+                let src = element.getAttribute("src")
+                // let match = String(src).match(new RegExp(/(\w+(_\w+)*)\.png$/))
+                // if (match) let new_src = app.getIcon(match[0])
+                let name = element.getAttribute("icon")
+                let new_src = app.getIcon(name)
+                if (String(src) == new_src) continue // source match
+                element.src = new_src
+            }
         }
     }
 }
@@ -6786,7 +6417,6 @@ class AppElement {
         if (value instanceof View) {
             this.element = value.view.element
         }
-
     }
 
     /** @type {string} */
@@ -6843,8 +6473,7 @@ class AppElement {
     ]
     /** @readonly @type {string[]} */
     static propertiesOfPixelValue = ['bottom', 'gap', 'height', 'left', 'marginBottom', 'marginLeft', 'marginRight', 'marginTop', 'max-height', 'max-width', 'paddingBottom', 'paddingLeft', 'paddingRight', 'paddingTop', 'right', 'top', 'width']
-    
-    
+   
     /** @param {...AppElement|Element|string} values @returns {boolean} */
     static hasElement(...values) {
         /** @type {string} */
@@ -6870,8 +6499,6 @@ class AppElement {
     static toHTMLElement(value) {
         return new AppElement(value).getElement()
     }
-
-
 
     // Properties
     /** @param {string} value @returns {AppElement|string} */
@@ -7016,7 +6643,7 @@ class AppElement {
             AppElement.toHTMLElement(otherNode)
         )
     }
-    /** @param {string} type @param {{ bubbles: boolean; cancelable: boolean; }} @returns {AppElement} */
+    /** @param {string} type @param {{ bubbles: boolean; cancelable: boolean; }} options @returns {AppElement} */
     dispatchEvent(type, options = { bubbles: true, cancelable: true }) {
         let event = new Event(type, options)
         this.element.dispatchEvent(event)
@@ -7153,7 +6780,7 @@ class AppElement {
         return this
     }
     /** @param {boolean|Object} options @returns {AppElement} */
-    scrollIntoView(options = { 'behavior': 'smooth', 'block': 'start', 'inline': 'nearest' }) {
+    scrollIntoView(options = { behavior: 'smooth', block: 'start', inline: 'nearest' }) {
         this.element.scrollIntoView(options)
         return this
     }
@@ -7174,7 +6801,7 @@ class AppElement {
 
 
     // Methods Custom
-    /** @param {string} type @param {(event: Event, element: AppElement) => void} listener @param {boolean|{capture: boolean, once: boolean, passive: boolean, signal: AbortSignal}} options @returns {AppElement} */
+    /** @param {string} type @param {(event: Event, element: AppElement) => void} listener @param {boolean|{bubbling: boolean, capture: boolean, once: boolean, passive: boolean, signal: AbortSignal}} options @returns {AppElement} */
     addListener(type, listener, options = false) {
         if (type == 'lgclick') {
             this.element.addEventListener('touchstart', (event) => {
@@ -7211,6 +6838,9 @@ class AppElement {
         this.element.addEventListener(type, (event) => {
             if (app.isTouchDisabled()) return
             if (!event.target) return
+            if (options.bubbling === false) {
+                if (event.target !== event.currentTarget) return
+            }
             if (!(this.element == event.target || this.element.contains(event.target))) return
             let element = app.element(event.target)
             listener(event, element)
@@ -7223,18 +6853,19 @@ class AppElement {
         return this
     }
     /** @param {object} options @param {(element: AppElement, observer: MutationObserver, list: MutationRecord[]) => void} listener  @returns {AppElement} */
-    addMutationObserver(options = { childList: true }, listener) {
+    addMutationObserver(options = { childList: true, subtree: true }, listener) {
         // https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
         let observer = new MutationObserver((mutationList, observer) => {
             listener(this, observer, mutationList)
         })
-        observer.observe(this.element, { childList: true })
+        observer.observe(this.element, options)
         return this
     }
-    /** @param {...string} value @returns {AppElement} */
-    addClass(...values) {
-        for (let value of values) {
-            this.element.classList.add(value)
+    /** @param {string[]|string} names @returns {AppElement} */
+    addClass(names) {
+        let class_names = util.istype(names, 'string') ? array.fromstring(names, ',', true) : names
+        for (let class_name of class_names) {
+            this.element.classList.add(class_name)
         }
         return this
     }
@@ -7260,17 +6891,18 @@ class AppElement {
     childrenLength() {
         return this.element.children.length
     }
-    /** @param {string} value @returns {AppElement} */
-    class(value) {
+    /** @param {string[]|string} names @returns {AppElement} */
+    class(names) {
         // TODO: more functionality
-        for (let _class_ of value.strip(' ,').split(',')) {
-            this.element.classList.add(_class_)
+        let class_names = util.istype(names, 'string') ? array.fromstring(names, ',', true) : names
+        for (let class_name of class_names) {
+            this.element.classList.add(class_name)
         }
         return this
     }
     /** @returns {AppElement} */
     clear() {
-        if (this.isTagName('button,input,li,meter,option,param,progress,select,textarea')) {
+        if (this.isTagName('button|input|li|meter|option|param|progress|textarea')) {
             this.value('')
         } else {
             this.innerHTML('')
@@ -7286,19 +6918,25 @@ class AppElement {
         this.element.removeAttribute(key)
         return this
     }
-    /** @param {string} keys @returns {AppElement} */
+    /** @param {string[]|string} keys @returns {AppElement} */
     delAttributes(keys) {
-        for (let attributeKey of keys.strip(' ,').split(',')) {
-            attributeKey = attributeKey.strip(' ')
+        let attributeKeys = util.istype(keys, 'string') ? array.fromstring(keys, ',', true) : keys
+        for (let attributeKey of attributeKeys) {
             this.removeAttribute(attributeKey)
         }
         return this
     }
-    /** @param {...string} value @returns {AppElement} */
-    delClass(...values) {
-        for (let value of values) {
-            this.element.classList.remove(value)
+    /** @param {string[]|string} names @returns {AppElement} */
+    delClass(names) {
+        let class_names = util.istype(names, 'string') ? array.fromstring(names, ',', true) : names
+        for (let class_name of class_names) {
+            this.element.classList.remove(class_name)
         }
+        return this
+    }
+    /** @param {string} key @returns {AppElement} */
+    delDataset(key) {
+        delete this.element.dataset[key]
         return this
     }
     /** @param {string} type @param {() => void} listener @param {boolean|{capture: boolean}} options @returns {AppElement} */
@@ -7314,8 +6952,8 @@ class AppElement {
     }
     /** @param {boolean} value @returns {AppElement|boolean} */
     display(value = null) {
-        if (value == null) return this.style('display') != 'none'
-        this.style('display', value ? 'revert' : 'none')
+        if (value == null) return this.getStyleProperty('display') != 'none'
+        this.setStyleProperty('display', value ? 'revert' : 'none')
         return this
     }
     /** @returns {boolean} */
@@ -7324,21 +6962,17 @@ class AppElement {
     }
     /** @param {string|string[]} keys @returns {{string:string|null}} */
     getAttributes(keys) {
-        let attributes = new object()
-        if (util.istype(keys, 'string')) {
-            for (let attributeKey of keys.strip(' ,').split(',')) {
-                attributeKey = attributeKey.strip(' ')
-                let attributeValue = this.getAttribute(attributeKey)
-                attributes.set(attributeKey, attributeValue)
-            }
-        }
-        if (util.istype(keys, 'array-string')) {
-            for (let attributeKey of keys) {
-                let attributeValue = this.getAttribute(attributeKey)
-                attributes.set(attributeKey, attributeValue)
-            }
+        let attributes = {}
+        let attribute_keys = util.istype(keys, 'string') ? array.fromstring(keys, ',', true) : keys
+        for (let attribute_key of attribute_keys) {
+            attributes[attribute_key] = this.getAttribute(attribute_key)
         }
         return attributes
+    }
+    /** @param {string} key @param {string} defaultvalue @returns {string|null} */
+    getDataset(key, defaultvalue = null) {
+        let value = this.element.dataset[key]
+        return value ? value : defaultvalue
     }
     /** @returns {Element} */
     getElement() {
@@ -7423,29 +7057,20 @@ class AppElement {
         if (this.isProperty(key)) {
             return this.element[key]
         } else {
-            console.error(`KeyError: variable-name=this.element key=${key}`)
+            console.error(`KeyError: element property '${key}' nonexistent`)
             return defaultvalue
         }
     }
-    /** @param {string|string[]} value @returns {{ string: any|null }} */
-    getProperties(value) {
-        let properties = new object()
-        if (util.istype(value, 'string')) {
-            for (let propertyKey of value.strip(' ,').split(',')) {
-                propertyKey = propertyKey.strip(' ')
-                let propertyValue = this.getProperty(propertyKey)
-                properties.set(propertyKey, propertyValue)
-            }
-        }
-        if (util.istype(value, 'array-string')) {
-            for (let propertyKey of value) {
-                let propertyValue = this.getProperty(propertyKey)
-                properties.set(propertyKey, propertyValue)
-            }
+    /** @param {string[]|string} keys @returns {{ string: any|null }} */
+    getProperties(keys) {
+        let properties = {}
+        let property_keys = util.istype(keys, 'string') ? array.fromstring(keys, ',', true) : keys
+        for (let property_key of property_keys) {
+            properties[property_key] = this.getProperty(property_key)
         }
         return properties
     }
-    /** @param {AppElement} element @returns {number[]} */
+    /** @returns {number[]} */
     getScrollOffset() {
         let left = ((this.getProperty('scrollLeft') / this.getWidth()) * 100)
         let top = ((this.getProperty('scrollTop') / this.getHeight()) * 100)
@@ -7455,21 +7080,12 @@ class AppElement {
     getStyleProperty(key, defaultvalue = null) {
         return this.element.style[key]
     }
-    /** @param {string|string[]} value @returns {{ string: string|null }} */
-    getStyleProperties(value) {
-        let properties = new object()
-        if (util.istype(value, 'string')) {
-            for (let propertyKey of value.strip(' ,').split(',')) {
-                propertyKey = propertyKey.strip(' ')
-                let propertyValue = this.getStyleProperty(propertyKey)
-                properties.set(propertyKey, propertyValue)
-            }
-        }
-        if (util.istype(value, 'array-string')) {
-            for (let propertyKey of value) {
-                let propertyValue = this.getStyleProperty(propertyKey)
-                properties.set(propertyKey, propertyValue)
-            }
+    /** @param {string[]|string} keys @returns {{string:string|null}} */
+    getStyleProperties(keys) {
+        let properties = {}
+        let property_keys = util.istype(keys, 'string') ? array.fromstring(keys, ',', true) : keys
+        for (let property_key of property_keys) {
+            properties[property_key] = this.getStyleProperty(property_key)
         }
         return properties
     }
@@ -7499,9 +7115,9 @@ class AppElement {
     }
     /** @param {string} keys @returns {boolean} */
     hasAttributes(keys) {
-        for (let attributeKey of keys.strip(' ,').split(',')) {
-            attributeKey = attributeKey.strip(' ')
-            if (!this.hasAttribute(attributeKey)) {
+        let attribute_keys = util.istype(keys, 'string') ? array.fromstring(keys, ',', true) : keys
+        for (let attribute_key of attribute_keys) {
+            if (!this.hasAttribute(attribute_key)) {
                 return false
             }
         }
@@ -7513,7 +7129,7 @@ class AppElement {
     }
     /** @returns {AppElement} */
     hide() {
-        let styles = getComputedStyle(this.element)
+        let styles = window.getComputedStyle(this.element)
         this.element.style.display = 'none'
         return this
     }
@@ -7538,11 +7154,11 @@ class AppElement {
             return this.getAttribute(key) != null
         }
     }
-    /** @param {string} keys @returns {boolean} */
+    /** @param {string[]|string} keys @returns {boolean} */
     isAttributes(keys) {
-        for (let attributeKey of keys.strip(' ,').split(',')) {
-            attributeKey = attributeKey.strip(' ')
-            if (!this.hasAttribute(attributeKey)) {
+        let attribute_keys = util.istype(keys, 'string') ? array.fromstring(keys, ',', true) : keys
+        for (let attribute_key of attribute_keys) {
+            if (!this.hasAttribute(attribute_key)) {
                 return false
             }
         }
@@ -7570,17 +7186,27 @@ class AppElement {
     /** @param {AppElement|Element} element @param {boolean} includeChildren  @returns {boolean} */
     isEqualTo(element, includeChildren = true) {
         // child.isEqualTo(parent)
-        element = app.element(element)
+        if (element === null || element === undefined) return false
+        element = AppElement.toHTMLElement(element)
         if (includeChildren) {
-            return this.element == element.getElement() || element.contains(this.element)
+            return this.element == element || element.contains(this.element)
         } else {
-            return this.element == element.getElement()
+            return this.element == element
         }
     }
-    /** @param {string} identifiers @returns {boolean} */
+    /** @param {string} key @param {string} value @returns {boolean} */
+    isDataset(key, value = null) {
+        if (value) {
+            return this.getDataset(key) == value
+        } else {
+            return this.getDataset(key) != null
+        }
+    }
+    /** @param {string[]|string} identifiers @returns {boolean} */
     isIdentifier(identifiers) {
-        for (let identifier of identifiers.strip(' |').split('|')) {
-            if (this.element.id == identifier.strip(' ')) {
+        let identifiers_ = util.istype(identifiers, 'string') ? array.fromstring(identifiers, '|', true) : identifiers
+        for (let identifier of identifiers_) {
+            if (this.element.id == identifier) {
                 return true
             }
         }
@@ -7610,10 +7236,11 @@ class AppElement {
             return keys.includes(key)
         }
     }
-    /** @param {string} tagNames @returns {boolean} */
-    isTagName(tagNames) {
-        for (let tagName of tagNames.strip(' ,').split(',')) {
-            if (this.getTagName('lower') == tagName.lower()) {
+    /** @param {string} tag_names @returns {boolean} */
+    isTagName(tag_names) {
+        let tag_names_ = util.istype(tag_names, 'string') ? array.fromstring(tag_names, '|', true) : tag_names
+        for (let tag_name of tag_names_) {
+            if (this.getTagName('lower') == tag_name.lower()) {
                 return true
             }
         }
@@ -7654,10 +7281,6 @@ class AppElement {
         let DOMRect = this.getBoundingClientRect()
         return key == null ? DOMRect : DOMRect[key]
     }
-    /** @deprecated @param {string} keys @returns {AppElement} */
-    removeAttributes(keys) {
-        return this.delAttributes(keys)
-    }
     /** @param {number} index @returns {AppElement} */
     removeChildAt(index) {
         let element = this.children(index)
@@ -7672,14 +7295,6 @@ class AppElement {
         }
         return this
     }
-    /** @deprecated @param {...string} value @returns {AppElement} */
-    removeClass(...values) {
-        return this.delClass(...values)
-    }
-    /** @deprecated @param {string} type @param {() => void} listener @param {boolean|{capture: boolean}} options @returns {AppElement} */
-    removeListener(type, listener, options) {
-        return this.delListener(type, listener, options)
-    }
     /** @param {number} index @param {AppElement|Element|string} newChild @returns {AppElement} */
     replaceChildAt(index, newChild) {
         newChild = app.element(newChild).getElement()
@@ -7689,7 +7304,7 @@ class AppElement {
     }
     /** @returns {AppElement} */
     scrollDown() {
-        this.element.scrollTop = this.element.scrollHeight - this.element.offsetHeight
+        this.element.scrollTop = this.element.scrollHeight
         return this
     }
     /** @returns {AppElement} */
@@ -7701,7 +7316,6 @@ class AppElement {
     scrollRight() {
         this.element.scrollLeft = this.element.scrollWidth
         return this
-        // this.element.scrollLeft = this.element.scrollWidth - this.element.offsetWidth
     }
     /** @returns {AppElement} */
     scrollUp() {
@@ -7715,26 +7329,17 @@ class AppElement {
     }
     /** @returns {AppElement} */
     sendToBack() {
-        return this.style('z-index', 0)
+        return this.setStyleProperty('z-index', 0)
     }
     /** @returns {AppElement} */
     sendToFront() {
-        return this.style('z-index', 100)
+        return this.setStyleProperty('z-index', 100)
     }
-    /** @param {string|{string:string}} value @returns {AppElement} */
-    setAttributes(value) {
-        if (util.istype(value, 'string')) {
-            for (let entry of value.strip(' ;').split(';')) {
-                let attribute = entry.split(':')
-                let attributeKey = attribute.getfirst().strip(' ')
-                let attributeValue = attribute.getlast().strip(' ')
-                this.setAttribute(attributeKey, attributeValue)
-            }
-        }
-        if (util.istype(value, 'object')) {
-            for (let [attributeKey, attributeValue] of enumerate(value)) {
-                this.setAttribute(attributeKey, attributeValue)
-            }
+    /** @param {string|{string:string}} attributes @returns {AppElement} */
+    setAttributes(attributes) {
+        let attributes_ = util.istype(attributes, 'string') ? object.fromstring(attributes, ';', ':', true) : attributes
+        for (let [attribute_key, attribute_value] of enumerate(attributes_)) {
+            this.setAttribute(attribute_key, attribute_value)
         }
         return this
     }
@@ -7745,33 +7350,31 @@ class AppElement {
             contentOriginal = this.children(0).something()
         }
         if (!contentOriginal) {
-            return console.error(`UnsetError: variable-name=contentOriginal`)
+            return console.error(`UnsetError: argument 'contentOriginal' undefined`)
         }
         if (this.childrenLength() >= 1) {
-            if (this.children(0).hasAttribute('class')) {
-                if (!this.children(0).getAttribute('class').includes('content-background')) {
-                    return console.error(`MissingElementError: `, this.element)
-                }
-            } else return console.error(`MissingElementError: `, this.element)
-        } else return console.error(`MissingElementError: `, this.element)
+            if (!this.children(0).getAttribute('class').includes('content-background')) {
+                return console.error(`UnsetError: element content background undefined`)
+            }
+        } else return console.error(`UnsetError: element content undefined`)
         // 
         contentResults = contentOriginal
         let element = this
         if (!this.getHeight()) {
-            console.warn(`ValueError: function-name=this.getHeight()`, this.element)
+            console.warn(`ValueError: element height invalid`)
         }
         if (!this.getWidth()) {
-            console.warn(`ValueError: function-name=this.getWidth()`, this.element)
+            console.warn(`ValueError: element width invalid`)
         }
         /** @param {string} content @param {number} index @param {number} variable @param {string} oldContent @param {string} newContent @returns {[number, string, string]} */
         function convertContents(content, index, variable = 0, oldContent = '$', newContent = '') {
             if (content.slice(index, index + 'color-accent'.length) == 'color-accent') {
                 oldContent += 'color-accent'
-                newContent = app.getGlobalVariable("color-accent")
+                newContent = app.configuration("--color-accent")
             }
-            if (content.slice(index, index + 'color-header'.length) == 'color-header') {
-                oldContent += 'color-header'
-                newContent = app.getGlobalVariable("color-header")
+            if (content.slice(index, index + 'color-secondary'.length) == 'color-secondary') {
+                oldContent += 'color-secondary'
+                newContent = app.configuration("--color-secondary")
             }
             if (content[index] == '0') {
                 oldContent += content[index]
@@ -7839,7 +7442,7 @@ class AppElement {
     setBackgroundContent(content = null) {
         content = content == null ? this.getStyleProperty('background-image') : content
         if (!content) {
-            return console.error(`UnsetError: variable-name=content`)
+            return console.error(`UnsetError: element background content undefined`)
         }
         if (!content.includes('xmlns')) {
             content = content.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
@@ -7847,10 +7450,10 @@ class AppElement {
         // 
         let element = this
         if (!this.getHeight()) {
-            console.warn(`ValueError: function-name=this.getHeight()`, this.element)
+            console.warn(`ValueError: element height invalid`)
         }
         if (!this.getWidth()) {
-            console.warn(`ValueError: function-name=this.getWidth()`, this.element)
+            console.warn(`ValueError: element width invalid`)
         }
         let height = this.getHeight()
         let width = this.getWidth()
@@ -7885,6 +7488,11 @@ class AppElement {
         this.setStyleProperty('background-image', backgroundImage)
         return this
     }
+    /** @param {string} key @param {string} value @returns {AppElement} */
+    setDataset(key, value) {
+        this.element.dataset[key] = value
+        return this
+    }
     /** @param {string} value @returns {AppElement} */
     setForeground(value) {
         if (this.childrenLength() >= 2) {
@@ -7914,7 +7522,7 @@ class AppElement {
         if (this.isProperty(key)) {
             this.element[key] = value
         } else {
-            console.error(`KeyError: variable-name=this.element key=${key}`)
+            console.error(`KeyError: element property '${key}' nonexistent`)
         }
         return this
     }
@@ -7922,20 +7530,11 @@ class AppElement {
     setPropertyDisabled(disabled) {
         this.setProperty('disabled', disabled)
     }
-    /** @param {string|{string:string}} value @returns {AppElement} */
-    setProperties(value) {
-        if (util.istype(value, 'string')) {
-            for (let entry of value.strip(' ;').split(';')) {
-                let property = entry.split(':')
-                let propertyKey = property.getfirst().strip(' ')
-                let propertyValue = property.getlast().strip(' ')
-                this.setProperty(propertyKey, propertyValue)
-            }
-        }
-        if (util.istype(value, 'object')) {
-            for (let [propertyKey, propertyValue] of enumerate(value)) {
-                this.setProperty(propertyKey, propertyValue)
-            }
+    /** @param {string|{string:string}} properties @returns {AppElement} */
+    setProperties(properties) {
+        let properties_ = util.istype(properties, 'string') ? object.fromstring(properties, ';', ':', true) : properties
+        for (let [property_key, property_value] of enumerate(properties_)) {
+            this.setProperty(property_key, property_value)
         }
         return this
     }
@@ -7944,26 +7543,17 @@ class AppElement {
         this.element.style[key] = AppElement.#convertValue(key, value)
         return this
     }
-    /** @param {string|{string:string}} value @returns {AppElement} */
-    setStyleProperties(value) {
-        if (util.istype(value, 'string')) {
-            for (let entry of value.strip(' ;').split(';')) {
-                let property = entry.split(':')
-                let propertyKey = property.getfirst().strip(' ')
-                let propertyValue = property.getlast().strip(' ')
-                this.setStyleProperty(propertyKey, propertyValue)
-            }
-        }
-        if (util.istype(value, 'object')) {
-            for (let [propertyKey, propertyValue] of enumerate(value)) {
-                this.setStyleProperty(propertyKey, propertyValue)
-            }
+    /** @param {string|{string:string}} properties @returns {AppElement} */
+    setStyleProperties(properties) {
+        let properties_ = util.istype(properties, 'string') ? object.fromstring(properties, ';', ':', true) : properties
+        for (let [property_key, property_value] of enumerate(properties_)) {
+            this.setStyleProperty(property_key, property_value)
         }
         return this
     }
     /** @returns {AppElement} */
     show() {
-        let style = getComputedStyle(this.element)
+        let style = window.getComputedStyle(this.element)
         this.element.style.display = ''
         if (style.display == 'none' || style.display == '') {
             this.element.style.display = 'revert'
@@ -7998,7 +7588,7 @@ class AppElement {
     }
     /** @param {string} value @param {boolean} append @returns {AppElement|string} */
     text(value = null, append = false) {
-        if (this.isTagName('input,li,meter,option,param,progress,select,textarea')) {
+        if (this.isTagName('input|li|meter|option|param|progress|select|textarea')) {
             return this.value(value, append)
         } else {
             return this.innerHTML(value, append)
@@ -8029,6 +7619,10 @@ class AppElement {
             value += 'px'
         }
         return value
+    }
+
+    static fromstring(data) {
+
     }
 }
 class ApplicationProgrammingInterface {
@@ -8069,7 +7663,7 @@ class ApplicationProgrammingInterface {
         /** @type {string} */
         this.requestQuery = ''
         /** @type {string} */
-        this.requestResponseValueDefault = null
+        this.requestResponseDefault = null
         /** @type {string} */
         this.requestResponseType = null
         /** @type {string} */
@@ -8152,7 +7746,7 @@ class ApplicationProgrammingInterface {
     }
     /** @param {any} value @returns {ApplicationProgrammingInterface} */
     body(body) {
-        if (util.istype(body, 'array|object')) {
+        if (util.istype(body, "array|object")) {
             body = util.json_encode(body)
         }
         this.requestBody = body
@@ -8160,28 +7754,30 @@ class ApplicationProgrammingInterface {
     }
     /** @param {string} controller @returns {ApplicationProgrammingInterface} */
     controller(controller) {
-        if (controller == '' || controller == null) {
+        if (!controller) {
             this.requestController = ''
         } else {
             this.requestController = controller[0] == '/' ? controller : `/${controller}`
         }
         return this
     }
-    /** @param {string} route @returns {any} */
-    delete(route = null) {
-        this.#setRequest(ApplicationProgrammingInterface.METHOD_DELETE, route)
+    /** @param {string} uri @returns {any} */
+    delete(uri = null) {
+        this.#uri_decode(uri)
+        this.#setRequest(ApplicationProgrammingInterface.METHOD_DELETE)
         this.request.send()
         return this.#getResponse()
     }
-    /** @param {string} route @returns {any} */
-    get(route = null) {
-        this.#setRequest(ApplicationProgrammingInterface.METHOD_GET, route)
+    /** @param {string} uri @returns {any} */
+    get(uri = null) {
+        this.#uri_decode(uri)
+        this.#setRequest(ApplicationProgrammingInterface.METHOD_GET)
         this.request.send()
         return this.#getResponse()
     }
-    /** @param {string} headerKey @param {string} headerValue @returns {ApplicationProgrammingInterface|string} */
-    header(headerKey, headerValue) {
-        this.requestHeaders.set(headerKey, headerValue)
+    /** @param {string} header_key @param {string} header_value @returns {ApplicationProgrammingInterface|string} */
+    header(header_key, header_value) {
+        this.requestHeaders.set(header_key, header_value)
         return this
     }
     /** @param {string|{string:string}} value @returns {ApplicationProgrammingInterface|string} */
@@ -8244,24 +7840,33 @@ class ApplicationProgrammingInterface {
         this.requestPassword = value
         return this
     }
-    /** @param {string} route @returns {any} */
-    post(route = null) {
-        this.#setRequest(ApplicationProgrammingInterface.METHOD_POST, route)
+    /** @param {string} uri @returns {any} */
+    post(uri = null) {
+        this.#uri_decode(uri)
+        this.#setRequest(ApplicationProgrammingInterface.METHOD_POST)
         this.request.send(this.requestBody)
         return this.#getResponse()
     }
-    /** @param {string} route @returns {any} */
-    put(route = null) {
-        this.#setRequest(ApplicationProgrammingInterface.METHOD_PUT, route)
+    /** @param {string} uri @returns {any} */
+    put(uri = null) {
+        this.#uri_decode(uri)
+        this.#setRequest(ApplicationProgrammingInterface.METHOD_PUT)
         this.request.send(this.requestBody)
         return this.#getResponse()
     }
     /** @param {string|{string:string}} value @returns {ApplicationProgrammingInterface} */
     query(value) {
+        let query = {}
         this.requestQuery = '?'
-        let query = object.fromdata(value)
-        for (let [queryKey, queryValue] of enumerate(query)) {
-            this.requestQuery += `${this.requestQuery.length == 1 ? '' : '&'}${queryKey}=${queryValue}`
+        if (util.istype(value, "string")) {
+            query = object.fromstring(value, '&', '=', true)
+        } else {
+            query = object.fromdata(value)
+        }
+        for (let [query_key, query_value] of enumerate(query)) {
+            if (query_key == null) continue
+            query_value = query_value == null ? '' : query_value
+            this.requestQuery += `${this.requestQuery.length == 1 ? '' : '&'}${query_key}=${query_value}`
         }
         return this
     }
@@ -8299,7 +7904,7 @@ class ApplicationProgrammingInterface {
     }
     /** @param {any} responseValueDefault @returns {ApplicationProgrammingInterface} */
     responseDefault(responseValueDefault) {
-        this.requestResponseValueDefault = responseValueDefault
+        this.requestResponseDefault = util.copy(responseValueDefault)
         return this
     }
     /** @param {string} header @returns {string|null} */
@@ -8342,7 +7947,11 @@ class ApplicationProgrammingInterface {
     }
     /** @param {string} route @returns {ApplicationProgrammingInterface} */
     route(route) {
-        this.requestRoute = route[0] == '/' ? route : `/${route}`
+        if (!route) {
+            this.requestRoute = ''
+        } else {
+            this.requestRoute = route[0] == '/' ? route : `/${route}`
+        }
         return this
     }
     /** @param {Listener} listener @returns {void} */
@@ -8399,19 +8008,33 @@ class ApplicationProgrammingInterface {
         this.request.withCredentials = value
         return this
     }
+
+    /** @param {string} uri @returns {any} */
+    #uri_decode(uri) {
+        if (uri) {
+            if (uri.includes('?')) {
+                this.route(uri.slice(0, uri.indexOf('?')))
+                this.query(uri.slice(uri.indexOf('?')+1))
+            } else {
+                if (!(uri.includes('/')) && uri.includes('=')) {
+                    this.query(uri)
+                } else {
+                    this.route(uri)
+                }
+            }
+        }
+    }
     /** @returns {any} */
     #getResponse() {
         app.progressStop()
         let response = this.request.response
-        let responseDefault = this.requestResponseValueDefault
-        this.requestResponseValueDefault = null
-        if (this.responseCodeError() && response == '') {
-            return this.requestResponseValueDefault ? responseDefault : response
+        if (this.responseCodeError() && this.request.responseText.length == 0) {
+            return this.requestResponseDefault ? this.requestResponseDefault : response
         }
-        if (this.responseHeader('content-type') == 'application/json') {
+        if (this.responseHeader("content-type") == "application/json") {
             return util.json_decode(response)
         }
-        if (this.responseHeader('content-type') == 'text/plain') {
+        if (this.responseHeader("content-type") == "text/plain") {
             if (util.istype(response, 'string-array|string-object')) {
                 return util.json_decode(response)
             }
@@ -8425,13 +8048,13 @@ class ApplicationProgrammingInterface {
                 return response
             }
         }
-        if (this.responseHeader('content-type') == 'image/png') {
+        if (this.responseHeader("content-type") == "image/png") {
 
         }
         return response
     }
     /** @param {string} method @param {string} route @returns {void} */
-    #setRequest(method, route) {
+    #setRequest(method, route = null) {
         if (route) {
             this.route(route)
         }
@@ -8456,8 +8079,10 @@ class ApplicationProgrammingInterface {
         })
         this.request.overrideMimeType(this.requestMimeType)
         this.request.open(method, url, this.requestAsynchronous, this.requestUsername, this.requestPassword)
-        for (let [headerKey, headerValue] of enumerate(this.requestHeaders)) {
-            this.request.setRequestHeader(headerKey, headerValue)
+        for (let [header_key, header_value] of enumerate(this.requestHeaders)) {
+            if (header_key == null) continue
+            header_value = header_value == null ? '' : header_value
+            this.request.setRequestHeader(header_key, header_value)
         }
         this.requestIdentifier = util.identifier()
         this.requestHeaders.clear()
@@ -8496,6 +8121,10 @@ class DataBinding {
     /** @returns {any} */
     clear() {
         return this.#onSet(() => this.value_.clear())
+    }
+    /** @returns {boolean} */
+    empty() {
+        return this.value_.empty()
     }
     /** @returns {number} */
     index(value) {
@@ -8577,7 +8206,6 @@ class DataBinding {
         return newvalue
     }
 }
-
 //__________________________________________________________________________________________________________________________________________________//
 class View {
     /** @constructor */
@@ -8620,10 +8248,6 @@ class View {
     /** @returns {AppElement} */
     getElementByIdentifier(identifier) {
         return this.view.getElementByIdentifier(identifier)
-    }
-    /** @deprecated @returns {string} */
-    getId(index) {
-        return this.view.getIdentifier(index)
     }
     /** @param {number} index @returns {string} */
     getIdentifier(index = null) {
@@ -8685,10 +8309,6 @@ class View {
         }
         return element
     }
-    /** @deprecated @param {string} id @returns {void} */
-    setId(id) {
-        this.view.setIdentifier(id)
-    }
     /** @param {string} identifier @returns {void} */
     setIdentifier(identifier) {
         this.view.setIdentifier(identifier)
@@ -8701,13 +8321,7 @@ class View {
     /** @param {AppElement} element @param {AppElement|string} name @returns {AppElement} */
     setIcon(element, name) {
         element.src(app.getIcon(name))
-        return element
-    }
-    /** @param {AppElement} element @param {AppElement|string} name @returns {AppElement} */
-    setIcon(element, name) {
-        let path = `${app.getGlobalVariable("repository")}/icons/${app.getAppeatanceMode()}`
-        let filename = name.removesuffix('.png')
-        element.src(`${path}/${filename}.png`)
+        element.setAttribute("icon", name)
         return element
     }
     /** @deprecated @param {AppElement} element @param {AppElement|string} value @param {boolean} wait @returns {AppElement} */
@@ -8750,10 +8364,9 @@ class View {
     }
     /** @param {AppElement|string} view */
     setView(view) {
-        if (util.istype(view, 'string')) {
-            view = app.element(view)
-        }
-        if (view.attribute('view') == this.getClassName() && view.childrenLength() == 0) {
+        view = app.element(view)
+        view.setAttribute('view', this.getClassName())
+        if (view.childrenLength() == 0) {
             let instance = new this.constructor()
             view.appendChild(...instance.view.children())
             if (view.getIdentifier() == '') {
@@ -8807,7 +8420,7 @@ class Dialog extends View {
         /** @type {Listener} */
         this.onShowListener = Dialog.onShowListener
         /** @type {string} */
-        this.style = Dialog.STYLE_DEFAULT
+        this.type = Dialog.STYLE_DEFAULT
         // 
         super.view = app.element('div').view('dialog').appendChild(
             app.element('div').appendChild(
@@ -8829,11 +8442,15 @@ class Dialog extends View {
     }
 
     /** @readonly @type {string} */
-    static STYLE_DEFAULT      = ''
+    static TYPE_DEFAULT          = ''
     /** @readonly @type {string} */
-    static STYLE_MULTICHOICE  = 'multichoice'
+    static TYPE_MULTICHOICE      = 'multichoice'
     /** @readonly @type {string} */
-    static STYLE_SINGLECHOICE = 'singlechoice'
+    static TYPE_SINGLECHOICE     = 'singlechoice'
+    /** @readonly @type {string} */
+    static TYPE_PROGRESS_BAR     = 'progress-bar'
+    /** @readonly @type {string} */        
+    static TYPE_PROGRESS_SPINNER = 'progress-spinner'
 
     /** @readonly @type {number} */
     static BUTTON_NEUTRAL  = 0
@@ -8886,10 +8503,10 @@ class Dialog extends View {
             }
         }
         if (event.type == 'input') {
-            if (this.style == Dialog.STYLE_DEFAULT) {
+            if (this.type == Dialog.TYPE_DEFAULT) {
                 this.onInputListener(this, element)
             }
-            if (this.style == Dialog.STYLE_MULTICHOICE || this.style == Dialog.STYLE_SINGLECHOICE) {
+            if (this.type == Dialog.TYPE_MULTICHOICE || this.type == Dialog.TYPE_SINGLECHOICE) {
                 for (let [position, item] of enumerate(this.#getBody().children())) {
                     let input = item.children(0)
                     if (input.isEqualTo(element)) {
@@ -9046,55 +8663,19 @@ class Dialog extends View {
     setMessage(message) {
         super.setText(this.#getMessage(), message)
     }
-    /** @param {string|string[][]} items @param {string} checkedItems @returns {void} */
+    /** @param {string[][]|string} items @param {string[]|string} checkedItems @returns {void} */
     setMultiChoiceItems(items, checkedItems = []) {
-        // items: string[][] = [[title,value],[title,value]]
-        // items: string = title:value,title:value
-        // items: string = value,value
-        // checkedItem: string = [value,value]
-        // checkedItem: string = value,value
-        this.style = Dialog.STYLE_MULTICHOICE
-        this.view.setAttribute('style', this.style)
-        items = array.fromdata(items)
-        checkedItems = util.istype(checkedItems, 'string') ? checkedItems.split(',') : checkedItems
-        this.#getBody().clear()
-        for (let itemData of items) {
-            let [title, value] = ['', '']
-            if (util.istype(itemData, 'array-string')) {
-                [title, value] = itemData
-            }
-            if (util.istype(itemData, 'string')) {
-                [title, value] = [itemData, itemData]
-            }
-            let item = app.element('div').appendChild(
-                app.element('input').attribute(`type: checkbox; icon: check; value: ${value};`),
-                app.element('div').text(title)
-            )
-            if (value != null && checkedItems.includes(value)) {
-                item.children(0).attribute('checked: ')
-            }
-            this.#getBody().appendChild(item)
-        }
+        this.setMultipleChoiceItems(items, checkedItems)
     }
-    /** @param {string|string[][]} items @param {string} checkedItems @returns {void} */
+    /** @param {string[][]|string} items @param {string[]|string} checkedItems @returns {void} */
     setMultipleChoiceItems(items, checkedItems = []) {
-        // items: string[][] = [[title,value],[title,value]]
-        // items: string = title:value,title:value
-        // items: string = value,value
-        // checkedItem: string = [value,value]
-        // checkedItem: string = value,value
-        this.style = Dialog.STYLE_MULTICHOICE
-        this.view.setAttribute('style', this.style)
-        items = array.fromdata(items)
-        checkedItems = util.istype(checkedItems, 'string') ? checkedItems.split(',') : checkedItems
-        this.#getBody().clear()
-        for (let itemData of items) {
-            let [title, value] = ['', '']
-            if (util.istype(itemData, 'array-string')) {
-                [title, value] = itemData
-            }
-            if (util.istype(itemData, 'string')) {
-                [title, value] = [itemData, itemData]
+        checkedItems = util.istype(checkedItems, 'string') ? array.fromstring(checkedItems) : checkedItems
+        this.setType(Dialog.TYPE_MULTICHOICE)
+        for (let item_data of array.fromitems(items)) {
+            let [title, value] = item_data
+            if (value === undefined) {
+                title = title.capitalize()
+                value = title
             }
             let item = app.element('div').appendChild(
                 app.element('input').attribute(`type: checkbox; icon: check; value: ${value};`),
@@ -9162,28 +8743,20 @@ class Dialog extends View {
             }
         }
     }
-    /** @param {string|string[][]} items @param {string} checkedItem @returns {void} */
+    /** @param {string[][]|string} items @param {string} checkedItem @returns {void} */
     setSingleChoiceItems(items, checkedItem = null) {
-        // items: string[][] = [[title,value],[title,value],...]
-        // items: string = title:value,title:value,...
-        // items: string = value,value,...
-        // checkedItem: string = value
-        this.style = Dialog.STYLE_SINGLECHOICE
-        this.view.setAttribute('style', this.style)
-        this.#getBody().clear()
-        for (let itemData of array.fromdata(items)) {
-            let [title, value] = ['', '']
-            if (util.istype(itemData, 'array-string')) {
-                [title, value] = itemData
-            }
-            if (util.istype(itemData, 'string')) {
-                [title, value] = [itemData, itemData]
+        this.setType(Dialog.TYPE_SINGLECHOICE)
+        for (let item_data of array.fromitems(items)) {
+            let [title, value] = item_data
+            if (value === undefined) {
+                title = title.capitalize()
+                value = title
             }
             let item = app.element('div').appendChild(
                 app.element('input').attribute(`name: single-choice; type: radio; value: ${value}`),
                 app.element('div').text(title)
             )
-            if (value != null && value == checkedItem) {
+            if (checkedItem && value == checkedItem) {
                 item.children(0).attribute('checked: ')
             }
             this.#getBody().appendChild(item)
@@ -9192,6 +8765,26 @@ class Dialog extends View {
     /** @param {AppElement|number|string} title @returns {void} */
     setTitle(title) {
         super.setText(this.#getTitle(), title)
+    }
+    /** @param {string} type @returns {void} */
+    setType(type) {
+        this.type = type
+        this.view.setAttribute('type', this.type)
+        this.#getBody().clear()
+        if (this.type == Dialog.TYPE_PROGRESS_BAR) {
+            this.setBody(app.element('div').appendChild(
+                app.element('progress').attribute(`max: ${this.maximum}; value: 0;`),
+                app.element('div').appendChild(
+                    app.element('div').text('0%'),
+                    app.element('div').text('0/0')
+                )
+            ))
+        }
+        if (this.type == Dialog.TYPE_PROGRESS_SPINNER) {
+            this.setBody(app.element('div').appendChild(
+                app.element('div')
+            ))
+        }
     }
     /** @param {number|string} width @returns {void} */
     setWidth(width) {
@@ -9279,21 +8872,14 @@ class DialogProgress extends Dialog {
         this.maximum = 100
         /** @type {number} */
         this.progress = 0
-        /** @type {string} */
-        this.style = DialogProgress.STYLE_HORIZONTAL
         // 
         super.setAttributes(attributes)
         // 
         this.setCancelable(false)
         this.setCanceledOnTouchOutside(false)
         this.setTitle('Please Wait...')
-        this.setStyle(DialogProgress.STYLE_HORIZONTAL)
+        this.setType(Dialog.TYPE_PROGRESS_BAR)
     }
-
-    /** @readonly @type {string} */    
-    static STYLE_HORIZONTAL = 'horizontal'
-    /** @readonly @type {string} */        
-    static STYLE_SPINNER    = 'spinner'
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
@@ -9308,30 +8894,26 @@ class DialogProgress extends Dialog {
     getProgress() {
         return this.progres
     }
-    /** @returns {string} */
-    getProgressStyle() {
-        return this.style
-    }
     /** @returns {boolean} */
     isFinish() {
         return this.progress == this.maximum
     }
     /** @param {number} increment @returns {number} */
     incrementProgressBy(increment) {
-        if (this.style == DialogProgress.STYLE_HORIZONTAL) {
+        if (this.type == Dialog.TYPE_PROGRESS_BAR) {
             this.setProgress(this.progress + increment)
         }
     }
     /** @param {number} maximum @returns {void} */
     setMaximum(maximum) {
-        if (this.style == DialogProgress.STYLE_HORIZONTAL) {
+        if (this.type == Dialog.TYPE_PROGRESS_BAR) {
             this.maximum = maximum
             this.#getProgress().attribute(`max:${this.maximum}`)
         }
     }
     /** @param {number} progress @returns {void} */
     setProgress(progress) {
-        if (this.style == DialogProgress.STYLE_HORIZONTAL) {
+        if (this.type == Dialog.TYPE_PROGRESS_BAR) {
             this.progress = Math.min(this.maximum, progress)
             this.#getProgress().attribute(`value:${this.progress}`)
             let percentage = Math.round(this.progress * this.maximum) / this.maximum
@@ -9339,25 +8921,6 @@ class DialogProgress extends Dialog {
             let fractionNumerator = this.progress.toFixed(0)
             let fractionDenominator = this.maximum
             this.#getProgressFraction().text(`${fractionNumerator}/${fractionDenominator}`)
-        }
-    }
-    /** @param {string} style @returns {void} */
-    setStyle(style) {
-        this.style = style
-        this.view.attribute(`style:progress-${this.style}`)
-        if (this.style == DialogProgress.STYLE_HORIZONTAL) {
-            this.setBody(app.element('div').appendChild(
-                app.element('progress').attribute(`max:${this.maximum};value:0`),
-                app.element('div').appendChild(
-                    app.element('div').text('0%'),
-                    app.element('div').text('0/0')
-                )
-            ))
-        }
-        if (this.style == DialogProgress.STYLE_SPINNER) {
-            this.setBody(app.element('div').appendChild(
-                app.element('div')
-            ))
         }
     }
     // 
@@ -9378,7 +8941,7 @@ class Divider extends View {
     constructor(attributes = {}) {
         super()
         /** @type {string} */
-        this.color = app.getStyleProperty(':root', '--color-accent')
+        this.color = app.getColorAccent()
         /** @type {string} */
         this.style = Divider.STYLE_SOLID
         // 
@@ -9425,13 +8988,26 @@ class Drawer extends View {
         super()
         /** @type {string} */
         this.lock_mode = Drawer.LOCK_MODE_UNLOCKED
+        /** @type {Menu} */
+        this.menu = new Menu()
+        /** @type {Listener} */
+        this.onCloseListener = Drawer.onCloseListener
+        /** @type {Listener} */
+        this.onOpenListener = Drawer.onOpenListener
+        /** @type {Listener} */
+        this.onStateChangeListener = Drawer.onStateChangeListener
         /** @type {string} */
         this.side = Drawer.SIDE_LEFT
         /** @type {string} */
         this.state = Drawer.STATE_CLOSED
+        /** @type {AppElement} */
+        this.toggle = null
         // 
-        this.view = app.element('div').view(super.getClassName())
-        app.addEventListenerInterface('click', this, false)
+        this.view = app.element('div').view(super.getClassName()).appendChild(
+            app.element('div'),
+            this.menu.getView()
+        )
+        app.addEventListenerInterface('mousedown|mousemove|mouseup', this, false)
         super.setAttributes(attributes)
     }
 
@@ -9458,6 +9034,13 @@ class Drawer extends View {
     /** @readonly @type {string} */
     static STATE_SETTLING = 'SETTLING'
 
+    /** @type {function(Drawer): void} */
+    static onCloseListener = (popup) => { }
+    /** @type {function(Drawer): void} */
+    static onOpenListener = (popup) => { }
+    /** @type {function(Drawer, string): void} */
+    static onStateChangeListener = (drawer, state) => { }
+
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
         if (element.isEqualTo(this.view)) {
@@ -9467,6 +9050,18 @@ class Drawer extends View {
         }
     }
 
+    /** @param {string[]|string} data @returns {Item} */
+    addItem(data) {
+        return this.menu.addItem(data)
+    }
+    /** @param {string[][]|string} data @returns {void} */
+    addItems(data) {
+        return this.menu.addItems(data)
+    }
+    /** @returns {void} */
+    clear() {
+        this.menu.clear()
+    }
     /** @returns {boolean} */
     isClosed() {
         return this.state == Drawer.STATE_CLOSED
@@ -9498,28 +9093,94 @@ class Drawer extends View {
         }
         // TODO: account other states
     }
-    /** @returns {string} */
-    getSide() {
-        return this.side
+    /** @param {number} position @returns {Item} */
+    getItemAt(position) {
+        return this.menu.getItemAt(position)
+    }
+    /** @returns {number} */
+    getItemCount() {
+        return this.menu.getItemCount()
+    }
+    /** @returns {Item[]} */
+    getItems() {
+        return this.menu.getItems()
     }
     /** @returns {string} */
     getLockMode() {
         return this.lock_mode
+    }
+    /** @returns {string} */
+    getSide() {
+        return this.side
+    }
+    /** @returns {AppElement} */
+    getTitle() {
+        return this.view.children(0).children(0)
+    }
+    /** @returns {AppElement} */
+    getToggle() {
+        return this.toggle
+    }
+    /** @returns {void} */
+    removeAllItems() {
+        this.menu.removeAllItems()
+    }
+    /** @param {Item} item @returns {Item} */
+    removeItem(item) {
+        return this.menu.removeItem(item)
+    }
+    /** @param {number} position @returns {Item} */
+    removeItemAt(position) {
+        return this.menu.removeItemAt(position)
+    }
+    /** @param {Item} item @returns {void} */
+    selectItem(item) {
+        this.menu.selectItem(item)
+    }
+    /** @param {number} position @returns {void} */
+    selectItemAt(position) {
+        this.menu.selectItemAt(position)
     }
     /** @param {string} lock_mode @returns {void} */
     setLockMode(lock_mode) {
         this.lock_mode = lock_mode
         // TODO: 
     }
+    /** @param {Listener} listener @returns {void} */
+    setOnCloseListener(listener) {
+        this.onCloseListener = listener
+    }
+    /** @param {Listener} listener @returns {void} */
+    setOnOpenListener(listener) {
+        this.onOpenListener = listener
+    }
+    /** @param {Listener} listener @returns {void} */
+    setOnStateChangeListener(listener) {
+        this.onStateChangeListener = listener
+    }
     /** @param {string} side @returns {void} */
     setSide(side) {
         this.side = side
         // TODO: 
+        if (this.side == Drawer.SIDE_LEFT) {
+            this.view.style('left: 0; transform: translateX(-100%);')
+        }
+        if (this.side == Drawer.SIDE_RIGHT) {
+            this.view.style('right: 0; transform: translateX(100%);')
+        }
     }
     /** @param {string} state @returns {void} */
     setState(state) {
         this.state = state
         // TODO: 
+    }
+    /** @param {string} title @returns {void} */
+    setTitle(title) {
+        super.setText(this.getTitle(), title).show()
+    }
+    /** @param {AppElement|Element|string} toggle @returns {void} */
+    setToggle(toggle) {
+        this.toggle = new AppElement(toggle)
     }
     /** @returns {void} */
     unlock() {
@@ -9536,7 +9197,7 @@ class Calender extends View {
         /** @type {Date} */
         this.selectedDate = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)
         /** @type {string} */
-        this.selectedDateColor = app.getGlobalVariable("color-accent")
+        this.selectedDateColor = app.getColorAccent()
         /** @type {string} */
         this.selectedWeekColor = 'transparent'
         /** @type {Date} */
@@ -9957,12 +9618,12 @@ class Icon extends View {
     }
 }
 class Item extends View {
-    constructor(attributes = {}) {
+    constructor() {
         super()
         /** @type {boolean} */
         this.enabled = true
-        /** @type {PopupMenu} */
-        this.menu = null
+        /** @type {PopupMenu|AppElement|string} */
+        this.link = null
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
             app.element('div').appendChild(
@@ -9971,33 +9632,20 @@ class Item extends View {
             ),
             app.element('div')
         )
-        this.getView().addListener('mouseenter', (...args) => this.onEventListenerInterface(...args))
-        this.getView().addListener('mouseleave', (...args) => this.onEventListenerInterface(...args))
-        // mouseover mouseout mousemove 
-        super.setAttributes(attributes)
         // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        // TODO: setup auto show popupmenu on mouseenter popupmenu.anchor
-        if (event.type == 'mouseenter') {
-            if (!this.hasMenu()) return
-            // this.getMenu().showOn()
-        }
-        if (event.type == 'mouseleave') {
-            if (!this.hasMenu()) return
-            // this.getMenu().dismiss()
-        }
     }
 
     /** @returns {AppElement} */
     getBody() {
         return this.#getBody()
     }
-    /** @returns {PopupMenu} */
-    getMenu() {
-        return this.menu
+    /** @returns {PopupMenu|AppElement|string} */
+    getLink() {
+        return this.link
     }
     /** @returns {number} */
     getOrder() {
@@ -10025,7 +9673,7 @@ class Item extends View {
     }
     /** @returns {boolean} */
     hasMenu() {
-        return this.menu != null
+        return this.link && this.link instanceof PopupMenu
     }
     /** @returns {boolean} */
     isEnabled() {
@@ -10041,8 +9689,8 @@ class Item extends View {
         return icon.isTagName('input')
     }
     /** @returns {boolean} */
-    isMenu() {
-        return this.menu != null
+    isLink() {
+        return this.link != null
     }
     /** @param {number} order @returns {boolean} */
     isOrder(order) {
@@ -10095,11 +9743,17 @@ class Item extends View {
             super.setIcon(this.#getIcon(), icon).show()
         }
     }
+    /** @param {PopupMenu|AppElement|string} link @returns {void} */
+    setLink(link) {
+        this.link = link
+        if (this.link instanceof PopupMenu) {
+            this.link.setAnchor(this.getView())
+            this.link.setTitle(this.getTitle())
+        }
+    }
     /** @param {PopupMenu} menu @returns {void} */
     setMenu(menu) {
-        this.menu = menu
-        this.menu.setAnchor(this.getView())
-        this.menu.setTitle(this.getTitle())
+        this.setLink(menu)
     }
     /** @param {string} title @returns {void} */
     setTitle(title) {
@@ -10110,6 +9764,7 @@ class Item extends View {
         let visibility = visible ? 'visible' : 'hidden'
         this.view.setStyleProperty('visibility', visibility)
     }
+
     /** @returns {AppElement} */
     #getBody() {
         return this.view.children(1)
@@ -10154,6 +9809,8 @@ class Link extends View {
 class List extends View {
     constructor(attributes = {}) {
         super()
+        /** @type {number} */
+        this.depth = 0
         /** @type {boolean} */
         this.isCheckableMultipleChoice = false
         /** @type {boolean} */
@@ -10176,20 +9833,22 @@ class List extends View {
     onEventListenerInterface(event, element) {
         if (event.type == 'click') {
             for (let [position, item] of enumerate(this.getItems())) {
-                if (!element.isEqualTo(item.getView(), true)) continue
+                if (!element.isEqualTo(item.getView())) continue
                 if (!item.isEnabled()) continue
                 if (item.isCheckable()) {
                     item.setChecked(!item.isChecked())
                 }
+                if (item.isLink()) {
+                    // TODO: navigate to link | open a popupmenu
+                }
                 this.onItemClickListener(this, item)
             }
-
         }
     }
 
     /** @param {string[]|string} data @returns {Item} */
     addItem(data = ['','','']) {
-        let [title, body, icon] = array.fromdata(data)
+        let [title, body, icon] = util.istype(data, 'string') ? array.fromstring(data, ':') : data
         let item = new Item()
         item.setTitle(title)
         item.setTag(util.identifier(title))
@@ -10207,11 +9866,10 @@ class List extends View {
         this.view.appendChild(item.getView())
         return item
     }
-    /** @param {string|string[][]} data @returns {void} */
+    /** @param {string[][]|string} data @returns {void} */
     addItems(data) {
-        data = array.fromdata(data)
-        for (let itemData of data) {
-            this.addItem(itemData)
+        for (let item of array.fromitems(data)) {
+            this.addItem(item)
         }
     }
     /** @returns {void} */
@@ -10223,9 +9881,9 @@ class List extends View {
     empty() {
         return this.size() == 0
     }
-    /** @returns {Item[]} */
-    getItems() {
-        return this.items
+    /** @returns {number} */
+    getDepth() {
+        return this.depth
     }
     /** @param {number} position @returns {Item} */
     getItemAt(position) {
@@ -10234,6 +9892,14 @@ class List extends View {
     /** @returns {number} */
     getItemCount() {
         return this.getItems().size()
+    }
+    /** @returns {Item[]} */
+    getItems() {
+        return this.items
+    }
+    /** @param {number} depth @returns {boolean} */
+    isDepth(depth) {
+        return depth == this.depth
     }
     /** @returns {void} */
     removeAllItems() {
@@ -10252,6 +9918,19 @@ class List extends View {
         if (item) this.removeItem(item)
         return item
     }
+    /** @param {Item} item @returns {void} */
+    selectItem(item) {
+        item.getView().dispatchEvent('click')
+    }
+    /** @param {number} position @returns {void} */
+    selectItemAt(position) {
+        let item = this.getItemAt(position)
+        this.selectItem(item)
+    }
+    /** @param {number} depth @returns {void} */
+    setDepth(depth) {
+        this.depth = depth
+    }
     /** @param {string|string[][]} data @returns {void} */
     setItems(data) {
         this.removeAllItems()
@@ -10269,8 +9948,6 @@ class List extends View {
 class Menu extends List {
     constructor(attributes = {}) {
         super()
-        /** @type {string} */
-        this.colorSelect = app.getGlobalVariable("color-select")
         /** @type {boolean} */
         this.groupDividerEnabled = true
         /** @type {Listener} */
@@ -10289,11 +9966,9 @@ class Menu extends List {
 
     /**@param {string} groupIdentifier @param {string} itemIdentifier @param {number} order @param {string} title @returns {void} */
     add(groupIdentifier, itemIdentifier, order, title) {
-
     }
     /** @param {string} groupIdentifier @param {string} itemIdentifier @param {number} order @param {string} title @returns {void} */
     addSubMenu(groupIdentifier, itemIdentifier, order, title) {
-
     }
     /** @returns {boolean} */
     hasVisibleItems() {
@@ -10310,16 +9985,6 @@ class Menu extends List {
     }
     /** @param {string} groupIdentifier @returns {void} */
     removeGroup(groupIdentifier) {
-
-    }
-    /** @param {Item} item @returns {void} */
-    selectItem(item) {
-        item.getView().dispatchEvent('click')
-    }
-    /** @param {number} position @returns {void} */
-    selectItemAt(position) {
-        let item = this.getItemAt(position)
-        this.selectItem(item)
     }
     /** @param {boolean} groupDividerEnabled  @returns {void} */
     setGroupDividerEnabled(groupDividerEnabled) {
@@ -10327,11 +9992,9 @@ class Menu extends List {
     }
     /** @param {string} groupIdentifier @param {boolean} enabled @returns {void} */
     setGroupEnabled(groupIdentifier, enabled) {
-
     }
     /** @param {string} groupIdentifier @param {boolean} visible @returns {void} */
     setGroupVisible(groupIdentifier, visible) {
-
     }
     /** @param {Listener} listener @returns {void} */
     setOnMenuItemClickListener(listener) {
@@ -10437,6 +10100,8 @@ class Popup extends View {
         super()
         /** @type {AppElement} */
         this.anchor = null
+        /** @type {string} */
+        this.anchorSide = Popup.SIDE_RIGHT
         /** @type {boolean} */
         this.autoDismiss = true
         /** @type {boolean} */
@@ -10454,9 +10119,7 @@ class Popup extends View {
         /** @type {number} */
         this.positionY = 0
         /** @type {number} */
-        this.positionPadding = 5
-        /** @type {string} */
-        this.side = Popup.SIDE_RIGHT
+        this.positionPadding = 3
         /** @type {number} */
         this.timeoutID = null
         // 
@@ -10467,17 +10130,21 @@ class Popup extends View {
     }
 
     /** @readonly @type {string} */
-    static SIDE_BOTTOM = 'bottom'
+    static SIDE_BOTTOM       = 'bottom'
     /** @readonly @type {string} */
-    static SIDE_BOTTOM_LEFT = 'bottom-left'
+    static SIDE_BOTTOM_LEFT  = 'bottom_left'
     /** @readonly @type {string} */
-    static SIDE_BOTTOM_RIGHT = 'bottom-right'
+    static SIDE_BOTTOM_RIGHT = 'bottom_right'
     /** @readonly @type {string} */
-    static SIDE_LEFT  = 'left'
+    static SIDE_LEFT         = 'left'
     /** @readonly @type {string} */
-    static SIDE_RIGHT = 'right'
+    static SIDE_RIGHT        = 'right'
     /** @readonly @type {string} */
-    static SIDE_TOP   = 'top'
+    static SIDE_TOP          = 'top'
+    /** @readonly @type {string} */
+    static SIDE_TOP_LEFT     = 'top_left'
+    /** @readonly @type {string} */
+    static SIDE_TOP_RIGHT    = 'top_right'
 
     /** @type {(popup: Popup) => void} */
     static onDismissListener = (popup) => { }
@@ -10489,35 +10156,59 @@ class Popup extends View {
         if (event.type == 'click') {
             if (this.isVisible() && this.isWithinView(element)) {
                 if (this.dismissOnTouchInside) {
-                    this.dismiss()
+                    // delay dismissal for animation
+                    // NOTE: anchor non-existent provided that anchor is an popup menu item
+                    // timeout maintains anchor's existence during operations in Popup.showOn()
+                    let delay = this.view.getStylePropertyComputed('transition')
+                    delay = (util.ispattern(delay, /\d(.\d)?s/) ? delay.slice(0, delay.length-1) : 0.01) * 1000
+                    setTimeout(() => {
+                        if (this.isVisible()) {
+                            this.dismiss()
+                        }
+                    }, delay)
                 }
             }
-            if (this.isVisible() && !this.isWithinView(element) && this.isAnchor() && !element.isEqualTo(this.anchor)) {
+            if (this.isVisible() && !this.isWithinView(element) && !this.isAnchor(element)) {
                 if (this.dismissOnTouchOutside) {
                     this.dismiss()
                 }
             }
-            if (!this.isVisible() && this.isAnchor() && element.isEqualTo(this.anchor)) {
+            if (!this.isVisible() && this.isAnchor(element)) {
                 this.showOn()
             }
         }
     }
 
-    /** @returns {void} */
-    dismiss() {
+    /** @param {boolean} delay @returns {void} */
+    dismiss(delay = null) {
+        // delay dismissal for animation
         // NOTE: anchor non-existent provided that anchor is an popup menu item
         // timeout maintains anchor's existence during operations in Popup.showOn()
+        if (delay == null) {
+            delay = this.view.getStylePropertyComputed('transition')
+            delay = (util.ispattern(delay, /\d(.\d)?s/) ? delay.slice(0, delay.length-1) : 0.01) * 1000
+        }
         setTimeout(() => {
-            if (this.isVisible()) {
-                clearTimeout(this.timeoutID)
-                app.body().removeChild(this.view)
-                this.onDismissListener(this)
-            }
-        }, 10)
+            if (!this.isVisible()) return
+            clearTimeout(this.timeoutID)
+            app.body().removeChild(this.view)
+            this.onDismissListener(this)
+        }, delay)
+    }
+    /** @returns {void} */
+    dismiss() {
+        if (!this.isVisible()) return
+        clearTimeout(this.timeoutID)
+        app.body().removeChild(this.view)
+        this.onDismissListener(this)
     }
     /** @returns {AppElement} */
     getAnchor() {
         return this.anchor
+    }
+    /** @returns {string} */
+    getAnchorSide(side) {
+        return this.anchorSide
     }
     /** @returns {AppElement} */
     getBody() {
@@ -10527,9 +10218,12 @@ class Popup extends View {
     getDismissTimeout() {
         return this.dismissTimeout
     }
-    /** @returns {boolean} */
-    isAnchor() {
-        return this.anchor != null
+    /** @param {AppElement|Element|string} element @returns {boolean} */
+    isAnchor(element) {
+        if (this.anchor) {
+            return new AppElement(element).isEqualTo(this.anchor)
+        }
+        return false
     }
     /** @returns {boolean} */
     isAutoDismiss() {
@@ -10541,7 +10235,11 @@ class Popup extends View {
     }
     /** @param {AppElement|Element|string} anchor @returns {void} */
     setAnchor(anchor) {
-        this.anchor = app.element(anchor)
+        this.anchor = new AppElement(anchor)
+    }
+    /** @param {string} side @returns {void} */
+    setAnchorSide(side) {
+        this.anchorSide = side
     }
     /** @param {boolean} autoDismiss @returns {void} */
     setAutoDismiss(autoDismiss) {
@@ -10585,17 +10283,16 @@ class Popup extends View {
     }
     /** @param {number} x @param {number} y @returns {void} */
     showAt(x = this.positionX, y = this.positionY) {
-        if (this.isVisible()) return
-        app.body().appendChild(this.view)
+        if (!this.isVisible()) app.body().appendChild(this.view)
         let viewWidth = this.view.getWidth()
         let viewHeight = this.view.getHeight()
-        let viewportWidth = app.body().getWidth()
-        let viewportHeight = app.body().getHeight()
-        let left, top
-        left = x <= 0 ? this.positionPadding : x
-        left = x + viewWidth > viewportWidth ? x - viewWidth - this.positionPadding : x
-        top = y <= 0 ? this.positionPadding : y
-        top = y + viewHeight > viewportHeight ? y - viewHeight - this.positionPadding : y
+        let viewportWidth = app.body().getProperty('scrollWidth')
+        let viewportHeight = app.body().getProperty('scrollHeight')
+        let left = x, top = y
+        left = left <= 0 ? this.positionPadding : left
+        left = left + viewWidth >= viewportWidth ? viewportWidth - viewWidth - this.positionPadding : left
+        top = top <= 0 ? this.positionPadding : top
+        top = top + viewHeight >= viewportHeight ? viewportHeight - viewHeight - this.positionPadding : top
         this.view.setStyleProperty('left', left)
         this.view.setStyleProperty('top', top)
         clearTimeout(this.timeoutID)
@@ -10605,28 +10302,14 @@ class Popup extends View {
         this.onShowListener(this)
     }
     /** @param {AppElement|Element|string} anchor @param {string} side @returns {void} */
-    showOn(anchor = this.anchor, side = this.side) {
-        this.side = side
+    showOn(anchor = this.anchor, anchorSide = this.anchorSide) {
+        if (!this.isVisible()) app.body().appendChild(this.view)
         this.setAnchor(anchor)
-        let rect = anchor.getBoundingClientRect()
-        let x
-        let y
-        if (side == Popup.SIDE_BOTTOM) {
-            x = rect.x
-            y = rect.y + rect.height
-        }
-        if (side == Popup.SIDE_LEFT) {
-            x = rect.x
-            y = rect.y
-        }
-        if (side == Popup.SIDE_RIGHT) {
-            x = rect.x + rect.width
-            y = rect.y
-        }
-        if (side == Popup.SIDE_TOP) {
-            x = rect.x
-            y = rect.y
-        }
+        this.setAnchorSide(anchorSide)
+        let rect = this.anchor.getBoundingClientRect()
+        let x = rect.x
+        let y = rect.y
+        // adjust for scrolling
         let element = this.anchor
         do {
             element = element.parentElement()
@@ -10634,8 +10317,41 @@ class Popup extends View {
             x += element.getProperty('scrollLeft')
             y += element.getProperty('scrollTop')
         } while (true)
+        if (this.anchorSide == Popup.SIDE_BOTTOM) {
+            x = x
+            y = y + this.anchor.getHeight() + this.positionPadding
+        }
+        if (this.anchorSide == Popup.SIDE_BOTTOM_LEFT) {
+            x = x
+            y = y + this.anchor.getHeight() + this.positionPadding
+        }
+        if (this.anchorSide == Popup.SIDE_BOTTOM_RIGHT) {
+            x = x + this.anchor.getWidth() - this.view.getWidth()
+            y = y + this.anchor.getHeight() + this.positionPadding
+        }
+        if (this.anchorSide == Popup.SIDE_LEFT) {
+            x = x - this.view.getWidth() - this.positionPadding
+            y = y
+        }
+        if (this.anchorSide == Popup.SIDE_RIGHT) {
+            x = x + this.anchor.getWidth() + this.positionPadding
+            y = y
+        }
+        if (this.anchorSide == Popup.SIDE_TOP) {
+            x = x
+            y = y - this.view.getHeight() - this.positionPadding
+        }
+        if (this.anchorSide == Popup.SIDE_TOP_LEFT) {
+            x = x
+            y = y - this.view.getHeight() - this.positionPadding
+        }
+        if (this.anchorSide == Popup.SIDE_TOP_RIGHT) {
+            x = x + this.anchor.getWidth() - this.view.getWidth()
+            y = y - this.view.getHeight() - this.positionPadding
+        }
         this.showAt(x, y)
     }
+
     /** @returns {AppElement} */
     #getBody() {
         return this.view
@@ -10646,13 +10362,13 @@ class PopupMenu extends Popup {
         super()
         /** @type {Menu} */
         this.menu = new Menu()
-        /** @type {number} */
-        this.onMenuItemClickDismissTimeout = 300
         /** @type {Listener} */
         this.onMenuItemClickListener = PopupMenu.onMenuItemClickListener
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
-            app.element('div'),
+            app.element('div').appendChild(
+                app.element('div'),
+            ),
             this.menu.getView()
         )
         super.setAttributes(attributes)
@@ -10672,13 +10388,21 @@ class PopupMenu extends Popup {
     addItem(data) {
         return this.menu.addItem(data)
     }
-    /** @param {string|string[][]} data @returns {void} */
+    /** @param {string[][]|string} data @returns {void} */
     addItems(data) {
         return this.menu.addItems(data)
     }
-    /** @param {string} identifier @returns {Item|null} */
-    findItem(identifier) {
-        return this.menu.findItem(identifier)
+    /** @returns {void} */
+    clear() {
+        this.menu.clear()
+    }
+    /** @returns {boolean} */
+    empty() {
+        return this.menu.empty()
+    }
+    /** @returns {number} */
+    getDepth() {
+        return this.menu.getDepth()
     }
     /** @param {number} position @returns {Item} */
     getItemAt(position) {
@@ -10692,10 +10416,6 @@ class PopupMenu extends Popup {
     getItems() {
         return this.menu.getItems()
     }
-    /** @returns {Menu} */
-    getMenu() {
-        return this.menu
-    }
     /** @returns {string} */
     getTitle() {
         return this.#getTitle().text()
@@ -10703,6 +10423,10 @@ class PopupMenu extends Popup {
     /** @returns {boolean} */
     hasVisibleItems() {
         return this.menu.hasVisibleItems()
+    }
+    /** @param {number} depth @returns {boolean} */
+    isDepth(depth) {
+        return this.menu.isDepth(depth)
     }
     /** @param {string} title @returns {boolean} */
     isTitle(title) {
@@ -10728,6 +10452,10 @@ class PopupMenu extends Popup {
     selectItemAt(position) {
         this.menu.selectItemAt(position)
     }
+    /** @param {number} depth @returns {void} */
+    setDepth(depth) {
+        this.menu.setDepth(depth)
+    }
     /** @param {string|string[][]} data @returns {void} */
     setItems(data) {
         return this.menu.setItems(data)
@@ -10740,9 +10468,7 @@ class PopupMenu extends Popup {
     }
     /** @param {Listener} listener @returns {void} */
     setOnMenuItemClickListener(listener) {
-        this.menu.setOnItemClickListener((menu, item) => {
-            listener(this, item)
-        })
+        this.menu.setOnItemClickListener(listener)
     }
     /** @param {string} title @returns {void} */
     setTitle(title) {
@@ -10752,6 +10478,7 @@ class PopupMenu extends Popup {
     size() {
         return this.menu.size()
     }
+
     /** @returns {AppElement} */
     #getBody() {
         return this.view.children(1)
@@ -10771,7 +10498,7 @@ class ProgressBar extends View {
         /** @type {number} */
         this.indeterminateDuration = 100
         /** @type {string} */
-        this.indeterminateColor = app.getGlobalVariable("color-accent")
+        this.indeterminateColor = app.getColorAccent()
         /** @type {number} */
         this.max = 100
         /** @type {number} */
@@ -10821,7 +10548,7 @@ class RadioGroup extends View {
     }
 }
 class SeekBar extends View {
-    constructor() {
+    constructor(attributes = {}) {
         super()
         // 
         super.view = app.element('div').view(super.getClassName())
@@ -10938,7 +10665,7 @@ class Search extends View {
         let suggestionsListId = util.identifier()
         super.view = app.element('div').view(super.getClassName()).appendChild(
             app.element('input').attribute(`list: ${suggestionsListId}; type: search`).style('visibility: hidden'),
-            app.element('img').view('icon'),
+            app.element('img').view('icon').attribute('type: button; icon: search'),
             app.element('datalist').identifier(suggestionsListId)
         )
         app.addEventListenerInterface('click|input', this, true)
@@ -11012,7 +10739,7 @@ class Search extends View {
     /** @returns {void} */
     open() {
         this.#getIcon().style('margin: 0 0 0 10px;')
-        this.#getInput().style(`visibility: visible; width: ${this.maxWidth};`)
+        this.#getInput().style(`visibility: visible; width: ${this.maxWidth};`).focus()
         this.onOpenListener(this)
     }
     /** @param {string} icon @returns {void} */
@@ -11025,7 +10752,6 @@ class Search extends View {
     }
     /** @param {string} inputType @returns {void} */
     setInputType(inputType) {
-        if (excludes(inputType, 'color|date|datetime|local|email|month|number|range|tel|text|time|url|week')) console.error(`ValueError: variable-name=inputType variable-value=${inputType}`)
         this.#getInput().setAttribute('type', inputType)
     }
     /** @param {number|string} maxWidth @returns {void} */
@@ -11063,9 +10789,9 @@ class Search extends View {
     setQueryHint(queryHint) {
         this.#getInput().setAttribute('placeholder', queryHint)
     }
-    /** @param {string|string[]} suggestions @returns {void} */
-    setSuggestions(suggestions) {
-        suggestions = array.fromdata(suggestions, false)
+    /** @param {string[]|string} data @returns {void} */
+    setSuggestions(data) {
+        let suggestions = util.istype(data, 'string') ? array.fromstring(data, ',') : data
         let innerHTML = suggestions.map((suggestion) => `<option>${suggestion}</option>`).join('')
         this.#getSuggestions().innerHTML(innerHTML)
     }
@@ -11101,7 +10827,7 @@ class Selector extends View {
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        if (element.isEqualTo(this.#getSelect())) {
+        if (element.isEqualTo(this.getSelect())) {
             for (let [position, item] of enumerate(this.getItems())) {
                 let value = item.value()
                 if (this.getSelectedItem() == value) {
@@ -11112,23 +10838,32 @@ class Selector extends View {
     }
 
     /** @param {string[]|string} data @returns {AppElement} */
-    addItem(data) {
-        data = array.fromdata(data)
-        let [title, value] = data
-        let item = app.element('option').innerHTML(title).value(value)
-        this.#getSelect().appendChild(item)
+    addItem(data = ['','']) {
+        let [title, value] = util.istype(data, 'string') ? array.fromstring(data, ':') : data
+        let item = app.element('option')
+        if (value === undefined) {
+            item.innerHTML(title)
+            item.value(title)
+        } else {
+            item.innerHTML(title)
+            item.value(value)
+        }
+        this.getSelect().appendChild(item)
         return item
     }
     /** @param {string|string[][]} data @returns {void} */
     addItems(data) {
-        data = array.fromdata(data)
-        for (let itemData of data) {
-            this.addItem(itemData)
+        for (let item of array.fromitems(data)) {
+            this.addItem(item)
         }
+    }
+    /** @returns {void} */
+    clear() {
+        this.removeAllItems()
     }
     /** @returns {AppElement[]} */
     getItems() {
-        return new array(this.#getSelect().children())
+        return new array(this.getSelect().children())
     }
     /** @param {number} position @returns {AppElement} */
     getItemAt(position) {
@@ -11140,7 +10875,7 @@ class Selector extends View {
     }
     /** @returns {string} */
     getSelectedItem() {
-        return this.#getSelect().value()
+        return this.getSelect().value()
     }
     /** @param {string} value @returns {boolean} */
     isItem(value) {
@@ -11153,11 +10888,11 @@ class Selector extends View {
     }
     /** @param {string} value @returns {boolean} */
     isSelectedItem(value) {
-        return this.#getSelect().value() == value
+        return this.getSelect().value() == value
     }
     /** @returns {void} */
     removeAllItems() {
-        this.#getSelect().innerHTML('')
+        this.getSelect().innerHTML('')
     }
     /** @param {string} value @returns {AppElement} */
     removeItem(value) {
@@ -11171,13 +10906,13 @@ class Selector extends View {
     /** @param {number} position @returns {AppElement} */
     removeItemAt(position) {
         let item = this.getItemAt(position)
-        if (item) this.#getSelect().removeChildAt(position)
+        if (item) this.getSelect().removeChildAt(position)
         return item
     }
     /** @param {string} value @returns {void} */
     selectItem(value) {
         if (this.isItem(value)) {
-            this.#getSelect().value(value)
+            this.getSelect().value(value)
         }
     }
     /** @param {number} position @returns {void} */
@@ -11185,7 +10920,7 @@ class Selector extends View {
         let value = this.getItemAt(position).value()
         this.selectItem(value)
     }
-    /** @param {string|string[][]} data @returns {void} */
+    /** @param {string[][]|string} data @returns {void} */
     setItems(data) {
         this.removeAllItems()
         this.addItems(data)
@@ -11196,18 +10931,20 @@ class Selector extends View {
     }
     /** @param {AppElement|number|string|null} title @returns {void} */
     setTitle(title) {
-        super.setText(this.#getTitle(), title)
+        super.setText(this.getTitle(), title)
+        this.getTitle().text(`${this.getTitle().text()}&colon;`)
     }
     /** @returns {number} */
     size() {
         return this.getItemCount()
     }
+
     /** @returns {AppElement} */
-    #getTitle() {
+    getTitle() {
         return this.view.children(0)
     }
     /** @returns {AppElement} */
-    #getSelect() {
+    getSelect() {
         return this.view.children(1)
     }
 }
@@ -11245,7 +10982,7 @@ class Switch extends View {
         /** @type {boolean} */
         this.showText = true
         /** @type {string} */
-        this.backgroundColor = app.getGlobalVariable("color-accent")
+        this.backgroundColor = app.getColorAccent()
         // 
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('click', this, true)
@@ -11314,7 +11051,7 @@ class Tab extends View {
     /** @returns {void} */
     select() {
         this.selected = true
-        let color = app.getStyleProperty(':root', '--color-accent')
+        let color = app.getColorAccent()
         this.view.scrollIntoView()
         this.view.setStyleProperty('border-bottom-color', color)
     }
@@ -11396,7 +11133,7 @@ class Tabs extends View {
 
     /** @param {string[]|string} data @param {boolean} selected @returns {Tab} */
     addTab(data, selected = false) {
-        let [title, body, icon] = array.fromdata(data)
+        let [title, body, icon] = util.istype(data, 'string') ? array.fromstring(data, ':') : data
         let tab = new Tab()
         tab.setText(title)
         tab.setTag(util.identifier(title))
@@ -11484,7 +11221,7 @@ class Tabs extends View {
     setLocked(locked) {
         this.locked = locked
         let transparency = locked ? '80' : 'ff'
-        let color = `${app.getStyleProperty(':root', '--color-accent')}${transparency}`
+        let color = `${app.getColorAccent()}${transparency}`
         this.getSelectedTab().getView().setStyleProperty('border-bottom-color', color)
     }
     /** @param {Listener} listener @returns {void} */
@@ -11626,11 +11363,9 @@ class Table extends View {
         }
         if (data.get('type') == Table.CELL_TYPE_SELECTOR) {
             cell = app.element('select').attribute(`cell-type: ${Table.CELL_TYPE_SELECTOR}`)
-            for (let item of array.fromdata(data.get('items', []))) {
-                let [title, value] = item
-                let option = app.element('option').innerHTML(title).value(value)
-                cell.appendChild(option)
-            }
+            let selector = new Selector()
+            selector.setItems(data.get('items', []))
+            cell.appendChild(...selector.getItems())
             cell.value(data.get('value', ''))
         }
         header = this.getHeaderAt(this.getCellCount() % this.getHeaderCount())
@@ -11802,10 +11537,10 @@ class Table extends View {
         this.actionButtonsEnalbed = enabled
         this.#getFooter().display(enabled)
     }
-    /** @param {string|string[]} headers @returns {void} */
-    setHeaders(headers) {
+    /** @param {string[]|string} data @returns {void} */
+    setHeaders(data) {
         // NOTE: requires execution of setView()
-        this.headers = array.fromdata(headers)
+        this.headers = util.istype(data, 'string') ? array.fromitems(data, true) : data
         this.#getHeader().innerHTML('')
         let total = 0
         for (let header of this.headers) {
@@ -11815,7 +11550,7 @@ class Table extends View {
             this.#getHeader().appendChild(cell)
         }
         if (total != 100) {
-            console.warn(`ValueError: improper header, width=${total}`)
+            console.warn(`ValueError: table header width exceeds 100%, redefined header width(s)`)
         }
     }
     /** @returns {AppElement|Element|number|string} */
@@ -12175,7 +11910,7 @@ class WebView extends View {
     onEventListenerInterface(event, element) {
     }
 }
-class Window extends View {
+class Widget extends View {
     constructor(attributes = {}) {
         super()
         /** @type {boolean} */
@@ -12201,7 +11936,7 @@ class Window extends View {
         /** @type {number} */
         this.positionY = 0
         /** @type {string} */
-        this.size = Window.SIZE_MAXIMIZE
+        this.size = Widget.SIZE_MAXIMIZE
         /** @type {number} */
         this.width = 0
         // 
@@ -12222,7 +11957,7 @@ class Window extends View {
         // 
         super.setIcon(this.#getSizer(), 'minimize')
         super.setIcon(this.#getCloser(), 'close')
-        this.setGeometry(Window.POSITION_CENTER, Window.POSITION_CENTER, '75%', '75%')
+        this.setGeometry(Widget.POSITION_CENTER, Widget.POSITION_CENTER, '75%', '75%')
         // 
         let mutationObserver = new MutationObserver((mutationsRecords, mutationObserver) => {
             for (let mutationRecord of mutationsRecords) {
@@ -12251,18 +11986,18 @@ class Window extends View {
     /** @readonly @type {string} */
     static SIZE_MINIMIZE = 'MINIMIZE'
 
-    /** @type {(window: Window, event: PointerEvent, element: AppElement) => void} */
-    static onClickListener = (window, event, element) => { }
-    /** @type {(window: Window) => void} */
-    static onCloseListener = (window) => { }
+    /** @type {(widget: Widget, event: PointerEvent, element: AppElement) => void} */
+    static onClickListener = (widget, event, element) => { }
+    /** @type {(widget: Widget) => void} */
+    static onCloseListener = (widget) => { }
     /** @type {(menuBar: MenuBar, item: Item) => void} */
     static onMenuItemClickListener = (menuBar, item) => { }
-    /** @type {(window: Window) => void} */
-    static onOpenListener = (window) => { }
-    /** @type {(window: Window) => void} */
-    static onMaximizeListener = (window) => { }
-    /** @type {(window: Window) => void} */
-    static onMinimizeListener = (window) => { }
+    /** @type {(widget: Widget) => void} */
+    static onOpenListener = (widget) => { }
+    /** @type {(widget: Widget) => void} */
+    static onMaximizeListener = (widget) => { }
+    /** @type {(widget: Widget) => void} */
+    static onMinimizeListener = (widget) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
@@ -12347,16 +12082,16 @@ class Window extends View {
     }
     /** @returns {boolean} */
     isMaximized() {
-        return this.size == Window.SIZE_MAXIMIZE
+        return this.size == Widget.SIZE_MAXIMIZE
     }
     /** @returns {boolean} */
     isMinimized() {
-        return this.size == Window.SIZE_MINIMIZE
+        return this.size == Widget.SIZE_MINIMIZE
     }
     /** @returns {void} */
     maximize() {
         if (this.isMaximized()) return
-        this.size = Window.SIZE_MAXIMIZE
+        this.size = Widget.SIZE_MAXIMIZE
         super.setIcon(this.#getSizer(), 'minimize')
         this.#getMenuBar().show()
         this.#getBody().show()
@@ -12368,7 +12103,7 @@ class Window extends View {
     /** @returns {void} */
     minimize() {
         if (this.isMinimized()) return
-        this.size = Window.SIZE_MINIMIZE
+        this.size = Widget.SIZE_MINIMIZE
         super.setIcon(this.#getSizer(), 'maximize')
         this.#getMenuBar().hide()
         this.#getBody().hide()
@@ -12392,7 +12127,7 @@ class Window extends View {
     }
     /** @returns {void} */
     sendForward() {
-        for (let element of app.body().getElementsByAttribute('view', 'window')) {
+        for (let element of app.body().getElementsByAttribute('view', super.getClassName())) {
             element.setStyleProperty('z-index', '0')
         }
         this.view.setStyleProperty('z-index', '1')
@@ -12488,13 +12223,13 @@ class Window extends View {
     /** @param {number|string} positionX @returns {void} */
     setPositionX(positionX) {
         let viewport = app.body()
-        if (positionX == Window.POSITION_CENTER) {
+        if (positionX == Widget.POSITION_CENTER) {
             positionX = (viewport.getWidth() - this.getWidth()) / 2
         }
-        else if (positionX == Window.POSITION_END) {
+        else if (positionX == Widget.POSITION_END) {
             positionX = viewport.getWidth() - 10
         }
-        else if (positionX == Window.POSITION_START) {
+        else if (positionX == Widget.POSITION_START) {
             positionX = 10
         }
         else {
@@ -12506,13 +12241,13 @@ class Window extends View {
     /** @param {number|string} positionY @returns {void} */
     setPositionY(positionY) {
         let viewport = app.body()
-        if (positionY == Window.POSITION_CENTER) {
+        if (positionY == Widget.POSITION_CENTER) {
             positionY = (viewport.getHeight() - this.getHeight()) / 2
         }
-        else if (positionY == Window.POSITION_END) {
+        else if (positionY == Widget.POSITION_END) {
             positionY = viewport.getHeight() - 10
         }
-        else if (positionY == Window.POSITION_START) {
+        else if (positionY == Widget.POSITION_START) {
             positionY = 10
         }
         else {
@@ -12586,17 +12321,12 @@ class Window extends View {
     /** @returns {void} */
     #setMaxHeight() {
         // NOTE: set view and body style property max-height to active y-axis scrollbar provided that the body's content exceeds calculated max-height
-        this.#getBody().setStyleProperty('max-height', '')
-        let percentageView = this.getView().getStylePropertyComputed('max-height')
-        if (percentageView == 0) return 
-        let maxHeightView = app.getHeight() * (percentageView.remove('%') / 100)
-        this.getView().setStyleProperty('max-height', maxHeightView)
         let heightView = this.getView().getHeight()
         let heightHeader = this.#getHeader().getHeight()
         let heightMenuBar = this.#getMenuBar().getHeight()
         let heightFooter = this.#getFooter().getHeight()
-        let heightBody = heightView - (heightHeader + heightMenuBar + heightFooter) - 12.5
-        this.#getBody().setStyleProperty('max-height', heightBody)
+        let heightBody = heightView - (heightHeader + heightMenuBar + heightFooter) - 5
+        // this.#getBody().setStyleProperty('max-height', heightBody)
     }
 }
 class _ extends View {
@@ -12617,8 +12347,6 @@ class _ extends View {
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        // print(`${this.getClassName()}(${this.getIdentifier()}).onEventListenerInterface(event={type=${event.type}}, element={id=${element.identifier()}})`)
-
         if (event.type == 'click') {
 
         }
@@ -12636,7 +12364,7 @@ class _ extends View {
 //__________________________________________________________________________________________________________________________________________________//
 
 /** @param {boolean[]|string[]|{}} iterable @returns {boolean} */
-window.all = function all(iterable) {
+function all(iterable) {
     if (util.istype(iterable, 'array-boolean')) {
         for (let value of iterable) {
             if (value === false) {
@@ -12654,7 +12382,7 @@ window.all = function all(iterable) {
     return true
 }
 /** @param {boolean[]|string[]|{}} iterable @returns {boolean} */
-window.any = function any(iterable) {
+function any(iterable) {
     if (util.istype(iterable, 'array-boolean')) {
         for (let value of iterable) {
             if (value === true) {
@@ -12676,24 +12404,24 @@ window.any = function any(iterable) {
     }
     return false
 }
-/** @param {any} value @returns {boolean} */
-window.len = function len(object) {
-    if (util.istype(object, 'array')) {
-        return object.length
+/** @param {any} iterable @returns {number} */
+function len(iterable) {
+    if (util.istype(iterable, 'array')) {
+        return iterable.length
     }
-    else if (util.istype(object, 'object')) {
+    else if (util.istype(iterable, 'object')) {
         let keys = []
-        for (let key in object) {
-            keys.append(key)
+        for (let key in iterable) {
+            keys.push(key)
         }
         return keys.length
     }
-    else if (util.istype(object, 'string')) {
-        return object.length
+    else if (util.istype(iterable, 'string')) {
+        return iterable.length
     }
 }
-/** @param {any[]|{}} iterable */
-window.enumerate = function* enumerate(iterable) {
+/** @generator @param {any[]|{}} iterable @yields {[string,any]} @returns {Generator<[string,any], void>} */
+function* enumerate(iterable) {
     if (util.istype(iterable, 'array')) {
         for (let index = 0; index < iterable.length; index++) {
             yield [index, iterable[index]]
@@ -12711,7 +12439,7 @@ window.enumerate = function* enumerate(iterable) {
     }
 }
 /** @param {string} key @param {string|string[]|{string:string}} iterable @returns {boolean} */
-window.excludes = function excludes(key, iterable) {
+function excludes(key, iterable) {
     // iterable:string='value|{type}|value|{type}|value'
     function istype(value) {
         if (value.startswith('{') && value.endswith('}')) {
@@ -12750,8 +12478,8 @@ window.excludes = function excludes(key, iterable) {
     }
 }
 /** @param {string} key @param {string|string[]|{string:string}} iterable @returns {boolean} */
-window.includes = function includes(key, iterable) {
-    // iterable:string='value|{type}|value|{type}|value'
+function includes(key, iterable) {
+    // iterable:string = 'value|{type}|value|{type}|value'
     function istype(value) {
         if (value.startswith('{') && value.endswith('}')) {
             if (util.istype(key, value.strip('{}'))) {
@@ -12789,24 +12517,18 @@ window.includes = function includes(key, iterable) {
     }
 }
 /** @param {any} value @param {string} types @returns {boolean} */
-window.istype = function istype(value, types) {
+function istype(value, types) {
     return util.istype(value, types)
 }
 /** @param {number} number @param {number} ndigits @returns {number} */
-window.round = function round(number, ndigits) {
-    let multiplier = Math.pow(10, nDigits)
+function round(number, ndigits) {
+    let multiplier = Math.pow(10, ndigits)
     return Math.round(number * multiplier) / multiplier
 }
 /** @param {any} value @returns {boolean} */
-window.type = function type(value) {
+function type(value) {
     return typeof value
 }
 
 /** @returns {void} */
 window.print = console.log
-
-// TESTING
-
-
-/***/
-
