@@ -9,6 +9,7 @@
  * @typedef {"0"|"1"} bit
  * @typedef {string} binary
  * @typedef {ArrayBuffer|Int8Array|Uint8Array} bytes
+ * @typedef {{real:number,imaginary:number}} complex
  * @typedef {string} hexadecimal
  * @typedef {string} octal
  * @typedef {number} port
@@ -498,7 +499,7 @@ String.prototype.upper = function () {
 String.prototype.zfill = function (width) {
     return this.padStart(width, '0');
 }
-//__________________________________________________________________________________________________________________________________________________//
+//____________________________________________________________________________//
 class util {
     constructor() {
     }
@@ -564,27 +565,13 @@ class util {
     static HASH_SHA512 = 'sha512'
 
     /** @readonly @type {string} */
-    static REFERENCE_TAG_ABBREVIATIONS = 'ABBREVIATIONS'
+    static NUMBER_COMPLEX_SYNTAX1 = /^(?<real>[+-]?\d*\.?\d+(e[+-]\d+)?)\s*(?<operation>[+-])\s*(?<imaginary>\d*\.?\d+(e[+-]\d+)?)(i|j)$/
     /** @readonly @type {string} */
-    static REFERENCE_TAG_ACRONYMS      = 'ACRONYMS'
+    static NUMBER_COMPLEX_SYNTAX2 = /^(?<real>[+-]?\d*\.?\d+(e[+-]\d+)?)\s*(?<operation>[+-])\s*j(?<imaginary>\d*\.?\d+(e[+-]\d+)?)$/
     /** @readonly @type {string} */
-    static REFERENCE_TAG_DEFINITIONS   = 'DEFINITIONS'
+    static NUMBER_DECIMAL_SYNTAX  = /^[+-]?(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?$|^[+-]?\d+[eE][+-]?\d+$/
     /** @readonly @type {string} */
-    static REFERENCE_TAG_LIST          = 'LIST'
-    /** @readonly @type {string} */
-    static REFERENCE_TAG_NAME          = 'NAME'
-    /** @readonly @type {string} */
-    static REFERENCE_TAG_OBJECT        = 'OBJECT'
-    /** @readonly @type {string} */
-    static REFERENCE_TAG_QUESTIONS     = 'QUESTIONS'
-    /** @readonly @type {string} */
-    static REFERENCE_TAG_SOURCE        = 'SOURCE'
-    /** @readonly @type {string} */
-    static REFERENCE_TAG_SUBTITLE      = 'SUBTITLE'
-    /** @readonly @type {string} */
-    static REFERENCE_TAG_TABLE         = 'TABLE'
-    /** @readonly @type {string} */
-    static REFERENCE_TAG_TITLE         = 'TITLE'
+    static NUMBER_INTEGER_SYNTAX  = /^[+-]?\d+$/
 
     /** @readonly @type {string} */
     static TABLE_ORIENTATION_VERTICAL = 'vertical'
@@ -599,21 +586,21 @@ class util {
     static TIME_QUARTERS = ['First', 'Second', 'Third', 'Fourth']
 
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_YEAR        = "(?<year>19[7-9][0-9]|[2-9][0-9][0-9][0-9])"
+    static TIMESTAMP_PATTERN_YEAR        = "(?<year>19[7-9]\\d|[2-9]\\d\\d\\d)"
     /** @readonly @type {string} */
     static TIMESTAMP_PATTERN_MONTH       = "(?<month>0[1-9]|1[0-2])"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_DAY         = "(?<day>0[1-9]|1[0-9]|2[0-9]|3[0-2])"
+    static TIMESTAMP_PATTERN_DAY         = "(?<day>0[1-9]|1\\d|2\\d|3[0-2])"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_HOUR        = "(?<hour>0[0-9]|1[0-9]|2[0-3])"
+    static TIMESTAMP_PATTERN_HOUR        = "(?<hour>0\\d|1\\d|2[0-3])"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_MINUTE      = "(?<minute>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
+    static TIMESTAMP_PATTERN_MINUTE      = "(?<minute>0\\d|[1-5]\\d)"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_SECOND      = "(?<second>0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])"
+    static TIMESTAMP_PATTERN_SECOND      = "(?<second>0\\d|[1-5]\\d)"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_MILLISECOND = "(?<millisecond>\\d\\d\\d)?"
+    static TIMESTAMP_PATTERN_MILLISECOND = "(?<millisecond>\\d\\d\\d)"
     /** @readonly @type {string} */
-    static TIMESTAMP_PATTERN_ZONE        = "(?<zone>[A-I]|[K-Z])?"
+    static TIMESTAMP_PATTERN_ZONE        = "(?<zone>[A-I]|[K-Z])"
 
     /** @readonly @type {string} */
     static TIMESTAMP_OPTION_DICTIONARY   = 'dictionary'
@@ -729,49 +716,41 @@ class util {
     static ispattern(value, pattern) {
         return new RegExp(pattern).test(`${value}`)
     }
-    /** @param {any} value @param {string} types @returns {boolean} */
-    static istype(value, types) {
-        /** @param {*} value @param {string} type @returns {boolean} */
-        function istype(value, type) {
-            function toBinary(value, type) {
-                if (util.ispattern(value, /^(0|1)+$/)) {
-                    return value
-                }
-                else if (type.startswith('address-ipv4') || type.startswith('address-internet_protocol_v4')) {
-                    return util.address_ipv4(value)
-                }
-                else if (type.startswith('address-ipv6') || type.startswith('address-internet_protocol_v6')) {
-                    return util.address_ipv6(value)
-                }
-                else if (type.startswith('address-mac') || type.startswith('address-media_access_control')) {
-                    return util.address_mac(value)
-                }
+    /** @param {any} value @param {string} data_types @returns {boolean} */
+    static istype(value, data_types) {
+        /** @param {*} value @param {string} data_type @returns {boolean} */
+        function istype(value, data_type) {
+            function toBinary(value, data_type) {
+                if (util.ispattern(value, /^(0|1)+$/)) return value
+                else if (data_type.startswith('address-ipv4') || data_type.startswith('address-internet_protocol_v4')) return util.address_ipv4(value)
+                else if (data_type.startswith('address-ipv6') || data_type.startswith('address-internet_protocol_v6')) return util.address_ipv6(value)
+                else if (data_type.startswith('address-mac')  || data_type.startswith('address-media_access_control')) return util.address_mac(value)
             }
-            if (type == 'address') {
+            if (data_type == 'address') {
                 return istype(value, 'address-ipv4') || istype(value, 'address-ipv6') || istype(value, 'address-mac')
             }
-            if (type == 'address-ip' || type == 'address-internet_protocol') {
+            if (data_type == 'address-ip' || data_type == 'address-internet_protocol') {
                 return istype(value, 'address-ipv4') || istype(value, 'address-ipv6')
             }
-            if (type == 'address-ip-local' || type == 'address-internet_protocol-local') {
+            if (data_type == 'address-ip-local' || data_type == 'address-internet_protocol-local') {
                 return istype(value, 'address-ipv4-local') || istype(value, 'address-ipv6-local')
             }
-            if (type == 'address-ip-local-link' || type == 'address-internet_protocol-local-link') {
+            if (data_type == 'address-ip-local-link' || data_type == 'address-internet_protocol-local-link') {
                 return istype(value, 'address-ipv4-local-link') || istype(value, 'address-ipv6-local-link')
             }
-            if (type == 'address-ip-local-unique' || type == 'address-internet_protocol-local-unique') {
+            if (data_type == 'address-ip-local-unique' || data_type == 'address-internet_protocol-local-unique') {
                 return istype(value, 'address-ipv4-local-unique') || istype(value, 'address-ipv6-local-unique')
             }
-            if (type == 'address-ip-loopback' || type == 'address-internet_protocol-loopback') {
+            if (data_type == 'address-ip-loopback' || data_type == 'address-internet_protocol-loopback') {
                 return istype(value, 'address-ipv4-loopback') || istype(value, 'address-ipv6-loopback')
             }
-            if (type == 'address-ip-multicast' || type == 'address-internet_protocol-multicast') {
+            if (data_type == 'address-ip-multicast' || data_type == 'address-internet_protocol-multicast') {
                 return istype(value, 'address-ipv4-multicast') || istype(value, 'address-ipv6-multicast')
             }
-            if (type == 'address-ip-unspecified' || type == 'address-internet_protocol-unspecified') {
+            if (data_type == 'address-ip-unspecified' || data_type == 'address-internet_protocol-unspecified') {
                 return istype(value, 'address-ipv4-unspecified') || istype(value, 'address-ipv6-unspecified')
             }
-            if (type == 'address-ipv4' || type == 'address-internet_protocol_v4') {
+            if (data_type == 'address-ipv4' || data_type == 'address-internet_protocol_v4') {
                 if (istype(value, 'string')) {
                     if (istype(value, 'binary')) {
                         return value.length == 32
@@ -788,60 +767,60 @@ class util {
                     }
                 }
             }
-            if (type == 'address-ipv4-benchmarking' || type == 'address-internet_protocol_v4-benchmarking') {
+            if (data_type == 'address-ipv4-benchmarking' || data_type == 'address-internet_protocol_v4-benchmarking') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 15) == '110001100001001'
                 }
             }
-            if (type == 'address-ipv4-broadcast' || type == 'address-internet_protocol_v4-broadcast') {
+            if (data_type == 'address-ipv4-broadcast' || data_type == 'address-internet_protocol_v4-broadcast') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == '11111111111111111111111111111111'
                 }
             }
-            if (type == 'address-ipv4-dummy' || type == 'address-internet_protocol_v4-dummy') {
+            if (data_type == 'address-ipv4-dummy' || data_type == 'address-internet_protocol_v4-dummy') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == '11000000000000000000000000001000'
                 }
             }
-            if (type == 'address-ipv4-local' || type == 'address-internet_protocol_v4-local') {
+            if (data_type == 'address-ipv4-local' || data_type == 'address-internet_protocol_v4-local') {
                 return istype(value, 'address-ipv4-local-link') || istype(value, 'address-ipv4-local-unique')
             }
-            if (type == 'address-ipv4-local-link' || type == 'address-internet_protocol_v4-local-link') {
+            if (data_type == 'address-ipv4-local-link' || data_type == 'address-internet_protocol_v4-local-link') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 16) == '1010100111111110'
                 }
             }
-            if (type == 'address-ipv4-local-unique' || type == 'address-internet_protocol_v4-local-unique') {
+            if (data_type == 'address-ipv4-local-unique' || data_type == 'address-internet_protocol_v4-local-unique') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 8) == '10100000' || value.slice(0, 12) == '101011000001' || value.slice(0, 16) == '1100000010101000'
                 }
             }
-            if (type == 'address-ipv4-loopback' || type == 'address-internet_protocol_v4-loopback') {
+            if (data_type == 'address-ipv4-loopback' || data_type == 'address-internet_protocol_v4-loopback') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 8) == '01111111'
                 }
             }
-            if (type == 'address-ipv4-mask' || type == 'address-internet_protocol_v4-mask') {
+            if (data_type == 'address-ipv4-mask' || data_type == 'address-internet_protocol_v4-mask') {
                 return istype(value, 'address-ipv4-networkmask') || istype(value, 'address-ipv4-wildcardmask')
             }
-            if (type == 'address-ipv4-multicast' || type == 'address-internet_protocol_v4-multicast') {
+            if (data_type == 'address-ipv4-multicast' || data_type == 'address-internet_protocol_v4-multicast') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 4) == '1110'
                 }
             }
-            if (type == 'address-ipv4-netmask' || type == 'address-internet_protocol_v4-netmask') {
+            if (data_type == 'address-ipv4-netmask' || data_type == 'address-internet_protocol_v4-netmask') {
                 return istype(value, 'address-ipv4-networkmask')
             }
-            if (type == 'address-ipv4-networkmask' || type == 'address-internet_protocol_v4-networkmask') {
+            if (data_type == 'address-ipv4-networkmask' || data_type == 'address-internet_protocol_v4-networkmask') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     if (value.includes('0')) {
                         return value.indexOf('0') > value.lastIndexOf('1')
                     } else {
@@ -849,31 +828,31 @@ class util {
                     }
                 }
             }
-            if (type == 'address-ipv4-prefix-length' || type == 'address-internet_protocol_v4-prefix-length') {
+            if (data_type == 'address-ipv4-prefix-length' || data_type == 'address-internet_protocol_v4-prefix-length') {
                 if (istype(value, 'number') || istype(value, 'string-number')) {
-                    return util.ispattern(value, /^(0?[0-9]|1[0-9]|2[0-9]|3[1-2])$/)
+                    return util.ispattern(value, /^(0?\d|1\d|2\d|3[1-2])$/)
                 }
             }
-            if (type == 'address-ipv4-subnetmask' || type == 'address-internet_protocol_v4-subnetmask') {
+            if (data_type == 'address-ipv4-subnetmask' || data_type == 'address-internet_protocol_v4-subnetmask') {
                 return istype(value, 'address-ipv4-networkmask')
             }
-            if (type == 'address-ipv4-subnetworkmask' || type == 'address-internet_protocol_v4-subnetworkmask') {
+            if (data_type == 'address-ipv4-subnetworkmask' || data_type == 'address-internet_protocol_v4-subnetworkmask') {
                 return istype(value, 'address-ipv4-networkmask')
             }
-            if (type == 'address-ipv4-unicast' || type == 'address-internet_protocol_v4-unicast') {
+            if (data_type == 'address-ipv4-unicast' || data_type == 'address-internet_protocol_v4-unicast') {
                 if (istype(value, 'address-ipv4')) {
                     return !(istype(value, 'address-ipv4-broadcast') || istype(value, 'address-ipv4-multicast'))
                 }
             }
-            if (type == 'address-ipv4-unspecified' || type == 'address-internet_protocol_v4-unspecified') {
+            if (data_type == 'address-ipv4-unspecified' || data_type == 'address-internet_protocol_v4-unspecified') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == '00000000000000000000000000000000'
                 }
             }
-            if (type == 'address-ipv4-wildcardmask' || type == 'address-internet_protocol_v4-wildcardmask') {
+            if (data_type == 'address-ipv4-wildcardmask' || data_type == 'address-internet_protocol_v4-wildcardmask') {
                 if (istype(value, 'address-ipv4')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     if (value.includes('1')) {
                         return value.indexOf('1') > value.lastIndexOf('0')
                     } else {
@@ -881,7 +860,7 @@ class util {
                     }
                 }
             }
-            if (type == 'address-ipv6' || type == 'address-internet_protocol_v6') {
+            if (data_type == 'address-ipv6' || data_type == 'address-internet_protocol_v6') {
                 if (istype(value, 'string')) {
                     if (istype(value, 'binary')) {
                         return value.length == 128
@@ -899,90 +878,90 @@ class util {
                     }
                 }
             }
-            if (type == 'address-ipv6-4to6' || type == 'address-internet_protocol_v6-4to6') {
+            if (data_type == 'address-ipv6-4to6' || data_type == 'address-internet_protocol_v6-4to6') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 96) == '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111'
                 }
             }
-            if (type == 'address-ipv6-ipv4-mapped' || type == 'address-internet_protocol_v6-internet_protocol_v4-mapped') {
+            if (data_type == 'address-ipv6-ipv4-mapped' || data_type == 'address-internet_protocol_v6-internet_protocol_v4-mapped') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 96) == '000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111'
                 }
             }
-            if (type == 'address-ipv6-6to4' || type == 'address-internet_protocol_v6-6to4') {
+            if (data_type == 'address-ipv6-6to4' || data_type == 'address-internet_protocol_v6-6to4') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 16) == '0010000000000010'
                 }
             }
-            if (type == 'address-ipv6-anycast' || type == 'address-internet_protocol_v6-anycast') {
+            if (data_type == 'address-ipv6-anycast' || data_type == 'address-internet_protocol_v6-anycast') {
                 return istype(value, 'address-ipv6-global')
             }
-            if (type == 'address-ipv6-benchmarking' || type == 'address-internet_protocol_v6-benchmarking') {
+            if (data_type == 'address-ipv6-benchmarking' || data_type == 'address-internet_protocol_v6-benchmarking') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 48) == '001000000000000100000000000000100000000000000000'
                 }
             }
-            if (type == 'address-ipv6-documentation' || type == 'address-internet_protocol_v6-documentation') {
+            if (data_type == 'address-ipv6-documentation' || data_type == 'address-internet_protocol_v6-documentation') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 32) == '00100000000000010000110110111000'
                 }
             }
-            if (type == 'address-ipv6-global' || type == 'address-internet_protocol_v6-global') {
+            if (data_type == 'address-ipv6-global' || data_type == 'address-internet_protocol_v6-global') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 3) == '001'
                 }
             }
-            if (type == 'address-ipv6-local' || type == 'address-internet_protocol_v6-local') {
+            if (data_type == 'address-ipv6-local' || data_type == 'address-internet_protocol_v6-local') {
                 return istype(value, 'address-ipv6-local-link') || istype(value, 'address-ipv6-local-unique')
             }
-            if (type == 'address-ipv6-local-link' || type == 'address-internet_protocol_v6-local-link') {
+            if (data_type == 'address-ipv6-local-link' || data_type == 'address-internet_protocol_v6-local-link') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 10) == '1111111010'
                 }
             }
-            if (type == 'address-ipv6-local-unique' || type == 'address-internet_protocol_v6-local-unique') {
+            if (data_type == 'address-ipv6-local-unique' || data_type == 'address-internet_protocol_v6-local-unique') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 7) == '1111110'
                 }
             }
-            if (type == 'address-ipv6-loopback' || type == 'address-internet_protocol_v6-loopback') {
+            if (data_type == 'address-ipv6-loopback' || data_type == 'address-internet_protocol_v6-loopback') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001'
                 }
             }
-            if (type == 'address-ipv6-multicast' || type == 'address-internet_protocol_v6-multicast') {
+            if (data_type == 'address-ipv6-multicast' || data_type == 'address-internet_protocol_v6-multicast') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 8) == '11111111'
                 }
             }
-            if (type == 'address-ipv6-teredo' || type == 'address-internet_protocol_v6-teredo') {
+            if (data_type == 'address-ipv6-teredo' || data_type == 'address-internet_protocol_v6-teredo') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 32) == '00100000000000010000000000000000'
                 }
             }
-            if (type == 'address-ipv6-unicast' || type == 'address-internet_protocol_v6-unicast') {
+            if (data_type == 'address-ipv6-unicast' || data_type == 'address-internet_protocol_v6-unicast') {
                 if (istype(value, 'address-ipv6')) {
                     return istype(value, 'address-ipv6-global') || istype(value, 'address-ipv6-local')
                 }
             }
-            if (type == 'address-ipv6-unspecified' || type == 'address-internet_protocol_v6-unspecified') {
+            if (data_type == 'address-ipv6-unspecified' || data_type == 'address-internet_protocol_v6-unspecified') {
                 if (istype(value, 'address-ipv6')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
                 }
             }
-            if (type == 'address-mac' || type == 'address-media_access_control') {
+            if (data_type == 'address-mac' || data_type == 'address-media_access_control') {
                 if (istype(value, 'string')) {
                     if (istype(value, 'binary')) {
                         return value.length == 48
@@ -998,41 +977,41 @@ class util {
                     }
                 }
             }
-            if (type == 'address-mac-broadcast' || type == 'address-media_access_control-broadcast') {
+            if (data_type == 'address-mac-broadcast' || data_type == 'address-media_access_control-broadcast') {
                 if (istype(value, 'address-mac')) {
                     if (istype(value, 'binary')) {
                         return value == '111111111111111111111111111111111111111111111111'
                     } else {
-                        return istype(util.address_mac(value), type)
+                        return istype(util.address_mac(value), data_type)
                     }
                 }
             }
-            if (type == 'address-mac-multicast' || type == 'address-media_access_control-multicast') {
+            if (data_type == 'address-mac-multicast' || data_type == 'address-media_access_control-multicast') {
                 return istype(value, 'address-mac-multicast-ipv4') || istype(value, 'address-mac-multicast-ipv6')
             }
-            if (type == 'address-mac-multicast-ipv4' || type == 'address-media_access_control-multicast-internet_protocol_v4') {
+            if (data_type == 'address-mac-multicast-ipv4' || data_type == 'address-media_access_control-multicast-internet_protocol_v4') {
                 if (istype(value, 'address-mac')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 25) == '0000000100000000010111100'
                 }
             }
-            if (type == 'address-mac-multicast-ipv6' || type == 'address-media_access_control-multicast-internet_protocol_v6') {
+            if (data_type == 'address-mac-multicast-ipv6' || data_type == 'address-media_access_control-multicast-internet_protocol_v6') {
                 if (istype(value, 'address-mac')) {
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value.slice(0, 16) == '0011001100110011'
                 }
             }
-            if (type == 'address-mac-unicast' || type == 'address-media_access_control-unicast') {
+            if (data_type == 'address-mac-unicast' || data_type == 'address-media_access_control-unicast') {
                 if (istype(value, 'address-mac')) {
                     return !(istype(value, 'address-mac-broadcast') || istype(value, 'address-mac-multicast'))
                 }
             }
-            if (type == 'array') {
+            if (data_type == 'array') {
                 if (typeof value === 'object') {
                     return value instanceof Array
                 }
             }
-            if (type == 'array-boolean') {
+            if (data_type == 'array-boolean') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'boolean')) return false
@@ -1040,7 +1019,7 @@ class util {
                     return true
                 }
             }
-            if (type == 'array-bytes') {
+            if (data_type == 'array-bytes') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'bytes')) return false
@@ -1048,7 +1027,7 @@ class util {
                     return true
                 }
             }
-            if (type == 'array-number') {
+            if (data_type == 'array-number') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'number')) return false
@@ -1056,7 +1035,7 @@ class util {
                     return true
                 }
             }
-            if (type == 'array-object') {
+            if (data_type == 'array-object') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'object')) return false
@@ -1064,7 +1043,7 @@ class util {
                     return true
                 }
             }
-            if (type == 'array-string') {
+            if (data_type == 'array-string') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'string')) return false
@@ -1072,7 +1051,7 @@ class util {
                     return true
                 }
             }
-            if (type == 'array-string-array') {
+            if (data_type == 'array-string-array') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'string-array')) return false
@@ -1080,7 +1059,7 @@ class util {
                     return true
                 }
             }
-            if (type == 'array-string-array-object') {
+            if (data_type == 'array-string-array-object') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'string-array-object')) return false
@@ -1088,7 +1067,7 @@ class util {
                     return true
                 }
             }
-            if (type == 'array-string-boolean') {
+            if (data_type == 'array-string-boolean') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'string-boolean')) return false
@@ -1096,7 +1075,7 @@ class util {
                     return true
                 }
             }
-            if (type == 'array-string-number') {
+            if (data_type == 'array-string-number') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'string-number')) return false
@@ -1104,7 +1083,7 @@ class util {
                     return true
                 }
             }
-            if (type == 'array-string-object') {
+            if (data_type == 'array-string-object') {
                 if (istype(value, 'array')) {
                     for (let value_ of value) {
                         if (!istype(value_, 'string-object')) return false
@@ -1112,46 +1091,46 @@ class util {
                     return true
                 }
             }
-            if (type == 'base64') {
+            if (data_type == 'base64') {
                 if (istype(value, 'string')) {
                     return util.ispattern(value, /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/)
                 }
             }
-            if (type == 'binary') {
+            if (data_type == 'binary') {
                 if (istype(value, 'string')) {
                     return util.ispattern(value, /^(0|1)+$/)
                 }
             }
-            if (type == 'boolean') {
+            if (data_type == 'boolean') {
                 return typeof value === 'boolean'
             }
-            if (type == 'bytes') {
+            if (data_type == 'bytes') {
                 return value instanceof Int8Array || value instanceof Uint8Array
             }
-            if (type == 'bytes-array') {
+            if (data_type == 'bytes-array') {
                 if (istype(value, 'bytes')) {
                     return istype(util.byt2str(value), 'string-array')
                 }
             }
-            if (type == 'bytes-array-object') {
+            if (data_type == 'bytes-array-object') {
                 if (istype(value, 'bytes')) {
                     return istype(util.byt2str(value), 'string-array-object')
                 }
             }
-            if (type == 'bytes-object') {
+            if (data_type == 'bytes-object') {
                 if (istype(value, 'bytes')) {
                     return istype(util.byt2str(value), 'string-object')
                 }
             }
-            if (type == 'character') {
+            if (data_type == 'character') {
                 if (istype(value, 'string')) {
                     return util.ispattern(value, /^([A-Z]|[a-z])$/)
                 }
             }
-            if (type == 'coordinates-geographic') {
+            if (data_type == 'coordinates-geographic') {
                 return istype(value, 'coordinates-geographic-ddd') || istype(value, 'coordinates-geographic-ddm') || istype(value, 'coordinates-geographic-dms')
             }
-            if (type == 'coordinates-geographic-ddd') {
+            if (data_type == 'coordinates-geographic-ddd') {
                 if (istype(value, 'string')) {
                     return istype(value, 'coordinates-geographic-latitude-ddd') || istype(value, 'coordinates-geographic-longitude-ddd')
                 }
@@ -1161,7 +1140,7 @@ class util {
                     }
                 }
             }
-            if (type == 'coordinates-geographic-ddm') {
+            if (data_type == 'coordinates-geographic-ddm') {
                 if (istype(value, 'string')) {
                     return istype(value, 'coordinates-geographic-latitude-ddm') || istype(value, 'coordinates-geographic-longitude-ddm')
                 }
@@ -1171,7 +1150,7 @@ class util {
                     }
                 }
             }
-            if (type == 'coordinates-geographic-dms') {
+            if (data_type == 'coordinates-geographic-dms') {
                 if (istype(value, 'string')) {
                     return istype(value, 'coordinates-geographic-latitude-dms') || istype(value, 'coordinates-geographic-longitude-dms')
                 }
@@ -1181,12 +1160,12 @@ class util {
                     }
                 }
             }
-            if (type == 'coordinates-geographic-latitude') {
+            if (data_type == 'coordinates-geographic-latitude') {
                 if (istype(value, 'string')) {
                     return istype(value, 'coordinates-geographic-latitude-ddd') || istype(value, 'coordinates-geographic-latitude-ddm') || istype(value, 'coordinates-geographic-latitude-dms')
                 }
             }
-            if (type == 'coordinates-geographic-latitude-ddd') {
+            if (data_type == 'coordinates-geographic-latitude-ddd') {
                 if (istype(value, 'number') || istype(value, 'string-number')) {
                     return 0 <= Math.abs(Number(value)) && Math.abs(Number(value)) <= 90
                 }
@@ -1195,24 +1174,24 @@ class util {
                     return util.ispattern(value, `^${pattern}$`)
                 }
             }
-            if (type == 'coordinates-geographic-latitude-ddm') {
+            if (data_type == 'coordinates-geographic-latitude-ddm') {
                 if (istype(value, 'string')) {
                     let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
                     return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$`)
                 }
             }
-            if (type == 'coordinates-geographic-latitude-dms') {
+            if (data_type == 'coordinates-geographic-latitude-dms') {
                 if (istype(value, 'string')) {
                     let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
                     return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}${pattern}$`)
                 }
             }
-            if (type == 'coordinates-geographic-longitude') {
+            if (data_type == 'coordinates-geographic-longitude') {
                 if (istype(value, 'string')) {
                     return istype(value, 'coordinates-geographic-longitude-ddd') || istype(value, 'coordinates-geographic-longitude-ddm') || istype(value, 'coordinates-geographic-longitude-dms')
                 }
             }
-            if (type == 'coordinates-geographic-longitude-ddd') {
+            if (data_type == 'coordinates-geographic-longitude-ddd') {
                 if (istype(value, 'number') || istype(value, 'string-number')) {
                     return 0 <= Math.abs(Number(value)) && Math.abs(Number(value)) <= 180
                 }
@@ -1221,143 +1200,153 @@ class util {
                     return util.ispattern(value, `^${pattern}$`)
                 }
             }
-            if (type == 'coordinates-geographic-longitude-ddm') {
+            if (data_type == 'coordinates-geographic-longitude-ddm') {
                 if (istype(value, 'string')) {
                     let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}`
                     return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$`)
                 }
             }
-            if (type == 'coordinates-geographic-longitude-dms') {
+            if (data_type == 'coordinates-geographic-longitude-dms') {
                 if (istype(value, 'string')) {
                     let pattern = !(value.includes('*') || value.includes('°') || value.includes('º')) ? `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}` : `${util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}${util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}`
                     return util.ispattern(value, `^${pattern}${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$`) || util.ispattern(value, `^${util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}${pattern}$`)
                 }
             }
-            if (type == 'date') {
+            if (data_type == 'date') {
                 return value instanceof Date
             }
-            if (type == 'decimal') {
+            if (data_type == 'decimal') {
                 return istype(value, 'number') || istype(value, 'string-number')
             }
-            if (type == 'degrees') {
-                return util.ispattern(value, /^(0?\d?\d|[1-2]\d\d|3[0-5]\d)(°(M|T))?$/)
+            if (data_type == 'degrees') {
+                return util.ispattern(value, /^-?(0?\d?\d|[1-2]\d\d|3[0-5]\d)(°(M|T))?$/)
             }
-            if (type == 'element') {
+            if (data_type == 'element') {
                 return value instanceof Element || value instanceof AppElement
             }
-            if (type == 'hexadecimal') {
+            if (data_type == 'hexadecimal') {
                 if (istype(value, 'string')) {
                     return util.ispattern(value, /^([0-9]|[A-F]|[a-f])+$/)
                 }
             }
-            if (type == 'html') {
+            if (data_type == 'html') {
                 if (istype(value, 'string')) {
                     let document = new DOMParser().parseFromString(value, 'text/html')
-                    return Array.from(document.body.childNodes).some(node => node.nodeType === 1)
+                    return Array.from(document.body.childNodes).some(node => node.nodedata_Type === 1)
                 }
             }
-            if (type == 'html-tag') {
+            if (data_type == 'html-tag') {
                 if (istype(value, 'string')) {
                     let array = '!doctype|a|abbr|address|area|article|aside|audio|b|base|bb|bdi|bdo|big|blockquote|br|button|canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|dfn|dialog|div|dl|dt|em|embed|fieldset|figcaption|figure|footer|form|h1|h2|h3|h4|h5|h6|head|header|hr|html|i|iframe|img|input|ins|kbd|label|legend|li|link|main|map|mark|meta|meter|nav|noscript|object|ol|optgroup|option|p|param|picture|polyline|polygon|pre|progress|q|rp|rt|ruby|s|samp|script|section|select|small|source|span|strong|style|sub|summary|sup|svg|table|tbody|td|template|textarea|tfoot|th|thead|tr|track|u|ul|var|video|wbr'.split('|')
                     return array.includes(value)
                 }
             }
-            if (type == 'identifier') {
+            if (data_type == 'identifier') {
                 if (istype(value, 'string')) {
                     return util.ispattern(value, /^([0-9]|[A-Z]|[a-z]|_)+$/)
                 }
             }
-            if (type == 'number') {
-                return typeof value === 'number'
+            if (data_type == 'number') {
+                return typeof value === "number" || istype(value, "number-complex")
             }
-            if (type == 'number-decimal' || type == 'number-float') {
-                if (istype(value, 'number')) {
+            if (data_type == 'number-complex') {
+                if (istype(value, 'object')) {
+                    return value["real"] !== undefined && (value["imag"] !== undefined || value["imaginary"] !== undefined)
+                }
+            }
+            if (data_type == 'number-decimal' || data_type == 'number-float') {
+                if (typeof value === "number") {
                     return istype(`${value}`, 'string-number-decimal')
                 }
             }
-            if (type == 'number-integer') {
-                if (istype(value, 'number')) {
+            if (data_type == 'number-integer') {
+                if (typeof value === "number") {
                     return istype(`${value}`, 'string-number-integer')
                 }
             }
-            if (type == 'object') {
+            if (data_type == 'object') {
                 if (typeof value === 'object') {
                     return value instanceof Object && !(value instanceof Array)
                 }
             }
-            if (type == 'octal') {
+            if (data_type == 'octal') {
                 if (istype(value, 'string')) {
                     return util.ispattern(value, /^[0-7]+$/)
                 }
             }
-            if (type == 'port') {
+            if (data_type == 'port') {
                 if (istype(value, 'number') || istype(value, 'string-number')) {
                     return 0 <= Number(value) && Number(value) <= 65535
                 }
             }
-            if (type == 'port-ephemeral') {
+            if (data_type == 'port-ephemeral') {
                 if (istype(value, 'number') || istype(value, 'string-number')) {
                     return 1024 <= Number(value) && Number(value) <= 65535
                 }
             }
-            if (type == 'port-ephemeral-registered') {
+            if (data_type == 'port-ephemeral-registered') {
                 if (istype(value, 'number') || istype(value, 'string-number')) {
                     return 1024 <= Number(value) && Number(value) <= 49151
                 }
             }
-            if (type == 'port-ephemeral-unregistered' || type == 'port-ephemeral-dynamic' || type == 'port-ephemeral-private') {
+            if (data_type == 'port-ephemeral-unregistered' || data_type == 'port-ephemeral-dynamic' || data_type == 'port-ephemeral-private') {
                 if (istype(value, 'number') || istype(value, 'string-number')) {
                     return 49152 <= Number(value) && Number(value) <= 65535
                 }
             }
-            if (type == 'port-nonephemeral' || type == 'port-wellknown') {
+            if (data_type == 'port-nonephemeral' || data_type == 'port-wellknown') {
                 if (istype(value, 'number') || istype(value, 'string-number')) {
                     return 0 <= Number(value) && Number(value) <= 1023
                 }
             }
-            if (type == 'string') {
+            if (data_type == 'string') {
                 return typeof value === 'string'
             }
-            if (type == 'string-array') {
+            if (data_type == 'string-array') {
                 if (istype(value, 'string')) {
                     if (value.length >= 2) {
                         return value.slice(0, 1) == '[' && value.slice(-1) == ']'
                     }
                 }
             }
-            if (type == 'string-array-object') {
+            if (data_type == 'string-array-object') {
                 if (istype(value, 'string')) {
                     if (value.length >= 4) {
                         return value.slice(0, 1) == '[' && value.slice(-1) == ']' && value.slice(1, 2) == '{' && value.slice(-2, -1) == '}'
                     }
                 }
             }
-            if (type == 'string-boolean') {
+            if (data_type == 'string-boolean') {
                 if (istype(value, 'string')) {
                     return value.lower() == 'true' || value.lower() == 'false'
                 }
             }
-            if (type == 'string-number') {
-                return istype(value, 'string-number-decimal') || istype(value, 'string-number-integer')
+            if (data_type == 'string-number') {
+                return istype(value, 'string-number-complex') || istype(value, 'string-number-decimal') || istype(value, 'string-number-integer')
             }
-            if (type == 'string-number-decimal' || type == 'string-number-float') {
+            if (data_type == 'string-number-complex') {
                 if (istype(value, 'string')) {
-                    return util.ispattern(value, /^(-|\+)?\d+\.\d+$/)
+                    return util.ispattern(value, util.NUMBER_COMPLEX_SYNTAX1) || util.ispattern(value, util.NUMBER_COMPLEX_SYNTAX2)
                 }
             }
-            if (type == 'string-number-integer') {
+            if (data_type == 'string-number-decimal' || data_type == 'string-number-float') {
                 if (istype(value, 'string')) {
-                    return util.ispattern(value, /^(-|\+)?\d+$/)
+                    return util.ispattern(value, util.NUMBER_DECIMAL_SYNTAX)
                 }
             }
-            if (type == 'string-object') {
+            if (data_type == 'string-number-integer') {
+                if (istype(value, 'string')) {
+                    return util.ispattern(value, util.NUMBER_INTEGER_SYNTAX)
+                }
+            }
+            if (data_type == 'string-object') {
                 if (istype(value, 'string')) {
                     if (value.length >= 2) {
                         return value.slice(0, 1) == '{' && value.slice(-1) == '}'
                     }
                 }
             }
-            if (type == 'url') {
+            if (data_type == 'url') {
                 if (istype(value, 'string')) {
                     try {
                         new URL(value)
@@ -1367,71 +1356,67 @@ class util {
                     }
                 }
             }
-            if (type == 'timestamp') {
+            if (data_type == 'timestamp') {
                 if (istype(value, 'string')) {
                     if (value.length >= 4) {
                         let pattern = ""
                         if (value.includes('-')) {
-                            if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
-                            if (len(value) == 7 || len(value) == 8)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}`
-                            if (len(value) == 10 || len(value) == 11) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}`
-                            if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
-                            if (len(value) == 16 || len(value) == 17) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}`
-                            if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}`
-                            if (len(value) == 23 || len(value) == 24) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
+                            if (value.length ==  4 || value.length ==  5) pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
+                            if (value.length ==  7 || value.length ==  8) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}`
+                            if (value.length == 10 || value.length == 11) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}`
+                            if (value.length == 13 || value.length == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}( |T)${util.TIMESTAMP_PATTERN_HOUR}`
+                            if (value.length == 16 || value.length == 17) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}( |T)${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}`
+                            if (value.length == 19 || value.length == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}( |T)${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}`
+                            if (value.length == 23 || value.length == 24) pattern = `${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}( |T)${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
                         }
                         else {
-                            if (len(value) == 4 || len(value) == 5)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
-                            if (len(value) == 6 || len(value) == 7)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}`
-                            if (len(value) == 8 || len(value) == 9)   pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}`
-                            if (len(value) == 11 || len(value) == 12) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}`
-                            if (len(value) == 13 || len(value) == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}`
-                            if (len(value) == 15 || len(value) == 16) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}`
-                            if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
+                            if (value.length ==  4 || value.length ==  5) pattern = `${util.TIMESTAMP_PATTERN_YEAR}`
+                            if (value.length ==  6 || value.length ==  7) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}`
+                            if (value.length ==  8 || value.length ==  9) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}`
+                            if (value.length == 11 || value.length == 12) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}( |T)${util.TIMESTAMP_PATTERN_HOUR}`
+                            if (value.length == 13 || value.length == 14) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}( |T)${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}`
+                            if (value.length == 15 || value.length == 16) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}( |T)${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}`
+                            if (value.length == 19 || value.length == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}( |T)${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
                         }
-                        return util.ispattern(value, `^${pattern}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                        return util.ispattern(value, `^${pattern}${util.TIMESTAMP_PATTERN_ZONE}?$`)
                     }
                 }
             }
-            if (type == 'timestamp-date') {
+            if (data_type == 'timestamp-date') {
                 if (istype(value, 'string')) {
                     if (value.length > 0) {
                         if (value.includes('-')) {
-                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}-${util.TIMESTAMP_PATTERN_MONTH}-${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}?$`)
                         }
                         else {
-                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}${util.TIMESTAMP_PATTERN_ZONE}?$`)
                         }
                     }
                 }
             }
-            if (type == 'timestamp-time') {
+            if (data_type == 'timestamp-time') {
                 if (istype(value, 'string')) {
                     if (value.length > 0) {
                         if (value.includes('-')) {
-                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}:${util.TIMESTAMP_PATTERN_MINUTE}:${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}?$`)
                         }
                         else {
-                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}$`)
+                            return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}${util.TIMESTAMP_PATTERN_ZONE}?$`)
                         }
                     }
                 }
             }
-            if (type == 'timestamp-zone') {
+            if (data_type == 'timestamp-zone') {
                 if (istype(value, 'string')) {
                     if (value.length == 1) {
-                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_ZONE}$`)
+                        return util.ispattern(value, `^${util.TIMESTAMP_PATTERN_ZONE}?$`)
                     }
                 }
             }
-            if (type.slice(-2, type.length) == '[]') {
+            // array of type
+            if (data_type.startsWith('[') && data_type.endsWith(']')) {
                 if (istype(value, 'array')) {
-                    for (let value_ of value) {
-                        if (!istype(value_, type.slice(0, -2))) {
-                            return false
-                        }
-                    }
-                    return true
+                    return value.every(val => istype(val, data_type.slice(1, -1)))
                 }
             }
             return false
@@ -1439,15 +1424,14 @@ class util {
         if (value === null || value === undefined) return false
         // 
         let delimiters = ['&','|']
-        let delimiter = delimiters.find(delimiter => types.includes(delimiter))
-        if (delimiters.every(delimiter => types.includes(delimiter))) throw new Error(`ValueError: conflicting delimiters`)
-        // 
+        let delimiter = delimiters.find(delimiter => data_types.includes(delimiter))
+        if (delimiters.every(delimiter => data_types.includes(delimiter))) throw new Error(`ValueError: conflicting delimiters`)
         if (delimiter) {
-            let results = types.split(delimiter).map(type => istype(value, type))
+            let results = data_types.split(delimiter).map(data_type => istype(value, data_type))
             if (delimiter == '&') return all(results)
             if (delimiter == '|') return any(results)
         } else {
-            return istype(value, types)
+            return istype(value, data_types)
         }
     }
     /**  @param {string} method  @param {...*} args */
@@ -2217,6 +2201,20 @@ class util {
     /** @param {number} degrees @returns {number} */
     static degrees_to_radians(degrees) {
         return degrees * util.DEGREES_TO_RADIANS
+    }
+    /** @param {{string:any}} data @param {string} delimiter @param {(value: *) => string} encoder @returns {string} */
+    static dictionary_string_encode(data, delimiter = ":", fillChar = " ", encoder) {
+        // use parameter encoder to encode dictionary values
+        let entries = Object.entries(data);
+        let key_length = Math.max(...entries.map(([key]) => String(key).length), 0);
+        return entries.map(([key, val]) => {
+            let val_encoded = encoder ? encoder(val) : util.string_conversion_encode(val)
+            return `${String(key).padEnd(key_length, fillChar)} ${delimiter} ${val_encoded}`;
+        }).join('\n');
+    }
+    /** @param {string} data @param {string} delimiter @returns {{string:any}} */
+    static dictionary_string_decode(data) {
+
     }
     // e
     /** @param {{}[]} entries @param {...any} values @returns {boolean} */
@@ -3085,9 +3083,9 @@ class util {
         }
     }
     /** @param {number} number @returns {number} */
-    static mathematics_round(number, placement = 1) {
-        let multiplier = 10**placement
+    static __mathematics_round(number, placement = 1) {
         if (placement > 0) {
+            let multiplier = 10**placement
             number = util.round(number / multiplier, 1) * multiplier
             // correct floating point precision errors when handling large numbers
             number = Math.round(number)
@@ -3097,6 +3095,60 @@ class util {
         }
         number = util.mathematics_simplify(number)
         return number
+    }
+    /** @param {number} number @returns {number} */
+    static mathematics_round(number, placement = null) {
+        if (placement === null) {
+            let num_str = `${number}`;
+            if (!num_str.includes('.')) {
+                return number;
+            }
+            let [integer_part, decimal_part] = num_str.replace(/0+$/, '').split('.');
+            // find digit with highest consecutive count
+            let consecutive_counter_map = {};
+            let current_digit = "";
+            let current_count = 0;
+            for (let i = 0; i < decimal_part.length; i++) {
+                let digit = decimal_part[i];
+                if (digit === current_digit) {
+                    current_count += 1;
+                } else {
+                    current_digit = digit;
+                    current_count = 1;
+                }
+                consecutive_counter_map[digit] = Math.max(consecutive_counter_map[digit] || 0, current_count);
+            }
+            // handle empty map case
+            if (Object.keys(consecutive_counter_map).length === 0) {
+                return number
+            }
+            let max_consecutive_digit = Object.keys(consecutive_counter_map).reduce((a, b) => 
+                consecutive_counter_map[a] >= consecutive_counter_map[b] ? a : b
+            );
+            let last_digit = decimal_part[decimal_part.length - 1];
+            let second_last_digit = decimal_part[decimal_part.length - 2];
+            let nth_digit = (last_digit === second_last_digit) ? last_digit : second_last_digit;
+            if (consecutive_counter_map[max_consecutive_digit] >= 3 && max_consecutive_digit === nth_digit) {
+                // find index where consecutive digit starts and convert to placement
+                let start_index = (last_digit === second_last_digit) ? (decimal_part.length - 1) : (decimal_part.length - 2);
+                for (let i = start_index; i >= 0; i--) {
+                    if (decimal_part[i] !== nth_digit || i == 0) {
+                        placement = -(i + 1);
+                        break;
+                    }
+                }
+            }
+        }
+        if (placement !== null) {
+            if (placement > 0) {
+                let multiplier = Math.pow(10, placement)
+                number = Math.round((number / multiplier) * 10) / 10 * multiplier;
+                number = Math.round(number);
+            } else if (placement < 0) {
+                number = Number(number.toFixed(-placement))
+            }
+        }
+        return util.mathematics_simplify(number)
     }
     /** @param {number} number  @returns {number} */
     static mathematics_simplify(number) {
@@ -3198,6 +3250,10 @@ class util {
     static random(...values) {
         return util.mathematics_random(...values)
     }
+    /** @param {number} start @param {number} stop @param {number} step @returns {number} */
+    static range(start, stop, step = 1) {
+        return Array.from({ length: Math.ceil((stop - start) / step) }, (_, i) => start + i * step)
+    }
     /** @param {string|RegExp} pattern @param {string} value @returns {boolean} */
     static regular_expression_match(pattern, value) {
         return util.ispattern(value, pattern)
@@ -3294,27 +3350,38 @@ class util {
         let altitude = r - util.SPHERE_RADIUS
         return [latitude, longitude, altitude]
     }
-    /** @param {number[]} numbers1 @param {number[]} numbers2 @returns {number} */
-    static statistics_correlation_coefficient(numbers1, numbers2) {
-        if (numbers1.length !== numbers2.length) {
-            new Error(`RangeError: array length mismatch`)
-        }
-        let xMean = util.statistics_mean(numbers1);
-        let yMean = util.statistics_mean(numbers2);
-        let xStandardDeviation = util.statistics_standard_deviation(numbers1);
-        let yStandardDeviation = util.statistics_standard_deviation(numbers2);
-        if (xStandardDeviation === 0 || yStandardDeviation === 0) {
-            return 0.0;
-        }
-        let zScores1 = numbers1.map(number => (number - xMean) / xStandardDeviation);
-        let zScores2 = numbers2.map(number => (number - yMean) / yStandardDeviation);
-        let zScoresProduct = zScores1.map((zScore1, index) => zScore1 * zScores2[index]);
-        let zScoreSum = util.statistics_sum(zScoresProduct);
-        return (1 / (numbers1.length - 1)) * zScoreSum;
+    /** @param {number[]} numbers @returns {number} */
+    static statistics_coefficient_of_range(numbers) {
+        return (Math.max(...numbers) - Math.min(...numbers)) / (Math.max(...numbers) + Math.min(...numbers))
     }
-    /** @todo @param {number[]} numbers @returns {number} */
-    static statistics_correlation_matrix(numbers) {
-        return 0
+    /** @param {number[]} xNumbers @param {number[]} yNumbers @returns {number} */
+    static statistics_correlation_coefficient(xNumbers, yNumbers) {
+        if (xNumbers.length !== yNumbers.length || xNumbers.length === 0) {
+            throw new Error("ValueError: arrays must be the same size and not empty");
+        }
+        let xMean = util.statistics_mean(xNumbers)
+        let yMean = util.statistics_mean(yNumbers)
+        let xStandardDeviation = util.statistics_standard_deviation(xNumbers)
+        let yStandardDeviation = util.statistics_standard_deviation(yNumbers)
+        if (xStandardDeviation == 0 || yStandardDeviation == 0) return 0.0
+        let zNumbers1 = xNumbers.map(number => (number - xMean) / xStandardDeviation)
+        let zNumbers2 = yNumbers.map(number => (number - yMean) / yStandardDeviation)
+        let zProduct = zNumbers1.map((num, i) => num * zNumbers2[i]);
+        let zSum = util.statistics_sum(zProduct)
+        return (1 / (len(xNumbers) - 1)) * zSum
+    }
+    /** @param {number[]} xNumbers @param {number[]} yNumbers @returns {number} */
+    static statistics_covariance(xNumbers, yNumbers) {
+        if (xNumbers.length !== yNumbers.length || xNumbers.length === 0) {
+            throw new Error("ValueError: arrays must be the same size and not empty");
+        }
+        let xMean = xNumbers.reduce((a, b) => a + b, 0) / xNumbers.length;
+        let yMean = yNumbers.reduce((a, b) => a + b, 0) / yNumbers.length;
+        let sumProd = 0;
+        for (let i = 0; i < xNumbers.length; i++) {
+            sumProd += (xNumbers[i] - xMean) * (yNumbers[i] - yMean);
+        }
+        return sumProd / (xNumbers.length - 1);
     }
     /** @param {number[]} numbers @returns {number} */
     static statistics_count(numbers) {
@@ -3340,6 +3407,10 @@ class util {
         }
     }
     /** @param {number[]} numbers @returns {number} */
+    static statistics_midrange(numbers) {
+        return (Math.max(...numbers) + Math.min(...numbers)) / 2
+    }
+    /** @param {number[]} numbers @returns {number} */
     static statistics_minimum(numbers) {
         return Math.min(...numbers)
     }
@@ -3362,6 +3433,16 @@ class util {
         // return number with greatest occurrence
         return modes[0];
     }
+    /** @param {number[]} xNumbers @param {number[]} yNumbers @returns {number} */
+    static statistics_pearson_correlation(xNumbers, yNumbers) {
+        let cov_xy = util.statistics_covariance(xNumbers, yNumbers)
+        let std_x = util.statistics_standard_deviation(xNumbers)
+        let std_y = util.statistics_standard_deviation(yNumbers)
+        if (std_x == 0 && std_y == 0) {
+            return 0.0
+        }
+        return cov_xy / (std_x * std_y)
+    }
     /** @param {number[]} numbers @returns {number} */
     static statistics_product(numbers) {
         if (numbers.length == 0) return 0
@@ -3374,6 +3455,10 @@ class util {
     /** @param {number[]} numbers @returns {number} */
     static statistics_range(numbers) {
         return Math.max(...numbers) - Math.min(...numbers)
+    }
+    /** @param {number[]} numbers @returns {number} */
+    static statistics_range_coefficient(numbers) {
+        return util.statistics_coefficient_of_range(numbers)
     }
     /** @param {number[]} numbers @returns {number} */
     static statistics_standard_deviation(numbers) {
@@ -3421,9 +3506,9 @@ class util {
                 return string + fillChar.repeat(padding_length)
         }
     }
-    /** @param {string} value @returns {any} */
+    /** @param {string} value @returns {[]|{}|boolean|complex|number} */
     static string_conversion_decode(value) {
-        if (value == null) {
+        if (value == null || typeof value !== "string") {
             return value
         }
         else if (util.istype(value, 'string-array')) {
@@ -3432,7 +3517,17 @@ class util {
         else if (util.istype(value, 'string-boolean')) {
             return value.toLowerCase() == 'true'
         }
-        else if (util.istype(value, 'string-number')) {
+        else if (util.istype(value, 'string-number-complex')) {
+            let match = value.match(util.NUMBER_COMPLEX_SYNTAX1)
+            if (match) return {
+                real: parseFloat(match.groups.real), imaginary: parseFloat(match.groups.imaginary) * (match.groups.operation == "+" ? 1 : -1)
+            }
+            match = value.match(util.NUMBER_COMPLEX_SYNTAX2)
+            if (match) return {
+                real: parseFloat(match.groups.real), imaginary: parseFloat(match.groups.imaginary) * (match.groups.operation == "+" ? 1 : -1)
+            }
+        }
+        else if (util.istype(value, 'string-number-integer|string-number-decimal')) {
             return Number(value)
         }
         else if (util.istype(value, 'string-object')) {
@@ -3444,7 +3539,7 @@ class util {
     }
     /** @param {any} value @returns {string} */
     static string_conversion_encode(value) {
-        if (value == null) {
+        if (value == null || typeof value === "string") {
             return value
         }
         else if (util.istype(value, 'array')) {
@@ -3453,7 +3548,11 @@ class util {
         else if (util.istype(value, 'boolean')) {
             return `${value}`
         }
-        else if (util.istype(value, 'number')) {
+        else if (util.istype(value, 'number-complex')) {
+            let op = value.imaginary >= 0 ? '+' : ''
+            return `${value.real}${op}${value.imaginary}i`
+        }
+        else if (util.istype(value, 'number-integer|number-decimal')) {
             return `${value}`
         }
         else if (util.istype(value, 'object')) {
@@ -3492,25 +3591,25 @@ class util {
     }
     /** @param {object[]} entries @param {string} orientation @param {string} delimiter @returns {string} */
     static table_encode(entries, orientation = 'vertical', delimiter = '     ') {
+        let getCellText = (cell) => cell === null || typeof cell === "object" ? "." : `${cell}`;
         if (entries == []) return ''
-        let headers = []
-        for (let key in entries[0]) {
-            headers.push(`${key}`)
-        }
-        let rows = entries.map((entry) => new object(entry).values())
+        let headers = [...new Set(entries.flatMap(obj => Object.keys(obj)))]
+        // let rows = entries.map((entry) => new object(entry).values())
+        let rows = entries.map((entry) => object.values(entry))
         if (orientation == 'vertical' || orientation == 'v') {
             let columnLengths = []
             for (let x = 0; x < headers.length; x++) {
                 columnLengths.push(0)
                 for (let y = 0; y < rows.length + 1; y++) {
                     let cell = y == 0 ? headers[x] : rows[y - 1][x]
-                    cell = cell == null ? '' : `${cell}`
+                    // cell = cell === null ? '' : `${cell}`
+                    cell = getCellText(cell)
                     columnLengths[x] = cell.length > columnLengths[x] ? cell.length : columnLengths[x]
                 }
             }
             let tableString = headers.map((header, index) => header.ljust(columnLengths[index], ' ')).join(delimiter)
             for (let row of rows) {
-                tableString += '\n' + row.map((cell, index) => `${cell}`.ljust(columnLengths[index], ' ')).join(delimiter)
+                tableString += '\n' + row.map((cell, index) => getCellText(cell).ljust(columnLengths[index], ' ')).join(delimiter)
             }
             return tableString
         }
@@ -3536,7 +3635,6 @@ class util {
             }
             return tableString
         }
-
     }
     /** @param {Date|number|string} value @param {string} convert_to @returns {Date|number|string|Object} */
     static timestamp(value = null, convert_to = null) {
@@ -3546,6 +3644,11 @@ class util {
                 return date
             }
             if (option.toLowerCase() == util.TIMESTAMP_OPTION_DICTIONARY) {
+                // getTimezoneOffset returns positive number for timezones behind UTC
+                let zone_utc_offset = Math.round(-date.getTimezoneOffset() / 60);
+                let zone = Object.keys(util.TIMEZONE_DESIGNATION_OFFSETS).find(
+                    key => util.TIMEZONE_DESIGNATION_OFFSETS[key] == zone_utc_offset
+                ) || "Z";
                 return {
                     "year"       : date.getFullYear(),
                     "month"      : date.getMonth()+1,
@@ -3554,7 +3657,7 @@ class util {
                     "minute"     : date.getMinutes(),
                     "second"     : date.getSeconds(),
                     "millisecond": date.getMilliseconds(),
-                    "zone"       : 'Z'
+                    "zone"       : zone,
                 }
             }
             if (option.toLowerCase() == util.TIMESTAMP_OPTION_MILLISECONDS) {
@@ -3603,7 +3706,7 @@ class util {
                 if (len(value) == 15 || len(value) == 16) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}`
                 if (len(value) == 19 || len(value) == 20) pattern = `${util.TIMESTAMP_PATTERN_YEAR}${util.TIMESTAMP_PATTERN_MONTH}${util.TIMESTAMP_PATTERN_DAY}T${util.TIMESTAMP_PATTERN_HOUR}${util.TIMESTAMP_PATTERN_MINUTE}${util.TIMESTAMP_PATTERN_SECOND}.${util.TIMESTAMP_PATTERN_MILLISECOND}`
             }
-            let match = value.match(`^${pattern}${util.TIMESTAMP_PATTERN_ZONE}$`)
+            let match = value.match(`^${pattern}${util.TIMESTAMP_PATTERN_ZONE}?$`)
             return match.groups
         }
         let date = new Date()
@@ -3795,6 +3898,31 @@ class util {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getSeconds().toString().rjust(2, '0')
     }
+    /** @param {Date|number|string} timestamp @returns {string} */
+    static timestamp_summary(timestamp = null) {
+        timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
+        let results = { }
+        results["date"] = util.timestamp(timestamp, util.TIMESTAMP_OPTION_DICTIONARY)
+        results["Year"] = util.timestamp_year(timestamp)
+        results["Month"] = util.timestamp_month(timestamp)
+        results["Day"] = util.timestamp_day(timestamp)
+        results["Hour"] = util.timestamp_hour(timestamp)
+        results["Minute"] = util.timestamp_minute(timestamp)
+        results["Second"] = util.timestamp_second(timestamp)
+        results["Millisecond"] = util.timestamp_millisecond(timestamp)
+        results["Zone"] = results["date"]["zone"]
+        results["Date"] = util.timestamp_date(timestamp)
+        results["Time"] = util.timestamp_time(timestamp, True)
+        results["Weekday"] = util.timestamp_weekday(timestamp)
+        results["Quarter"] = util.timestamp_quarter(timestamp)
+        results["Timestamp Seconds"] = util.timestamp(timestamp, util.TIMESTAMP_OPTION_SECONDS)
+        results["Timestamp Milliseconds"] = util.timestamp(timestamp, util.TIMESTAMP_OPTION_MILLISECONDS)
+        results["Timestamp Text"] = util.timestamp(timestamp, util.TIMESTAMP_OPTION_TEXT)
+        results["Julian Date"] = util.timestamp_julian_date(timestamp)
+        results["Julian Day"] = util.timestamp_julian_day(timestamp)
+        results["Julian Day of Year"] = util.timestamp_julian_day_of_year(timestamp)
+        return results
+    }
     /** @param {Date|number|string} timestamp @param {boolean} short @returns {string} */
     static timestamp_time(timestamp, short = false) {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
@@ -3806,11 +3934,14 @@ class util {
     }
     /** @todo @param {timestamp} timestamp @param {string} zone @returns {Date} */
     static timestamp_to_zone(timestamp, zone) {
+        // NOTE: resulting Date excludes tiemzone offset, saved as GMT+0000 ?machine-time
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
-        let zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[zone]
-        timestamp.setHours(timestamp.getHours()+zone_utc_offset)
-        // TODO: UTC offset property not indicated in Date object
-        return timestamp
+        let zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[zone] || 0;
+        let local_offset_hours = timestamp.getTimezoneOffset() / 60;
+        let target = timestamp.getTime() + (zone_utc_offset - local_offset_hours) * 3600000;
+        let date_string_zone = (zone_utc_offset >= 0 ? "+" : "-") + `${Math.abs(zone_utc_offset)}`.rjust(2, '0') + ":00"
+        let date_string = `${util.timestamp_date(timestamp)}T${util.timestamp_time(timestamp, true)}` + date_string_zone
+        return new Date(timestamp.getTime() + zone_utc_offset * 3600000);
     }
     /** @param {Date|number|string} timestamp @param {boolean} short @returns {string} */
     static timestamp_weekday(timestamp, short = false) {
@@ -3823,8 +3954,8 @@ class util {
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return timestamp.getFullYear().toString()
     }
-    /** @param {string} value @returns {string} */
-    static title(value) {
+    /** @deprecated @param {string} value @returns {string} */
+    static #title(value) {
         let uppers = [
             'arcnet', 'arp', 'atm',
             'ciaddr', 'chaddr',
@@ -3849,15 +3980,18 @@ class util {
             'nor',
         ]
         let specials = [
-            'ICMPv6', 'InARP', 'IPv4', 'IPv6'
+            'ICMPv6', 'InARP', 'IPv4', 'IPv6',
+        ]
+        let simple_words = [
+            "idle"
         ]
         let isVowel = (char) => /[aeiouy]/i.test(char);
         /** @param {String} string @returns {String} */
         function convert(string) {
             if (string == '') return string
-            if (string.length <= 4) {
-                if (string.length == 3 && isVowel(string[1])) return string.capitalize()
-                if (string.length == 4 && (isVowel(string[1]) || isVowel(string[2]))) return string.capitalize()
+            if (string.length <= 4 && !simple_words.includes(string)) {
+                if (string.length == 3 && /^\w[aeiouy]\w*$/i.test(string)) return string.capitalize()
+                if (string.length == 4 && (/^\w[aeiouy]\w\w*$/i.test(string) || /^\w\w[aeiouy]\w*$/i.test(string))) return string.capitalize()
                 return string.toUpperCase() // abbreviaions
             }
             if (lowers.includes(string)) return string.toLowerCase()
@@ -3873,6 +4007,154 @@ class util {
             return string.capitalize()
         }
         return value.split('_').map((substring) => convert(substring.toLowerCase())).join(' ')
+    }
+    /** @param {string} value @returns {string} */
+    static title(value) {
+        const CONSONANT = "(?![aeiou])[a-z]" // any consonant letter only (excluding numbers, symbols, and whitespace)
+        const VOWEL = "[aeiouy]" // any vowel letter
+        const PUNCTUATION = "[^\w\s-]" // not a word character or whitespace excluding hyphen, any punctuation character (\p{P})
+        let words = {
+            "articles": [
+                "a", "an",
+                "the",
+            ],
+            "conjunctions": [
+                "after", "although", "and", "as",
+                "because", "before", "both", "but",
+                "either", "even though",
+                "for",
+                "if",
+                "just as",
+                "neither", "nor",
+                "once", "or",
+                "since", "so",
+                "than", "that", "though",
+                "unless", "until",
+                "when", "whenever", "where", "whereas", "wherever", "whether", "while",
+                "yet",
+                "as / as", "both / and", "neither / or", "neither / nor", "not only / but also", "rather than", "so that", "such that", "whether / or",
+            ],
+            "prepositions": [
+                "aboard", "about", "above", "across", "after", "against", "along", "among", "around", "at", 
+                "before", "behind", "below", "beneath", "beside", "besides", "between", "beyond", "by", 
+                "despite", "down", "during",
+                "except",
+                "following", "for", "from",
+                "in", "inside", "into", 
+                "like",
+                "near",
+                "of", "off", "on", "onto", "opposite", "out", "outside", "over",
+                "past", 
+                "regarding",
+                "since",
+                "through", "throughout", "to", "toward",
+                "under", "underneath", "unlike", "until", "up", "upon",
+                "via",
+                "with", "within", "without",
+                "according to", "because of", "due to", "instead of", "next to", "out of", "prior to", "thanks to"
+            ],
+            "2": [ // 2-letter words that are not articles, conjunctions, prepositions
+                "am",
+                "be",
+                "do",
+                "go",
+                "he",
+                "is", "it",
+                "me", "my",
+                "no", 
+                "us",
+                "we"
+            ],
+            "3": [ // 3-letter words excluded
+                // CCC
+                "brr",
+                "gym",
+                "hmm",
+                "nth",
+                "shh",
+                // CVV
+                "bee", "bio", "boo", "bye",
+                "coo", "cue",
+                "die", "doe", "due", "duo", 
+                "fee", "foe", "foo",
+                "hie", "hoe", "hue",
+                "lie",
+                "moo",
+                "pea", "pee", "pie", "poo",
+                "roe", "rue",
+                "sea", "see", "sue",
+                "tau", "tea", "tee", "tie", "toe", "too",
+                "vee", "via", "vie", "voe",
+                "wee", "woe", "woo",
+                "yea", "you", "zoo",
+                // VVC
+                "aid", "aim", "air",
+                "ear", "eat", "eek",
+                "ion",
+                "oaf", "oak", "oar", "oat", "oil", "our", "out",
+                // VCV
+                "ace", "age", "ago", "aha", "ale", "any", "ape", "are", "ate", "axe", "aye",
+                "ego", "eke", "era", "eve", "ewe", "eye",
+                "ice", "icy", "ire", "ivy", 
+                "one", "ore", "owe",
+                "use"
+            ],
+            "4": [ // 4-letter words that do not have a vowel as their second or third character
+                "arch",
+                "echo", "etch",
+                "gyms",
+                "idle", "imps", "inch", "isms",
+                "lynx"
+            ],
+        }
+        let acronyms = [ // +3-letters acronyms with vowels letters
+            "arcnet",
+            "ciaddr", "chaddr",
+            "drarp",
+            "giaddr",
+            "ieee",
+            "mac", "mosfet",
+            "nand",
+            "rarp",
+            "siaddr",
+            "uhf",
+            "xnor", "xor",
+            "yiaddr"
+        ]
+        let acronyms_special = [ // acronyms with lower case letters
+            "DHCPv6",
+            "ICMPv6", "InARP", "IPv4", "IPv6",
+        ]
+        /** @param {String} substring @param {boolean} hyphenated @returns {String} */
+        function convert(substring, hyphenated) {
+            let substring_f = substring.replace(/[^\w\s-]/g, "")
+            // words
+            if (hyphenated && substring_f == 'a') return 'A'
+            if (words["articles"].includes(substring_f) || words["conjunctions"].includes(substring_f) || words["prepositions"].includes(substring_f)) return substring.toLowerCase()
+            if (words["2"].includes(substring_f)) return substring.toLowerCase()
+            // acronyms
+                if (acronyms.includes(substring_f)) return substring.toUpperCase()
+            let special_acronym = acronyms_special.find(acronym => acronym.toLowerCase() == substring_f);
+            if (special_acronym) return substring.replace(substring_f, special_acronym)
+            if (substring_f.length < 3 && (!words["2"].includes(substring_f))) {
+                return substring.toUpperCase()
+            }
+            if (substring_f.length == 3 && (!words["3"].includes(substring_f) && !/^([^aeiou][aeiouy][^aeiou]|[^aeiou][^aeiou][aeiouy]|[aeiou][^aeiou][^aeiou])$/.test(substring_f))) { // CVC|CCV|VCC
+                return substring.toUpperCase()
+            }
+            if (substring_f.length == 4 && (!words["4"].includes(substring_f) && !/^\w+[aeiouy]\w+$/.test(substring_f))) {
+                return substring.toUpperCase()
+            }
+            if (substring_f.length > 4 && (/^((?![aeiou])[a-z])+$/.test(substring_f))) {
+                return substring.toUpperCase()
+            }
+            if (substring.includes('-')) {
+                return substring.split(/-/).map(sub_substring => convert(sub_substring, true)).join('-');
+            }
+            let substring_capitalized = substring.charAt(0).toUpperCase() + substring.slice(1).toLowerCase()
+            return substring.replace(substring_f, substring_capitalized)
+        }
+        return value.toLowerCase().split(/[_\s]/).map(substring => convert(substring, false)).join(' ');
     }
     // u
     /** @todo @param {{string:string}} value @returns {string} */
@@ -4362,8 +4644,6 @@ class array extends Array {
     static fromitems(data, remove_whitespace = false) {
         // data string example: item1val1:item1val2:item1val3,item2val1:item2val2:item2val3
         let nArray = new array()
-        let hasComma = data.includes(',')
-        let hasColon = data.includes(':')
         let item_size = 0
         if (util.istype(data, 'array')) {
             for (let item of data) {
@@ -4560,7 +4840,7 @@ class array extends Array {
     /** @param {T|(value: T, index: number, array: T[]) => void} condition @returns {void} */
     remove(condition) {
         let nArray
-        if (!(typeof condition === "functoin")) {
+        if (typeof condition === "function") {
             nArray = this.filter((v, i, array) => !condition(v, i, array));
         }
         else {
@@ -4976,7 +5256,7 @@ class object extends Object {
         return new array(...Object.values(this))
     }
 }
-//__________________________________________________________________________________________________________________________________________________//
+//____________________________________________________________________________//
 class app {
     constructor() {
     }
@@ -4988,9 +5268,9 @@ class app {
     }
 
     /** @readonly @type {string} */
-    static APPERANCE_MODE_DARK = 'dark'
+    static APPERANCE_MODE_DARK = "dark"
     /** @readonly @type {string} */
-    static APPERANCE_MODE_LIGHT = 'light'
+    static APPERANCE_MODE_LIGHT = "light"
     /** @readonly @type {string} */
     static DEVICE_PHONE = "phone"
     /** @readonly @type {string} */
@@ -5006,7 +5286,7 @@ class app {
     /** @readonly @type {number} */
     static MOUSE_BUTTON_RIGHT = 2
     /** @readonly @type {{[key:string]:string}} */
-    static EVENT_INTERFACES = { "afterprint": "onAfterPrint", "afterscriptexecute": "onAfterScriptExecute", "appinstalled": "onAppInstalled", "beforeinstallprompt": "onBeforeInstallPrompt", "beforeprint": "onBeforePrint", "beforescriptexecute": "onBeforeScriptExecute", "beforeunload": "onBeforeUnload", "blur": "onBlur", "click": "onClick", "copy": "onCopy", "cut": "onCut", "devicemotion": "onDeviceMotion", "deviceorientation": "onDeviceOrientation", "error": "onError", "focus": "onFocus", "fullscreenchange": "onFullScreenChange", "fullscreenerror": "onFullScreenError", "gamepadconnected": "onGamePadConnected", "gamepaddisonnected": "onGamePadDisonnected", "hashchange": "onHashChange", "input": "onInput", "keydown": "onKeyDown", "keyup": "onKeyUp", "languagechange": "onLanguageChange", "message": "onMessage", "messageerror": "onMessageError", "mousedown": "onMouseDown", "mouseenter": "onMouseEnter", "mouseleave": "onMouseLeave", "mousemove": "onMouseMove", "mouseout": "onMouseOut", "mouseover": "onMouseOver", "mouseup": "onMouseUp", "offline": "onOffline", "online": "onOnline", "pagehide": "onPageHide", "pagereveal": "onPageReveal", "pageshow": "onPageShow", "pageswap": "onPageSwap", "paste": "onPaste", "pointercancel": "onPointerCancel", "pointerdown": "onPointerDown", "pointerlockchange": "onPointerLockChange", "pointerlockerror": "onPointerLockError", "popstate": "onPopState", "prerenderingchange": "onPrerenderingChange", "readystatechange": "onReadyStateChange", "rejectionhandled": "onRejectionHandled", "resize": "onResize", "scroll": "onScroll", "scrollend": "onScrollEnd", "securitypolicyviolation": "onSecurityPolicyViolation", "selectionchange": "onSelectionChange", "storage": "onStorage", "touchend": "onTouchEnd", "touchmove": "onTouchMove", "touchstart": "onTouchStart", "unhandledrejection": "onUnhandledRejection", "visibilitychange": "onVisibilityChange", "wheel": "onWheel" }
+    static EVENT_INTERFACES = { "afterprint": "onAfterPrint", "afterscriptexecute": "onAfterScriptExecute", "appinstalled": "onAppInstalled", "beforeinstallprompt": "onBeforeInstallPrompt", "beforeprint": "onBeforePrint", "beforescriptexecute": "onBeforeScriptExecute", "beforeunload": "onBeforeUnload", "blur": "onBlur", "click": "onClick", "copy": "onCopy", "cut": "onCut", "dblclick": "onDoubleClick", "devicemotion": "onDeviceMotion", "deviceorientation": "onDeviceOrientation", "error": "onError", "focus": "onFocus", "fullscreenchange": "onFullScreenChange", "fullscreenerror": "onFullScreenError", "gamepadconnected": "onGamePadConnected", "gamepaddisonnected": "onGamePadDisonnected", "hashchange": "onHashChange", "input": "onInput", "keydown": "onKeyDown", "keyup": "onKeyUp", "languagechange": "onLanguageChange", "message": "onMessage", "messageerror": "onMessageError", "mousedown": "onMouseDown", "mouseenter": "onMouseEnter", "mouseleave": "onMouseLeave", "mousemove": "onMouseMove", "mouseout": "onMouseOut", "mouseover": "onMouseOver", "mouseup": "onMouseUp", "offline": "onOffline", "online": "onOnline", "pagehide": "onPageHide", "pagereveal": "onPageReveal", "pageshow": "onPageShow", "pageswap": "onPageSwap", "paste": "onPaste", "pointercancel": "onPointerCancel", "pointerdown": "onPointerDown", "pointerlockchange": "onPointerLockChange", "pointerlockerror": "onPointerLockError", "popstate": "onPopState", "prerenderingchange": "onPrerenderingChange", "readystatechange": "onReadyStateChange", "rejectionhandled": "onRejectionHandled", "resize": "onResize", "scroll": "onScroll", "scrollend": "onScrollEnd", "securitypolicyviolation": "onSecurityPolicyViolation", "selectionchange": "onSelectionChange", "storage": "onStorage", "touchend": "onTouchEnd", "touchmove": "onTouchMove", "touchstart": "onTouchStart", "unhandledrejection": "onUnhandledRejection", "visibilitychange": "onVisibilityChange", "wheel": "onWheel" }
     /** @readonly @type {{[key:string]:string}} */
     static LANGUAGE_CODES = { "ab": "abkhazian", "aa": "afar", "af": "afrikaans", "ak": "akan", "sq": "albanian", "am": "amharic", "ar": "arabic", "an": "aragonese", "hy": "armenian", "as": "assamese", "av": "avaric", "ae": "avestan", "ay": "aymara", "az": "azerbaijani", "bm": "bambara", "ba": "bashkir", "eu": "basque", "be": "belarusian", "bn": "bengali (bangla)", "bh": "bihari", "bi": "bislama", "bs": "bosnian", "br": "breton", "bg": "bulgarian", "my": "burmese", "ca": "catalan", "ch": "chamorro", "ce": "chechen", "ny": "chichewa, chewa, nyanja", "zh": "chinese", "zh-hans": "chinese (simplified)", "zh-hant": "chinese (traditional)", "cv": "chuvash", "kw": "cornish", "co": "corsican", "cr": "cree", "hr": "croatian", "cs": "czech", "da": "danish", "dv": "divehi, dhivehi, maldivian", "nl": "dutch", "dz": "dzongkha", "en": "english", "eo": "esperanto", "et": "estonian", "ee": "ewe", "fo": "faroese", "fj": "fijian", "fi": "finnish", "fr": "french", "ff": "fula, fulah, pulaar, pular", "gl": "galician", "gd": "gaelic (scottish)", "gv": "manx", "ka": "georgian", "de": "german", "el": "greek", "kl": "kalaallisut, greenlandic", "gn": "guarani", "gu": "gujarati", "ht": "haitian creole", "ha": "hausa", "he": "hebrew", "hz": "herero", "hi": "hindi", "ho": "hiri motu", "hu": "hungarian", "is": "icelandic", "io": "ido", "ig": "igbo", "id, in": "indonesian", "ia": "interlingua", "ie": "interlingue", "iu": "inuktitut", "ik": "inupiak", "ga": "irish", "it": "italian", "ja": "japanese", "jv": "javanese", "kn": "kannada", "kr": "kanuri", "ks": "kashmiri", "kk": "kazakh", "km": "khmer", "ki": "kikuyu", "rw": "kinyarwanda (rwanda)", "rn": "kirundi", "ky": "kyrgyz", "kv": "komi", "kg": "kongo", "ko": "korean", "ku": "kurdish", "kj": "kwanyama", "lo": "lao", "la": "latin", "lv": "latvian (lettish)", "li": "limburgish ( limburger)", "ln": "lingala", "lt": "lithuanian", "lu": "luga-katanga", "lg": "luganda, ganda", "lb": "luxembourgish", "mk": "macedonian", "mg": "malagasy", "ms": "malay", "ml": "malayalam", "mt": "maltese", "mi": "maori", "mr": "marathi", "mh": "marshallese", "mo": "moldavian", "mn": "mongolian", "na": "nauru", "nv": "navajo", "ng": "ndonga", "nd": "northern ndebele", "ne": "nepali", "no": "norwegian", "nb": "norwegian bokmål", "nn": "norwegian nynorsk", "ii": "sichuan yi", "oc": "occitan", "oj": "ojibwe", "cu": "old church slavonic, old bulgarian", "or": "oriya", "om": "oromo (afaan oromo)", "os": "ossetian", "pi": "pāli", "ps": "pashto, pushto", "fa": "persian (farsi)", "pl": "polish", "pt": "portuguese", "pa": "punjabi (eastern)", "qu": "quechua", "rm": "romansh", "ro": "romanian", "ru": "russian", "se": "sami", "sm": "samoan", "sg": "sango", "sa": "sanskrit", "sr": "serbian", "sh": "serbo-croatian", "st": "sesotho", "tn": "setswana", "sn": "shona", "sd": "sindhi", "si": "sinhalese", "ss": "swati", "sk": "slovak", "sl": "slovenian", "so": "somali", "nr": "southern ndebele", "es": "spanish", "su": "sundanese", "sw": "swahili (kiswahili)", "sv": "swedish", "tl": "tagalog", "ty": "tahitian", "tg": "tajik", "ta": "tamil", "tt": "tatar", "te": "telugu", "th": "thai", "bo": "tibetan", "ti": "tigrinya", "to": "tonga", "ts": "tsonga", "tr": "turkish", "tk": "turkmen", "tw": "twi", "ug": "uyghur", "uk": "ukrainian", "ur": "urdu", "uz": "uzbek", "ve": "venda", "vi": "vietnamese", "vo": "volapük", "wa": "wallon", "cy": "welsh", "wo": "wolof", "fy": "western frisian", "xh": "xhosa", "yi, ji": "yiddish", "yo": "yoruba", "za": "zhuang, chuang", "zu": "zulu" }
     
@@ -5026,8 +5306,13 @@ class app {
     static progressesRunning = []
     /** @readonly @type {number} */
     static progressTimeout = 3000
+    /** @type {AppElement} */
+    static toast
+    /** @type {number} */
+    static toastTimeoutID
     /** @type {boolean} */
     static touchable = true
+    
 
     /** @type {{[key:string]:{string:any[]}}} */
     static cascading_menu_chain = {}
@@ -5056,6 +5341,42 @@ class app {
         // 
         app.#addEventListeners1()
         console.log(`application{name=${app.name}, options=${app.options}}`)
+    }
+    /** @returns {void} */
+    static #onDocumentReadyStateComplete() {
+        app.#addEventListeners2()
+        app.#setIcons()
+        app.toast = app.element("div").identifier("toast")
+        app.body().appendChild(app.toast)
+        if (app.options.get('input-validation', 'true') == 'true') {
+            app.inputValidation()
+        }
+        // appeding new element to body triggers image icon source parsing
+        /** @param {Node} img @returns {void} */
+        function setIcon(img) {
+            // exclusive cutomized application images / icon only
+            if (!(img.getAttribute("view") == "icon" && img.hasAttribute("icon"))) return
+            let icon_name = img.getAttribute("icon")
+            let icon_url = app.getIcon(icon_name)
+            img.src = icon_url
+        }
+        let observer = new MutationObserver((mutationList, observer) => {
+            for (let mutation of mutationList) {
+                if (mutation.type === "childList") {
+                    for (let node of mutation.addedNodes) {
+                        // added node itself is an IMG
+                        if (node.nodeName == "IMG") {
+                            setIcon(node)
+                        }
+                        // added node contains IMGs inside it
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            node.querySelectorAll('img').forEach(img => setIcon(img))
+                        }
+                    }
+                }
+            }
+        })
+        observer.observe(window.document.body, { childList: true, subtree: true })
     }
     /** @returns {void} */
     static #addEventListeners1() {
@@ -5099,20 +5420,6 @@ class app {
             app.#onEventListenerInterface(event.type, event)
             if (window.onBlur) {
                 window.onBlur(event)
-            }
-        }
-        /** @param {ClipboardEvent} event @returns {void} */
-        window.oncopy = (event) => {
-            app.#onEventListenerInterface(event.type, event)
-            if (window.onCopy) {
-                window.onCopy(event)
-            }
-        }
-        /** @param {ClipboardEvent} event @returns {void} */
-        window.oncut = (event) => {
-            app.#onEventListenerInterface(event.type, event)
-            if (window.onCut) {
-                window.onCut(event)
             }
         }
         /** @param {DeviceMotionEvent} event @returns {void} */
@@ -5271,11 +5578,10 @@ class app {
         /** @param {Event} event @returns {void} */
         window.onresize = (event) => {
             app.#onEventListenerInterface(event.type, event)
-            // refresh contents of background element
-            for (let element of document.getElementsByClassName('content-background')) {
-                let parentElement = app.element(element.parentElement)
-                if (element.something) {
-                    parentElement.setBackground(element.something)
+            for (let element of document.getElementsByTagName("div")) {
+                // if (element.style.backgroundImage.match(`url\("data:image/svg\+xml,.+"\)`))
+                if (element.dataset.background) {
+                    app.element(element).setBackgroundSVG()
                 }
             }
             if (window.onResize) {
@@ -5297,7 +5603,7 @@ class app {
             }
         }
         if (window.document.readyState === 'complete') {
-            app.#addEventListeners2()
+            app.#onDocumentReadyStateComplete()
         }
         /** @param {Event} event @returns {void} */
         window.document.onreadystatechange = (event) => {
@@ -5306,7 +5612,7 @@ class app {
                 window.onReadyStateChange(event)
             }
             if (window.document.readyState === 'complete') {
-                app.#addEventListeners2()
+                app.#onDocumentReadyStateComplete()
             }
         }
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
@@ -5316,24 +5622,6 @@ class app {
     }
     /** @returns {void} */
     static #addEventListeners2() {
-        app.#setIcons()
-        if (app.options.get('input-validation', 'true') == 'true') {
-            app.inputValidation()
-        }
-        // required for updates to apperance mode
-        let observer = new MutationObserver((mutation_list, observer) => {
-            for (let mutation of mutation_list) {
-                if (mutation.type === "childList") {
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === 1) {
-                            // set icon(s) source upon appeding element to body
-                            app.#setIcons(node)
-                        }
-                    });
-                }
-            }
-        })
-        observer.observe(window.document.body, { childList: true, subtree: true })
         /** @param {Event} event @returns {void} */
         window.document.onafterscriptexecute = (event) => {
             app.#onEventListenerInterface(event.type, event)
@@ -5354,6 +5642,20 @@ class app {
             app.#onEventListenerInterface(event.type, event)
             if (window.onClick) {
                 window.onClick(event, app.element(event.target))
+            }
+        }
+        /** @param {ClipboardEvent} event @returns {void} */
+        window.document.oncopy = (event) => {
+            app.#onEventListenerInterface(event.type, event)
+            if (window.onCopy) {
+                window.onCopy(event, app.element(event.target))
+            }
+        }
+        /** @param {ClipboardEvent} event @returns {void} */
+        window.document.oncut = (event) => {
+            app.#onEventListenerInterface(event.type, event)
+            if (window.onCut) {
+                window.onCut(event, app.element(event.target))
             }
         }
         /** @param {PointerEvent} event @returns {void} */
@@ -5439,7 +5741,7 @@ class app {
         window.document.onpaste = (event) => {
             app.#onEventListenerInterface(event.type, event)
             if (window.onPaste) {
-                window.onPaste(event)
+                window.onPaste(event, app.element(event.target))
             }
         }
         /** @param {PointerEvent} event @returns {void} */
@@ -5552,7 +5854,7 @@ class app {
             }
         }
     }
-    /**@param {string} type @param {Event} event @returns {void} */
+    /** @param {string} type @param {Event} event @returns {void} */
     static #onEventListenerInterface(type, event) {
         // evnets that do nit require a specific target, global listeners
         let global_event_types = ["error","keydown","hashchange","load","offline","online","scroll","unload"]
@@ -5575,8 +5877,8 @@ class app {
             }
         }
     }
-
-    // configration
+    
+    // CONFIGRATION
     /** @param {string} key @param {string} value @returns {void} */
     static configuration(key, value = null) {
         if (key === null || key === undefined) {
@@ -5639,9 +5941,14 @@ class app {
         app.setStyleProperty(':root', '--color-secondary', util.hex_from_brightness(color_primary, brightness > 0.5 ? 0.45 : 0.55))
         app.setStyleProperty(':root', '--color-select', util.hex_from_brightness(color_primary, brightness > 0.5 ? 0.4 : 0.6))
         app.setStyleProperty(':root', '--color-text', (brightness > 0.6 ? "#000000" : "#ffffff"))
-        app.setAppeatanceMode(brightness > 0.6 ? app.APPERANCE_MODE_LIGHT : app.APPERANCE_MODE_DARK)
+        let apperance_mode_old = app.getAppeatanceMode()
+        let apperance_mode = brightness > 0.6 ? app.APPERANCE_MODE_LIGHT : app.APPERANCE_MODE_DARK
+        app.setAppeatanceMode(apperance_mode)
         app.setData("color-primary", color_primary)
-        app.#setIcons()
+        // apperance mode is undefined at application start, executing icon processing here unnecessary
+        if (apperance_mode_old !== undefined && apperance_mode_old != apperance_mode) {
+            app.#setIcons()
+        }
     }
     /** @param {string} color @returns {void} */
     static setColorAccent(color) {
@@ -5654,7 +5961,7 @@ class app {
         app.setStyleProperty(':root', '--color-text-accent', (brightness > 0.6 ? "#000000" : "#ffffff"))
         app.setData("color-accent", color)
     }
-    // device
+    // DEVICE
     /** @returns {string} */
     static getDeviceApperanceMode() {
         let isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -5709,7 +6016,7 @@ class app {
     static isRunningRemote() {
         return window.location.protocol == 'http:' || window.location.protocol == 'https:'
     }
-    // Document|Element
+    // DOCUMENT | ELEMENT
     /** @param {string|{string:string}} attributes @returns {HTMLScriptElement} */
     static addScript(attributes) {
         let script = window.document.createElement('script')
@@ -5726,6 +6033,14 @@ class app {
     /** @param {AppElement|Element|string} value @returns {AppElement} */
     static element(value) {
         return new AppElement(value)
+    }
+    /** @param {number} fontSize @param {string} fontFace @returns {void} */
+    static getCharacterWidth(fontSize, fontFace = 'Arial') {
+        const canvas = document.createElement('canvas');
+        let context = canvas.getContext('2d');
+        context.font = `${fontSize}px ${fontFace}`; 
+        let metrics = context.measureText("W");
+        return metrics.width;
     }
     /** @returns {number} */
     static getHeight() {
@@ -5807,6 +6122,19 @@ class app {
     static isTouchDisabled() {
         return !app.touchable
     }
+    /** @param {string} message @param {number} duration @returns {void} */
+    static showToast(message, duration = 2000) {
+        app.toast.text(message)
+        // trigger CSS entry animation on the next animation frame
+        requestAnimationFrame(() => {
+            app.toast.addClass("show")
+        });
+        clearTimeout(app.toastTimeoutID)
+        app.toastTimeoutID = setTimeout(() => {
+            app.toast.delClass("show")
+            app.toast.text("")
+        }, duration);
+    }
     /** @param {string} selector @param {string} propertyKey @param {string|null} propertyValue @param {string} priority @returns {void} */
     static setStyleProperty(selector, propertyKey, propertyValue, priority = '') {
         let element = window.document.querySelector(selector)
@@ -5827,7 +6155,7 @@ class app {
     static show() {
         app.element('body').show()
     }
-    // Mouse
+    // MOUSE
     /** @param {number} button @returns {boolean} */
     static isMouseButtonActive(button) {
         return app.mouseButtons[button]
@@ -5844,7 +6172,7 @@ class app {
     static isMouseWheelActive() {
         return app.mouseButtons[app.MOUSE_BUTTON_WHEEL]
     }
-    // Storage
+    // STORAGE
     /** @param {string} key @param {string} prefix @returns {void} */
     static clearData(key, prefix = null) {
         window.localStorage.removeItem(prefix == null ? key : `${prefix}.${key}`)
@@ -5876,7 +6204,7 @@ class app {
         }
         window.localStorage.setItem(prefix == null ? key : `${prefix}.${key}`, value)
     }
-    // System
+    // SYSTEM
     /** @param {string} types @param {View} instance @param {boolean} withinView @returns {void} */
     static addEventListenerInterface(types, instance, withinView = true) {
         for (let type of array.fromstring(types, '|', true)) {
@@ -6001,7 +6329,7 @@ class app {
     }
     
 
-    // Initilization Functions
+    // INITILIZATION
     /** @param {any} value @param {function(any, any): void} listener @returns {DataBinding} */
     static createBinding(value = null, listener = null) {
         return new DataBinding(value, listener)
@@ -6075,7 +6403,7 @@ class app {
     }
     
 
-    // View
+    // VEIW
     /** @param {{string:string}|string} attributes @returns {Button} */
     static createButton(attributes) {
         let view = new Button(attributes)
@@ -6256,6 +6584,7 @@ class app {
     /** @param {{string:string}|string} attributes @returns {Dialog} */
     static createConfirmDialog(attributes) {
         let view = new Dialog(attributes)
+        view.setMessage('Are you sure ?')
         view.setPositiveButton(Dialog.BUTTON_TEXT_POSITIVE)
         view.setNegativeButton(Dialog.BUTTON_TEXT_NEGATIVE)
         return view
@@ -6263,12 +6592,7 @@ class app {
     /** @param {{string:string}|string} attributes @returns {[Dialog, AppElement]} */
     static createInputDialog(attributes) {
         let view = new Dialog(attributes)
-        let input = app.element('textarea').attribute('rows: 1').style('padding-bottom: 10px;') //.style('text-wrap: auto;')
-        input.addListener('input', (event, element) => {
-            let lines = element.value().splitlines()
-            let rows = Math.max(lines.length, 1)
-            element.setAttribute('rows', rows)
-        })
+        let input = app.element('textarea').attribute('rows: 1').style('field-sizing: content; padding-bottom: 10px;') //.style('text-wrap: auto;')
         view.getBody().appendChild(input)
         return [view, input]
     }
@@ -6278,6 +6602,14 @@ class app {
         let list = app.createList(attributes)
         list.setItems(items)
         view.setBody(list.getView())
+        return view
+    }
+    /** @param {{string:string}|string} attributes @param {string|string[][]} items  @returns {Dialog} */
+    static createMultiChoiceItemsDialog(attributes, items) {
+        let view = new Dialog(attributes)
+        view.setTitle('Select Option(s)')
+        view.setMultipleChoiceItems(items)
+        view.setNegativeButton(Dialog.BUTTON_TEXT_NEGATIVE)
         return view
     }
     /** @param {{string:string}|string|null} attributes @returns {DialogProgress} */
@@ -6333,7 +6665,28 @@ class app {
     /** @param {string} name @returns {string} */
     static getIcon(name) {
         if (app.isOnline() && false) {
+            // let url = `https://raw.githubusercontent.com/google/material-design-icons/refs/heads/master/symbols/web/${name}/materialsymbolsoutlined/${name}_48px.svg`;
+            // let color = app.configuration("--color-text")
+            // try {
+            //     let response = await fetch(url)
+            //     let text = await response.text()
+            //     let svg = text.replace('<svg ', `<svg stroke="${color}" `)
+            //     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+            // } catch (error) {
+            //     console.error("Error fetching Google Fonts Material Symbols SVG:", error)
+            //     return ""
+            // }
+            // return `https://raw.githubusercontent.com/google/material-design-icons/refs/heads/master/symbols/web/${name}/materialsymbolsoutlined/${name}_48px.svg`
         }
+        // let result = app.getIcon(name)
+        // if (result instanceof Promise) {
+        //     result.then(uri => {
+        //         element.src(uri)
+        //     })
+        // }
+        // else {
+        //     element.src(result)
+        // }
         else {
             let path = `${app.configuration("repository")}/icons/${app.configuration("apperance_mode")}`
             let filename = name.removesuffix('.png')
@@ -6363,13 +6716,11 @@ class app {
     static #setIcons(parent = document) {
         for (let element of parent.getElementsByTagName('img')) {
             if (element.getAttribute("view") == "icon" && element.hasAttribute("icon")) {
-                let src = element.getAttribute("src")
-                // let match = String(src).match(new RegExp(/(\w+(_\w+)*)\.png$/))
-                // if (match) let new_src = app.getIcon(match[0])
-                let name = element.getAttribute("icon")
-                let new_src = app.getIcon(name)
-                if (String(src) == new_src) continue // source match
-                element.src = new_src
+                // let src = element.getAttribute("src")
+                let icon_name = element.getAttribute("icon")
+                let icon_url = app.getIcon(icon_name)
+                if (String(element.src) == icon_url) continue // source match
+                element.src = icon_url
             }
         }
     }
@@ -6383,18 +6734,10 @@ class AppElement {
             if (util.istype(value, 'html-tag')) {
                 this.element = document.createElement(value)
                 this.element.id = util.identifier()
-                if (this.getTagName() == 'INPUT' || this.getTagName() == 'TEXTAREA') {
+                if (this.tagName == 'INPUT' || this.tagName == 'TEXTAREA') {
                     app.inputValidation(this.element)
                 }
             }
-            // else if (AppElement.TAGS_CUSTOM.includes(value)) {
-            //     if (value == 'content') {
-            //         this.element = app.element('div').class('content').appendChild(
-            //             app.element('svg').class('content-background'),
-            //             app.element('div').class('content-foreground')
-            //         ).getElement()
-            //     }
-            // }
             else if (util.istype(value, 'html')) {
                 this.element = document.createElement('div')
                 this.element.innerHTML = value
@@ -6451,29 +6794,120 @@ class AppElement {
     ]
     /** @readonly @type {string[]} */
     static LISTENERS = [
-        'abort', 'afterprint', 'animationend', 'animationiteration', 'animationstart',
-        'beforeprint', 'beforeunload', 'blur',
-        'canplay', 'canplaythrough', 'change', 'click', 'contextmenu', 'copy', 'cut',
-        'dblclick', 'drag', 'dragend', 'dragenter', 'dragleave', 'dragover', 'dragstart', 'drop', 'durationchange',
-        'ended', 'error',
-        'focus', 'focusin', 'focusout', 'fullscreenchange', 'fullscreenerror',
-        'hashchange',
-        'input', 'invalid',
-        'keydown', 'keyup',
-        'load', 'loadeddata', 'loadedmetadata', 'loadstart',
-        'message', 'mousedown', 'mouseenter', 'mouseleave', 'mousemove', 'mouseover', 'mouseout', 'mouseup', 'mousewheel',
-        'offline', 'online', 'open',
-        'pagehide', 'pageshow', 'paste', 'pause', 'play', 'playing', 'popstate', 'progress',
-        'ratechange', 'resize', 'reset',
-        'scroll', 'search', 'seeked', 'seeking', 'select', 'show', 'stalled', 'storage', 'submit', 'suspend',
-        'timeupdate', 'touchstart', 'transitionend',
-        'unload',
-        'volumechange',
-        'waiting', 'wheel'
+        "abort", "afterprint", "animationend", "animationiteration", "animationstart",
+        "beforeprint", "beforeunload", "blur",
+        "canplay", "canplaythrough", "change", "click", "contextmenu", "copy", "cut",
+        "dblclick", "drag", "dragend", "dragenter", "dragleave", "dragover", "dragstart", "drop", "durationchange",
+        "ended", "error",
+        "focus", "focusin", "focusout", "fullscreenchange", "fullscreenerror",
+        "hashchange",
+        "input", "invalid",
+        "keydown", "keyup",
+        "load", "loadeddata", "loadedmetadata", "loadstart",
+        "message", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseover", "mouseout", "mouseup", "mousewheel",
+        "offline", "online", "open",
+        "pagehide", "pageshow", "paste", "pause", "play", "playing", "popstate", "progress",
+        "ratechange", "resize", "reset",
+        "scroll", "search", "seeked", "seeking", "select", "show", "stalled", "storage", "submit", "suspend",
+        "timeupdate", "touchstart", "transitionend",
+        "unload",
+        "volumechange",
+        "waiting", "wheel"
     ]
     /** @readonly @type {string[]} */
-    static propertiesOfPixelValue = ['bottom', 'gap', 'height', 'left', 'marginBottom', 'marginLeft', 'marginRight', 'marginTop', 'max-height', 'max-width', 'paddingBottom', 'paddingLeft', 'paddingRight', 'paddingTop', 'right', 'top', 'width']
-   
+    static propertiesOfPixelValue = ["bottom", "gap", "font-size", "height", "left", "marginBottom", "marginLeft", "marginRight", "marginTop", "max-height", "max-width", "min-height", "min-width", "paddingBottom", "paddingLeft", "paddingRight", "paddingTop", "right", "top", "width"]
+    get id() { return this.element.id }
+    get classList() { return this.element.classList }
+
+    // Node properties
+    get baseURI() { return this.element.baseURI }
+    get childNodes() { return this.element.childNodes }
+    get firstChild() { return this.element.firstChild }
+    get isConnected() { return this.element.isConnected }
+    get lastChild() { return this.element.lastChild }
+    get nextSibling() { return this.element.nextSibling }
+    get nodeName() { return this.element.nodeName }
+    get nodeType() { return this.element.nodeType }
+    get nodeValue() { return this.element.nodeValue }
+    get ownerDocument() { return this.element.ownerDocument }
+    get parentNode() { return this.element.parentNode }
+    get parentElement() { return this.element.parentElement }
+    get previousSibling() { return this.element.previousSibling }
+    get textContent() { return this.element.textContent }
+
+    // Element properties
+    get activeViewTransition() { return this.element.activeViewTransition }
+    get assignedSlot() { return this.element.assignedSlot }
+    get attributes() { return this.element.attributes }
+    get childElementCount() { return this.element.childElementCount }
+    get children() { return this.element.children }
+    get classList() { return this.element.classList }
+    get className() { return this.element.className }
+    get clientHeight() { return this.element.clientHeight }
+    get clientLeft() { return this.element.clientLeft }
+    get clientTop() { return this.element.clientTop }
+    get clientWidth() { return this.element.clientWidth }
+    get currentCSSZoom() { return this.element.currentCSSZoom }
+    get customElementRegistry() { return this.element.customElementRegistry }
+    get elementTiming() { return this.element.elementTiming }
+    get firstElementChild() { return this.element.firstElementChild }
+    get id() { return this.element.id }
+    // get innerHTML() { return this.element.innerHTML }
+    get lastElementChild() { return this.element.lastElementChild }
+    get localName() { return this.element.localName }
+    get namespaceURI() { return this.element.namespaceURI }
+    get nextElementSibling() { return this.element.nextElementSibling }
+    // get outerHTML() { return this.element.outerHTML }
+    get part() { return this.element.part }
+    get prefix() { return this.element.prefix }
+    get previousElementSibling() { return this.element.previousElementSibling }
+    get scrollHeight() { return this.element.scrollHeight }
+    get scrollLeft() { return this.element.scrollLeft }
+    get scrollLeftMax() { return this.element.scrollLeftMax }
+    get scrollTop() { return this.element.scrollTop }
+    get scrollTopMax() { return this.element.scrollTopMax }
+    get scrollWidth() { return this.element.scrollWidth }
+    get shadowRoot() { return this.element.shadowRoot }
+    get slot() { return this.element.slot }
+    get tagName() { return this.element.tagName }
+
+    // HTMLElement properties
+    get accessKey() { return this.element.accessKey }
+    get accessKeyLabel() { return this.element.accessKeyLabel }
+    get anchorElement() { return this.element.anchorElement }
+    get attributeStyleMap() { return this.element.attributeStyleMap }
+    get autocapitalize() { return this.element.autocapitalize }
+    get autofocus() { return this.element.autofocus }
+    get autocorrect() { return this.element.autocorrect }
+    get contentEditable() { return this.element.contentEditable }
+    // get dataset() { return this.element.dataset }
+    get dir() { return this.element.dir }
+    get draggable() { return this.element.draggable }
+    get editContext() { return this.element.editContext }
+    get enterKeyHint() { return this.element.enterKeyHint }
+    get hidden() { return this.element.hidden }
+    get inert() { return this.element.inert }
+    get innerText() { return this.element.innerText }
+    get inputMode() { return this.element.inputMode }
+    get isContentEditable() { return this.element.isContentEditable }
+    get lang() { return this.element.lang }
+    get nonce() { return this.element.nonce }
+    get offsetHeight() { return this.element.offsetHeight }
+    get offsetLeft() { return this.element.offsetLeft }
+    get offsetParent() { return this.element.offsetParent }
+    get offsetTop() { return this.element.offsetTop }
+    get offsetWidth() { return this.element.offsetWidth }
+    get outerText() { return this.element.outerText }
+    get popover() { return this.element.popover }
+    get spellcheck() { return this.element.spellcheck }
+    // get style() { return this.element.style }
+    get tabIndex() { return this.element.tabIndex }
+    get title() { return this.element.title }
+    get translate() { return this.element.translate }
+    get virtualKeyboardPolicy() { return this.element.virtualKeyboardPolicy }
+    get writingSuggestions() { return this.element.writingSuggestions }
+
+
     /** @param {...AppElement|Element|string} values @returns {boolean} */
     static hasElement(...values) {
         /** @type {string} */
@@ -6484,70 +6918,28 @@ class AppElement {
             } else if (values[0] instanceof Element) {
                 value = values[0].id
             } else if (values[0] instanceof AppElement) {
-                value = values[0].id()
+                value = values[0].id
             }
         } else {
             value = values.join('.')
         }
         return document.getElementById(value) != null
     }
-    /** @param {AppElement|Element|string} value @returns {Element} */
+    /** @param {AppElement|Element|string} value @returns {AppElement} */
     static toAppElement(value) {
         return new AppElement(value)
     }
-    /** @param {AppElement|Element|string} value @returns {Element} */
+    /** @param {AppElement|Element|string} value @returns {HTMLElement} */
     static toHTMLElement(value) {
         return new AppElement(value).getElement()
     }
 
     // Properties
-    /** @param {string} value @returns {AppElement|string} */
-    accessKey(value = "hh") {
-        if (value === null || value === undefined) return this.element.accessKey
-        else this.element.accessKey = value
-        return this
-    }
-    /** @param {boolean} value @returns {AppElement|boolean} */
-    contentEditable(value = null) {
-        if (value === null || value === undefined) return this.element.contentEditable
-        else this.element.contentEditable = value
-        return this
-    }
-    /** @returns {number} */
-    getNodeType() {
-        return this.element.nodeType
-    }
-    /** @param {string} characterCase @returns {string} */
-    getTagName(characterCase = 'upper') {
-        if (characterCase == 'upper') {
-            return this.element.tagName.upper()
-        }
-        else if (characterCase == 'lower') {
-            return this.element.tagName.lower()
-        }
-        return this.element.tagName
-    }
-    /** @param {string|number} value @returns {AppElement|string} */
-    id(value) {
-        if (value === null || value === undefined) return this.element.id
-        if (util.istype(value, 'number')) {
-            let strings = this.element.id.split(delimiter)
-            return strings[index < 0 ? index + strings.length : index]
-        }
-        else if (util.istype(value, 'string')) {
-            this.element.id = value
-        }
-        return this
-    }
     /** @param {string} value @param {boolean} append @returns {AppElement|string} */
     innerHTML(value = null, append = false) {
         if (value === null || value === undefined) return this.element.innerHTML
         else this.element.innerHTML = append ? this.element.innerHTML + value : value
         return this
-    }
-    /** @returns {boolean} */
-    isContentEditable() {
-        return this.element.isContentEditable
     }
     /** @param {string} value @returns {AppElement|string} */
     outerHTML(value = null) {
@@ -6570,6 +6962,12 @@ class AppElement {
     src(...values) {
         if (values.length == 0) return this.element.src
         else this.element.src = values.join('/')
+        return this
+    }
+    /** @param {string} value @param {boolean} append @returns {AppElement|string} */
+    textContent(value = null, append = false) {
+        if (value === null || value === undefined) return this.element.textContent
+        else this.element.textContent = append ? this.element.textContent + value : value
         return this
     }
     /** @param {string} value @param {boolean} append @returns {AppElement|string} */
@@ -6643,14 +7041,16 @@ class AppElement {
             AppElement.toHTMLElement(otherNode)
         )
     }
-    /** @param {string} type @param {{ bubbles: boolean; cancelable: boolean; }} options @returns {AppElement} */
-    dispatchEvent(type, options = { bubbles: true, cancelable: true }) {
-        let event = new Event(type, options)
+    /** @param {string|Event} event @param {{ bubbles: boolean; cancelable: boolean; }} options @returns {AppElement} */
+    dispatchEvent(event, options = { bubbles: true, cancelable: true }) {
+        if (typeof event === "string") {
+            event = new Event(event, options)
+        }
         this.element.dispatchEvent(event)
         return this
     }
     /** @param {{ preventScroll: boolean, focusVisible: boolean }} options @returns {AppElement} */
-    focus(options) {
+    focus(options = null) {
         this.element.focus(options)
         return this
     }
@@ -6729,6 +7129,15 @@ class AppElement {
             AppElement.toHTMLElement(otherNode)
         )
     }
+    /** @param {string} selectors @returns {AppElement} */
+    querySelector(selectors) {
+        return new AppElement(this.element.querySelector(selectors))
+    }
+    /** @param {string} selectors @returns {AppElement[]} */
+    querySelectorAll(selectors) {
+        let nodeList = this.element.querySelectorAll(selectors)
+        return Array.from(nodeList).map(node => new AppElement(node))
+    }
     /** @returns {void} */
     remove() {
         this.element.remove()
@@ -6761,36 +7170,17 @@ class AppElement {
         )
         return this
     }
-    /** @param {number} xCoord @param {number} yCoord @param {string} behavior @returns {AppElement} */
-    scroll(xCoord, yCoord, behavior = 'smooth') {
-        this.element.scroll({
-            'top': yCoord,
-            'left': xCoord,
-            'behavior': behavior
-        })
-        return this
+    /** @param {ScrollToOptions} options @returns {void} */
+    scrollBy(options = { behavior: "smooth", left: 0, top: 0 }) {
+        this.element.scrollBy(options)
     }
-    /** @param {number} xCoord @param {number} yCoord @param {string} behavior @returns {AppElement} */
-    scrollBy(xCoord, yCoord, behavior = 'smooth') {
-        this.element.scrollBy({
-            'top': yCoord,
-            'left': xCoord,
-            'behavior': behavior
-        })
-        return this
-    }
-    /** @param {boolean|Object} options @returns {AppElement} */
-    scrollIntoView(options = { behavior: 'smooth', block: 'start', inline: 'nearest' }) {
+    /** @param {boolean|Object} options @returns {void} */
+    scrollIntoView(options = { behavior: "smooth", block: 'start', inline: 'nearest' }) {
         this.element.scrollIntoView(options)
-        return this
     }
-    /** @param {number} xCoord @param {number} yCoord @param {string} behavior @returns {void} */
-    scrollTo(xCoord, yCoord, behavior = 'smooth') {
-        this.element.scrollTo({
-            'top': yCoord,
-            'left': xCoord,
-            'behavior': behavior,
-        })
+    /** @param {ScrollToOptions} options @returns {AppElement} */
+    scrollTo(options = { behavior: "smooth", left: 0, top: 0 }) {
+        this.element.scrollTo(options)
     }
     /** @param {string} name @param {string} value @returns {AppElement} */
     setAttribute(name, value = '') {
@@ -6855,8 +7245,8 @@ class AppElement {
     /** @param {object} options @param {(element: AppElement, observer: MutationObserver, list: MutationRecord[]) => void} listener  @returns {AppElement} */
     addMutationObserver(options = { childList: true, subtree: true }, listener) {
         // https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
-        let observer = new MutationObserver((mutationList, observer) => {
-            listener(this, observer, mutationList)
+        let observer = new MutationObserver((mutations, observer) => {
+            listener(this, observer, mutations)
         })
         observer.observe(this.element, options)
         return this
@@ -6886,6 +7276,7 @@ class AppElement {
         if (util.istype(value, 'array-string')) {
             return this.getAttributes(value)
         }
+        return this
     }
     /** @returns {number} */
     childrenLength() {
@@ -6912,6 +7303,25 @@ class AppElement {
     /** @returns {AppElement} */
     copy() {
         return new AppElement(this.element)
+    }
+    /** @param {string|string[]|{string:string}} value @returns {AppElement|string|null} */
+    dataset(value) {
+        if (util.istype(value, 'string') && value.includes(':')) {
+            return this.setDatasets(value)
+        }
+        if (util.istype(value, 'object')) {
+            return this.setDatasets(value)
+        }
+        if (util.istype(value, 'string') && !value.includes(':')) {
+            return this.getDataset(value)
+        }
+        if (util.istype(value, 'string') && value.includes(',') && !value.includes(':')) {
+            return this.getDatasets(value)
+        }
+        if (util.istype(value, 'array-string')) {
+            return this.getDatasets(value)
+        }
+        return this
     }
     /** @param {string} key @returns {AppElement} */
     delAttribute(key) {
@@ -6974,6 +7384,15 @@ class AppElement {
         let value = this.element.dataset[key]
         return value ? value : defaultvalue
     }
+    /** @param {string|string[]} keys @returns {{string:string|null}} */
+    getDatasets(keys) {
+        let datasets = {}
+        let dataset_keys = util.istype(keys, 'string') ? array.fromstring(keys, ',', true) : keys
+        for (let dataset_key of attridataset_keysbute_keys) {
+            datasets[dataset_key] = this.getDataset(dataset_key)
+        }
+        return datasets
+    }
     /** @returns {Element} */
     getElement() {
         return this.element
@@ -7016,23 +7435,23 @@ class AppElement {
         find(this.element, found)
         return found
     }
-    /** @param {boolean} useMargin @returns {number} */
-    getHeight(useMargin = true) {
-        let offsetHeight = this.element.offsetHeight
+    /** @param {boolean} includeMargin @param {boolean} includePadding @returns {number} */
+    getHeight(includeMargin = true, includePadding = true) {
+        let height = this.element.offsetHeight
         let styles = window.getComputedStyle(this.element)
-        if (useMargin) {
-            let margin = parseFloat(styles['marginTop']) + parseFloat(styles['marginBottom'])
-            return offsetHeight + margin
+        if (includeMargin) {
+            height += parseFloat(styles["marginTop"]) + parseFloat(styles["marginBottom"])
         }
-        else {
-            return offsetHeight
+        if (!includePadding) {
+            height -= parseFloat(styles["paddingTop"]) + parseFloat(styles["paddingBottom"])
         }
+        return height
     }
-    /** @param {boolean} useMargin @returns {number} */
-    getHeightChildren(useMargin = true) {
+    /** @param {boolean} includeMargin @param {boolean} includePadding @param {boolean} useMargin @returns {number} */
+    getHeightChildren(includeMargin = true, includePadding = true) {
         let height = 0
         for (let child of this.children()) {
-            height += child.getHeight(useMargin)
+            height += child.getHeight(includeMargin, includePadding)
         }
         return height
     }
@@ -7051,6 +7470,12 @@ class AppElement {
             let strings = this.element.id.split(delimiter)
             return strings[index < 0 ? index + strings.length : index]
         }
+    }
+    getIndex() {
+        if (!this.element.parentNode) {
+            return -1
+        }
+        return [...this.element.parentNode.children].indexOf(this.element);
     }
     /** @param {string} key @param {any} defaultvalue @returns {any|null} */
     getProperty(key, defaultvalue = null) {
@@ -7089,21 +7514,22 @@ class AppElement {
         }
         return properties
     }
-    /** @param {string} key @returns {string} */
+    /** @param {string} key @returns {number|string} */
     getStylePropertyComputed(key) {
         let styleDeclaration = window.getComputedStyle(this.element)
-        return styleDeclaration.getPropertyValue(key)
+        return AppElement.#property_decode(key, styleDeclaration[key])
     }
-    /** @param {boolean} useMargin @returns {number} */
-    getWidth(useMargin = true) {
+    /** @param {boolean} includeMargin @param {boolean} includePadding @returns {number} */
+    getWidth(includeMargin = true, includePadding = true) {
+        let width = this.element.offsetWidth
         let styles = window.getComputedStyle(this.element)
-        if (useMargin) {
-            let margin = parseFloat(styles['marginLeft']) + parseFloat(styles['marginRight'])
-            return this.element.offsetWidth + margin
+        if (includeMargin) {
+            width += parseFloat(styles["marginLeft"]) + parseFloat(styles["marginRight"])
         }
-        else {
-            return this.element.offsetWidth
+        if (!includePadding) {
+            width -= parseFloat(styles["paddingLeft"]) + parseFloat(styles["paddingRight"])
         }
+        return width
     }
     /** @param {boolean} useMargin @returns {number} */
     getWidthChildren(useMargin = true) {
@@ -7164,30 +7590,51 @@ class AppElement {
         }
         return true
     }
-    /** @param {AppElement|Element|string} parentElement @returns {boolean} */
-    isChildOf(parentElement) {
-        parentElement = app.element(parentElement)
-        if (this.element == parentElement.getElement()) {
+    /** @deprecated @param {AppElement|Element|string} parent @returns {boolean} */
+    __isChildOf(parent) {
+        // child.isChildOf(parent)
+        /** @type {HTMLElement} */
+        parent = AppElement.toHTMLElement(parent)
+        if (this.element == parent) {
             return false
         }
         let element = this.element
-        while (element != null && element != app.body().getElement()) {
-            if (element == parentElement.getElement()) {
+        while (element != null && element != window.document.body) {
+            if (element == parent) {
                 return true
             }
             element = element.parentElement
         }
         return false
     }
+    /** @param {AppElement|Element|string} parent @param {string} descendant @returns {boolean} */
+    isChildOf(parent, descendant = "both") {
+        // child.isChildOf(parent)
+        parent = AppElement.toHTMLElement(parent)
+        if (parent == null) return false
+        if (descendant == "direct") {
+            return this.element.parentElement === parent
+        }
+        else if (descendant == "indirect") {
+            return parent.contains(this.element) && this.element.parentElement !== parent;
+        }
+        else {
+            return parent.contains(this.element) && parent !== this.element
+        }
+    }
     /** @param {string} token @returns {boolean} */
     isClass(token) {
         return this.element.classList.contains(token)
     }
-    /** @param {AppElement|Element} element @param {boolean} includeChildren  @returns {boolean} */
+    /** @returns {boolean} */
+    isEnabled() {
+        return !(this.element.hasAttribute("disabled") || this.element.disabled)
+    }
+    /** @param {AppElement|Element} parent @param {boolean} includeChildren  @returns {boolean} */
     isEqualTo(element, includeChildren = true) {
         // child.isEqualTo(parent)
-        if (element === null || element === undefined) return false
         element = AppElement.toHTMLElement(element)
+        if (element == null) return false
         if (includeChildren) {
             return this.element == element || element.contains(this.element)
         } else {
@@ -7212,6 +7659,11 @@ class AppElement {
         }
         return false
     }
+    /** @param {AppElement|Element|string} child @returns {boolean} */
+    isParentOf(child) {
+        child = app.element(child)
+        return this.element.contains(child)
+    }
     /** @param {string} key @param {any} value @returns {boolean} */
     isProperty(key, value = null) {
         if (value) {
@@ -7227,12 +7679,9 @@ class AppElement {
     /** @param {string} key @param {any} value @returns {boolean} */
     isStyleProperty(key, value = null) {
         if (value) {
-            return this.getStyle(key) == value
+            return this.getStyleProperty(key) == value
         } else {
-            let keys = []
-            for (let key in this.element.style) {
-                keys.append(key)
-            }
+            let keys = Object.keys(this.element.style)
             return keys.includes(key)
         }
     }
@@ -7240,7 +7689,7 @@ class AppElement {
     isTagName(tag_names) {
         let tag_names_ = util.istype(tag_names, 'string') ? array.fromstring(tag_names, '|', true) : tag_names
         for (let tag_name of tag_names_) {
-            if (this.getTagName('lower') == tag_name.lower()) {
+            if (this.tagName.toLowerCase() == tag_name.toLowerCase()) {
                 return true
             }
         }
@@ -7275,6 +7724,7 @@ class AppElement {
         if (util.istype(value, 'array-string')) {
             return this.getProperties(value)
         }
+        return this
     }
     /** @param {string} key @returns {DOMRect|number} */
     rect(key = null) {
@@ -7303,22 +7753,22 @@ class AppElement {
         return this
     }
     /** @returns {AppElement} */
-    scrollDown() {
+    scrollToBottom() {
         this.element.scrollTop = this.element.scrollHeight
         return this
     }
     /** @returns {AppElement} */
-    scrollLeft() {
+    scrollToLeft() {
         this.element.scrollLeft = 0
         return this
     }
     /** @returns {AppElement} */
-    scrollRight() {
+    scrollToRight() {
         this.element.scrollLeft = this.element.scrollWidth
         return this
     }
     /** @returns {AppElement} */
-    scrollUp() {
+    scrollToTop() {
         this.element.scrollTop = 0
         return this
     }
@@ -7343,7 +7793,7 @@ class AppElement {
         }
         return this
     }
-    /** @param {string} contentOriginal @param {string} contentResults @returns {AppElement} */
+    /** @deprecated @param {string} contentOriginal @param {string} contentResults @returns {AppElement} */
     setBackground(contentOriginal = null, contentResults = '') {
         // contentOriginal default
         if (!contentOriginal) {
@@ -7439,53 +7889,97 @@ class AppElement {
         return this
     }
     /** @param {string} content @returns {AppElement} */
-    setBackgroundContent(content = null) {
-        content = content == null ? this.getStyleProperty('background-image') : content
+    setBackgroundSVG(content = null) {
+        // fallback to saved background if not content param is provided
         if (!content) {
-            return console.error(`UnsetError: element background content undefined`)
+            content = this.element.dataset.background
         }
-        if (!content.includes('xmlns')) {
-            content = content.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
+        if (!content) {
+            return console.error(`UnsetError: no backgound SVG content`);
         }
-        // 
-        let element = this
-        if (!this.getHeight()) {
-            console.warn(`ValueError: element height invalid`)
-        }
-        if (!this.getWidth()) {
-            console.warn(`ValueError: element width invalid`)
-        }
-        let height = this.getHeight()
-        let width = this.getWidth()
-        /** @param {string} match @param {string} operandLeft @param {string} operator @param {string} operandRight @param {number} offset @param {string} string @param {{string:string}} groups @returns {string} */
-        function replacer1(match, operandLeft, operator, operandRight, offset, string, groups) {
-            /** @type {string} */
-            let variableName = operandLeft
-            /** @type {number|string} */
-            let variableValue
-            if (variableName == 'height') {
-                variableValue = height
+        // define variable replacements
+        const tokens = {
+            'color-accent': () => app.configuration("--color-accent"),
+            'color-primary': () => app.configuration("--color-primary"),
+            'color-secondary': () => app.configuration("--color-secondary"),
+            'h': () => this.getProperty('offsetHeight').toString(),
+            'w': () => this.getProperty('offsetWidth').toString()
+        };
+        /** @param {string} content @param {number} index @returns {[number, string, string]} */
+        function decode(content, index) {
+            let oldContent = '\$';
+            let newContent = '';
+            let matchedKey = null;
+            // find which token matches the string at the current index
+            for (const key of Object.keys(tokens)) {
+                if (content.startsWith(key, index)) {
+                    matchedKey = key;
+                    break;
+                }
             }
-            if (variableName == 'width') {
-                variableValue = width
+            // no valid token matches
+            if (!matchedKey) {
+                return [0, '', ''];
             }
-            if (operator) {
-                if (operator == '+') variableValue += Number(operandRight)
-                if (operator == '/') variableValue /= Number(operandRight)
-                if (operator == '*') variableValue *= Number(operandRight)
-                if (operator == '%') variableValue *= (Number(operandRight) / 100)
-                if (operator == '-') variableValue -= Number(operandRight)
+            oldContent += matchedKey;
+            newContent = tokens[matchedKey]();
+            let currentValue = newContent
+            // variable mathematical operations
+            let opIndex = index + matchedKey.length;
+            let operator = content[opIndex];
+            if (['-', '+', '/', '*', '%'].includes(operator)) {
+                oldContent += operator;
+                let nextValue = 0;
+                let nextIndex = opIndex + 1;
+                // recursively decode nested variable sequences
+                if (content[nextIndex] == '$') {
+                    let [nestedVal, nestedOld, nestedNew] = decode(content, nextIndex + 1);
+                    nextValue = nestedVal;
+                    oldContent += nestedOld;
+                // parse immediate static numbers following the operator
+                } else {
+                    let numberStr = '';
+                    while (nextIndex < content.length && /[\d.]/.test(content[nextIndex])) {
+                        numberStr += content[nextIndex];
+                        nextIndex++;
+                    }
+                    nextValue = parseFloat(numberStr) || 0;
+                    oldContent += numberStr;
+                }
+                switch (operator) {
+                    case '+': currentValue += nextValue; break;
+                    case '-': currentValue -= nextValue; break;
+                    case '*': currentValue *= nextValue; break;
+                    case '/': currentValue = nextValue !== 0 ? currentValue / nextValue : 0; break;
+                    case '%': currentValue = nextValue !== 0 ? currentValue * (nextValue/100) : 0; break;
+                }
+                newContent = currentValue.toString();
             }
-            return variableValue
+            return [currentValue, oldContent, newContent];
+
         }
-        content = content.replaceAll(/\$(height|width)([+/*%-]|)(\d+|)/g, replacer1)
-        /** @param {string} match @param {string} propertyKey @param {number} offset @param {string} string @param {{string:string}} groups @returns {string} */
-        function replacer2(match, propertyKey, p2, offset, string, groups) {
-            return app.getStyleProperty(':root', propertyKey)
+        // find and replace all instances of variables
+        content = content.replace(/(\r\n|\r|\n|\t)+/g, '').replace(/\s+/, ' ').trim();
+        let processedContent = content
+        let searchIndex = processedContent.indexOf('\$');
+        while (searchIndex !== -1) {
+            let [_, oldStr, newStr] = decode(processedContent, searchIndex + 1);
+            if (oldStr === '\$') { 
+                // avoid infinite loops if '\$' is lonely or unparseable
+                searchIndex = processedContent.indexOf('\$', searchIndex + 1);
+                continue;
+            }
+            processedContent = processedContent.replace(oldStr, newStr);
+            searchIndex = processedContent.indexOf('\$');
         }
-        content = content.replaceAll(/var\((--\w+(-\w+)*)\)/g, replacer2)
-        let backgroundImage = `url(data:image/svg+xml;base64,${util.base64_encode(content)})`
-        this.setStyleProperty('background-image', backgroundImage)
+        // apply the fully evaluated SVG string to element
+        let svgCode = `<svg xmlns="http://www.w3.org/2000/svg">${processedContent}</svg>`;
+        let encodedSvg = encodeURIComponent(svgCode).replace(/#/g, '%23');
+        this.element.style.backgroundImage = `url("data:image/svg+xml,${encodedSvg}")`;
+        this.element.style.backgroundRepeat = 'no-repeat';
+        this.element.style.backgroundPosition = 'center';
+        this.element.style.backgroundSize = 'contain';
+        this.element.dataset.background = content; // save
         return this
     }
     /** @param {string} key @param {string} value @returns {AppElement} */
@@ -7493,24 +7987,26 @@ class AppElement {
         this.element.dataset[key] = value
         return this
     }
-    /** @param {string} value @returns {AppElement} */
-    setForeground(value) {
-        if (this.childrenLength() >= 2) {
-            if (this.children(1).hasAttribute('class')) {
-                if (!this.children(1).getAttribute('class').includes('content-foreground')) {
-                    return console.error('no foreground element')
-                }
-            } else return console.error('no foreground element')
-        } else return console.error('no foreground element')
-        if (util.istype(value, 'element')) {
-            value = app.element(value)
-            this.children(1).appendChild(value)
-        }
-        if (util.istype(value, 'string')) {
-            // TODO: decode variables
-            this.children(1).innerHTML(value)
+    /** @param {string|{string:string}} datasets @returns {AppElement} */
+    setDatasets(datasets) {
+        let datasets_ = util.istype(datasets, 'string') ? object.fromstring(datasets, ';', ':', true) : datasets
+        for (let [dataset_key, dataset_value] of enumerate(datasets_)) {
+            this.setDataset(dataset_key, dataset_value)
         }
         return this
+    }
+    /** @param {boolean} enabled @returns {AppElement} */
+    setEnabled(enabled) {
+        if (this.isTagName("img")) {
+            if (enabled) {
+                this.element.removeAttribute("disabled")
+            } else {
+                this.element.setAttribute("disabled", '')
+            }
+        }
+        if (this.isTagName("button|input|select")) {
+            this.element.disabled = !enabled
+        }
     }
     /** @param {...string} values @returns {AppElement} */
     setIdentifier(...values) {
@@ -7526,9 +8022,9 @@ class AppElement {
         }
         return this
     }
-    /** @param {boolean} disabled @returns {void} */
-    setPropertyDisabled(disabled) {
-        this.setProperty('disabled', disabled)
+    /** @param {boolean} enabled @returns {void} */
+    setPropertyChecked(enabled) {
+        this.setProperty('checked', enabled)
     }
     /** @param {string|{string:string}} properties @returns {AppElement} */
     setProperties(properties) {
@@ -7540,7 +8036,7 @@ class AppElement {
     }
     /** @param {string} key @param {number|string} value @returns {AppElement} */
     setStyleProperty(key, value) {
-        this.element.style[key] = AppElement.#convertValue(key, value)
+        this.element.style[key] = AppElement.#property_encode(key, value)
         return this
     }
     /** @param {string|{string:string}} properties @returns {AppElement} */
@@ -7591,7 +8087,7 @@ class AppElement {
         if (this.isTagName('input|li|meter|option|param|progress|select|textarea')) {
             return this.value(value, append)
         } else {
-            return this.innerHTML(value, append)
+            return this.textContent(value, append)
         }
     }
     /** @param {string} value @returns {AppElement|string} */
@@ -7613,16 +8109,19 @@ class AppElement {
         }
         return value
     }
-    /** @param {string} key  @param {string} value @returns {string} */
-    static #convertValue(key, value) {
-        if (AppElement.propertiesOfPixelValue.includes(key) && util.istype(value, 'string-number|number') && !(`${value}`.includes('px') || `${value}`.includes('%'))) {
-            value += 'px'
+    /** @param {string} key  @param {string} value @returns {number|string} */
+    static #property_encode(key, value) {
+        if (AppElement.propertiesOfPixelValue.includes(key) && util.istype(value, 'string-number|number')) {
+            return `${value}px`
         }
         return value
     }
-
-    static fromstring(data) {
-
+    /** @param {string} key  @param {string} value @returns {number|string} */
+    static #property_decode(key, value) {
+        if (AppElement.propertiesOfPixelValue.includes(key)) {
+            return parseFloat(value)
+        }
+        return value
     }
 }
 class ApplicationProgrammingInterface {
@@ -7734,6 +8233,25 @@ class ApplicationProgrammingInterface {
     /** @type {(event: any) => void} */
     static onResponseListener = (data) => { }
 
+    get isSuccessfull() {
+        return 200 <= this.request.status && this.request.status <= 299
+    }
+    get responseText() {
+        return this.request.responseText
+    }
+    get responseURL() {
+        return this.request.responseURL
+    }
+    get responseXML() {
+        return this.request.responseXML
+    }
+    get status() {
+        return this.request.status
+    }
+    get statusText() {
+        return this.request.statusText
+    }
+
     /** @returns {void} */
     abort() {
         this.request.abort()
@@ -7760,6 +8278,10 @@ class ApplicationProgrammingInterface {
             this.requestController = controller[0] == '/' ? controller : `/${controller}`
         }
         return this
+    }
+    /** @param {any} responseDefault @returns {ApplicationProgrammingInterface} */
+    default(responseDefault) {
+        return this.responseDefault(responseDefault)
     }
     /** @param {string} uri @returns {any} */
     delete(uri = null) {
@@ -7902,9 +8424,9 @@ class ApplicationProgrammingInterface {
     responseCodeSuccessful() {
         return 200 <= this.request.status && this.request.status <= 299
     }
-    /** @param {any} responseValueDefault @returns {ApplicationProgrammingInterface} */
-    responseDefault(responseValueDefault) {
-        this.requestResponseDefault = util.copy(responseValueDefault)
+    /** @param {any} responseDefault @returns {ApplicationProgrammingInterface} */
+    responseDefault(responseDefault) {
+        this.requestResponseDefault = util.copy(responseDefault)
         return this
     }
     /** @param {string} header @returns {string|null} */
@@ -7927,10 +8449,6 @@ class ApplicationProgrammingInterface {
     /** @returns {string} */
     responseStatusText() {
         return this.request.statusText
-    }
-    /** @returns {string} */
-    responseText() {
-        return this.request.responseText
     }
     /** @param {string} responseType @returns {ApplicationProgrammingInterface} */
     responseType(responseType) {
@@ -8028,7 +8546,7 @@ class ApplicationProgrammingInterface {
     #getResponse() {
         app.progressStop()
         let response = this.request.response
-        if (this.responseCodeError() && this.request.responseText.length == 0) {
+        if (this.responseCodeError() || !this.request.response) {
             return this.requestResponseDefault ? this.requestResponseDefault : response
         }
         if (this.responseHeader("content-type") == "application/json") {
@@ -8206,7 +8724,7 @@ class DataBinding {
         return newvalue
     }
 }
-//__________________________________________________________________________________________________________________________________________________//
+//____________________________________________________________________________//
 class View {
     /** @constructor */
     constructor() {
@@ -8280,22 +8798,30 @@ class View {
     /** @param {{string:string}|string} attributes */
     setAttributes(attributes) {
         attributes = object.fromdata(attributes)
-        for (let [key, value] in enumerate(attributes)) {
-            console.log(`View.setAttributes(attributes=${attributes}) > key=${key}`, this[key])
-            // if (this[key]) {
-            //     if (util.istype(value, 'string-array')) {
-            //         this[key] = util.json_decode(value)
-            //     }
-            //     if (util.istype(value, 'string-boolean')) {
-            //         this[key] = value == 'true'
-            //     }
-            //     if (util.istype(value, 'string-number')) {
-            //         this[key] = Number(value)
-            //     }
-            //     if (util.istype(value, 'string-object')) {
-            //         this[key] = util.json_decode(value)
-            //     }
-            // }
+        for (let [key, value] of enumerate(attributes)) {
+            let function_name
+            if (key.test(/^[a-z]+(?:[A-Z][a-z]*)*$/)) { // camel case, modiied (no numbers, permitted consecutive upper case letters after initial lowercase letter(s))
+                function_name = `set${key.charAt(0).toUpperCase() + key.slice(1)}`
+            }
+            else if (key.test(/^[a-z]+(?:_[a-z]+)*$/)) { // snake case, modiied (no numbers)
+                function_name = "set" + `${key}`.split('_').map((substring) => substring.charAt(0).toUpperCase() + substring.slice(1).toLowerCase()).join('')
+            }
+            if (this[function_name]) {
+                this[function_name](value)
+            }
+            else if (this[key]) {
+                if (util.istype(value, 'string-boolean')) {
+                    this[key] = value == 'true'
+                }
+                else if (util.istype(value, 'string-number')) {
+                    this[key] = Number(value)
+                } else {
+                    this[key] = value
+                }
+            } else {
+                console.warn(`KeyError: View attribute '${key}' not found`)
+            }
+            // console.log(`View.setAttributes(attributes) > key=${key} val=${value}`, this[key])
         }
     }
     /** @param {AppElement} element @param {AppElement|string} value @returns {AppElement} */
@@ -8424,7 +8950,7 @@ class Dialog extends View {
         // 
         super.view = app.element('div').view('dialog').appendChild(
             app.element('div').appendChild(
-                app.element('img').class('icon'),
+                app.element('img').view('icon'),
                 app.element('div')
             ),
             app.element('div'),
@@ -8438,19 +8964,18 @@ class Dialog extends View {
         app.addEventListenerInterface('click|keydown', this, false)
         app.addEventListenerInterface('input', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @readonly @type {string} */
     static TYPE_DEFAULT          = ''
     /** @readonly @type {string} */
-    static TYPE_MULTICHOICE      = 'multichoice'
+    static TYPE_MULTICHOICE      = "MULTICHOICE"
     /** @readonly @type {string} */
-    static TYPE_SINGLECHOICE     = 'singlechoice'
+    static TYPE_SINGLECHOICE     = "SINGLECHOICE"
     /** @readonly @type {string} */
-    static TYPE_PROGRESS_BAR     = 'progress-bar'
+    static TYPE_PROGRESS_BAR     = "PROGRESS-BAR"
     /** @readonly @type {string} */        
-    static TYPE_PROGRESS_SPINNER = 'progress-spinner'
+    static TYPE_PROGRESS_SPINNER = "PROGRESS-SPINNER"
 
     /** @readonly @type {number} */
     static BUTTON_NEUTRAL  = 0
@@ -8460,11 +8985,11 @@ class Dialog extends View {
     static BUTTON_POSITIVE = 2
 
     /** @readonly @type {string} */
-    static BUTTON_TEXT_NEUTRAL  = 'DONE'
+    static BUTTON_TEXT_NEUTRAL  = "DONE"
     /** @readonly @type {string} */
-    static BUTTON_TEXT_NEGATIVE = 'CANCEL'
+    static BUTTON_TEXT_NEGATIVE = "CANCEL"
     /** @readonly @type {string} */
-    static BUTTON_TEXT_POSITIVE = 'OK'
+    static BUTTON_TEXT_POSITIVE = "OK"
 
     /** @type {(dialog: Dialog) => void} */
     static onButtonClickListener = (dialog) => { }
@@ -8488,18 +9013,33 @@ class Dialog extends View {
             if (this.isVisible() && this.canceledOnTouchOutside && !element.isEqualTo(this.view)) {
                 this.dismiss()
             }
-            if (element.isEqualTo(this.#getButtonNeutral())) {
+            if (element.isEqualTo(this.getButtonNeutral())) {
                 this.onNeutralButtonClickListener(this)
                 this.dismiss()
             }
-            if (element.isEqualTo(this.#getButtonNegative())) {
+            if (element.isEqualTo(this.getButtonNegative())) {
                 this.onNegativeButtonClickListener(this)
                 this.onCancelListener(this)
                 this.dismiss()
             }
-            if (element.isEqualTo(this.#getButtonPositive())) {
+            if (element.isEqualTo(this.getButtonPositive())) {
                 this.onPositiveButtonClickListener(this)
                 this.dismiss()
+            }
+            if (this.type == Dialog.TYPE_MULTICHOICE || this.type == Dialog.TYPE_SINGLECHOICE) {
+                for (let item of this.getItems()) {
+                    let input = item.children(0)
+                    if (element.isEqualTo(item, true) && !element.isEqualTo(input, false)) {
+                        if (this.type == Dialog.TYPE_MULTICHOICE) {
+                            let isChecked = input.getProperty('checked')
+                            input.setProperty('checked', !isChecked).dispatchEvent('input')
+                        }
+                        if (this.type == Dialog.TYPE_SINGLECHOICE) {
+                            input.setProperty('checked', true).dispatchEvent('input')
+                            
+                        }
+                    }
+                }
             }
         }
         if (event.type == 'input') {
@@ -8507,9 +9047,15 @@ class Dialog extends View {
                 this.onInputListener(this, element)
             }
             if (this.type == Dialog.TYPE_MULTICHOICE || this.type == Dialog.TYPE_SINGLECHOICE) {
-                for (let [position, item] of enumerate(this.#getBody().children())) {
+                for (let [position, item] of enumerate(this.getItems())) {
                     let input = item.children(0)
-                    if (input.isEqualTo(element)) {
+                    if (element.isEqualTo(item, true)) {
+                        if (this.type == Dialog.TYPE_SINGLECHOICE && this.getSelectedSingleChoiceItem() !== null) {
+                            this.getButtonPositive().setEnabled(true)
+                        }
+                        if (this.type == Dialog.TYPE_MULTICHOICE && this.getSelectedMultipleChoiceItems().length > 0) {
+                            this.getButtonPositive().setEnabled(true)
+                        }
                         this.onItemSelectedListener(this, position, input.getProperty('checked'))
                     }
                 }
@@ -8535,13 +9081,9 @@ class Dialog extends View {
             this.onDismissListener(this)
         }
     }
-    /** @returns {AppElement} */
-    getBody() {
-        return this.#getBody()
-    }
     /** @returns {AppElement[]} */
     getItems() {
-        return this.#getBody().children()
+        return this.getBody().children()
     }
     /** @param {number} position @returns {AppElement} */
     getItemAt(position) {
@@ -8550,17 +9092,6 @@ class Dialog extends View {
     /** @returns {number} */
     getItemCount() {
         return this.getItems().size()
-    }
-    /** @returns {string[]} */
-    getSelectedMultiChoiceItems() {
-        let values = new array()
-        for (let item of this.getItems()) {
-            let input = item.children(0)
-            if (input.getProperty('checked')) {
-                values.append(input.getAttribute('value'))
-            }
-        }
-        return values
     }
     /** @returns {string[]} */
     getSelectedMultipleChoiceItems() {
@@ -8573,7 +9104,7 @@ class Dialog extends View {
         }
         return values
     }
-    /** @returns {string} */
+    /** @returns {string|null} */
     getSelectedSingleChoiceItem() {
         for (let item of this.getItems()) {
             let input = item.children(0)
@@ -8581,6 +9112,7 @@ class Dialog extends View {
                 return input.getAttribute('value')
             }
         }
+        return null
     }
     /** @param {number} timeout @param {string} identifier @returns {void} */
     prepare(timeout = 3000, identifier = util.identifier()) {
@@ -8594,7 +9126,7 @@ class Dialog extends View {
     }
     /** @returns {void} */
     removeAllItems() {
-        this.#getBody().innerHTML('')
+        this.getBody().innerHTML('')
     }
     /** @param {string} value @returns {AppElement} */
     removeItem(value) {
@@ -8610,13 +9142,13 @@ class Dialog extends View {
     removeItemAt(position) {
         let item = this.getItemAt(position)
         if (item) {
-            this.#getBody().removeChildAt(position)
+            this.getBody().removeChildAt(position)
         }
         return item
     }
     /** @param {AppElement|number|string} body @returns {void} */
     setBody(body) {
-        super.setText(this.#getBody(), body)
+        super.setText(this.getBody(), body)
     }
     /** @returns {void} */
     setCancelable(cancelable) {
@@ -8657,20 +9189,17 @@ class Dialog extends View {
     }
     /** @param {string} icon @returns {void} */
     setIcon(icon) {
-        super.setIcon(this.#getIcon(), icon).show()
+        super.setIcon(this.getIcon(), icon).show()
     }
     /** @param {AppElement|number|string} message @returns {void} */
     setMessage(message) {
-        super.setText(this.#getMessage(), message)
-    }
-    /** @param {string[][]|string} items @param {string[]|string} checkedItems @returns {void} */
-    setMultiChoiceItems(items, checkedItems = []) {
-        this.setMultipleChoiceItems(items, checkedItems)
+        super.setText(this.getMessage(), message)
     }
     /** @param {string[][]|string} items @param {string[]|string} checkedItems @returns {void} */
     setMultipleChoiceItems(items, checkedItems = []) {
         checkedItems = util.istype(checkedItems, 'string') ? array.fromstring(checkedItems) : checkedItems
         this.setType(Dialog.TYPE_MULTICHOICE)
+        this.getButtonPositive().setEnabled(false)
         for (let item_data of array.fromitems(items)) {
             let [title, value] = item_data
             if (value === undefined) {
@@ -8684,7 +9213,7 @@ class Dialog extends View {
             if (value != null && checkedItems.includes(value)) {
                 item.children(0).attribute('checked: ')
             }
-            this.#getBody().appendChild(item)
+            this.getBody().appendChild(item)
         }
     }
     /** @param {string} text @param {Listener} listener @returns {void} */
@@ -8746,6 +9275,7 @@ class Dialog extends View {
     /** @param {string[][]|string} items @param {string} checkedItem @returns {void} */
     setSingleChoiceItems(items, checkedItem = null) {
         this.setType(Dialog.TYPE_SINGLECHOICE)
+        this.getButtonPositive().setEnabled(false)
         for (let item_data of array.fromitems(items)) {
             let [title, value] = item_data
             if (value === undefined) {
@@ -8753,24 +9283,24 @@ class Dialog extends View {
                 value = title
             }
             let item = app.element('div').appendChild(
-                app.element('input').attribute(`name: single-choice; type: radio; value: ${value}`),
+                app.element('input').attribute(`type: radio; name: ${Dialog.TYPE_SINGLECHOICE}}; value: ${value}`),
                 app.element('div').text(title)
             )
             if (checkedItem && value == checkedItem) {
                 item.children(0).attribute('checked: ')
             }
-            this.#getBody().appendChild(item)
+            this.getBody().appendChild(item)
         }
     }
     /** @param {AppElement|number|string} title @returns {void} */
     setTitle(title) {
-        super.setText(this.#getTitle(), title)
+        super.setText(this.getTitle(), title)
     }
     /** @param {string} type @returns {void} */
     setType(type) {
         this.type = type
-        this.view.setAttribute('type', this.type)
-        this.#getBody().clear()
+        this.view.setAttribute('type', this.type.toLowerCase())
+        this.getBody().clear()
         if (this.type == Dialog.TYPE_PROGRESS_BAR) {
             this.setBody(app.element('div').appendChild(
                 app.element('progress').attribute(`max: ${this.maximum}; value: 0;`),
@@ -8809,44 +9339,41 @@ class Dialog extends View {
             // NOTE: prevent immediate dismissisal after calling show() provided that canceledOnTouchOutside=true and dialog is gui activated
             setTimeout(() => {
                 app.body().appendChild(this.view)
-                this.#getBody().setStyleProperty('max-height', this.view.getHeight(false) * 0.8)
+                this.getBody().setStyleProperty('max-height', this.view.getHeight(false) * 0.8)
                 this.onShowListener(this)
             }, delay)
         }
     }
-    // 
+
     /** @returns {AppElement} */
-    #getBody() {
+    getBody() {
         return this.view.children(2)
     }
-    /** @returns {AppElement[]} */
-    #getButtons() {
-        return this.view.children(3).children()
-    }
     /** @returns {AppElement} */
-    #getButtonNeutral() {
+    getButtonNeutral() {
         return this.view.children(3).children(0)
     }
     /** @returns {AppElement} */
-    #getButtonNegative() {
+    getButtonNegative() {
         return this.view.children(3).children(1)
     }
     /** @returns {AppElement} */
-    #getButtonPositive() {
+    getButtonPositive() {
         return this.view.children(3).children(2)
     }
     /** @returns {AppElement} */
-    #getIcon() {
+    getIcon() {
         return this.view.children(0).children(0)
     }
     /** @returns {AppElement} */
-    #getMessage() {
+    getMessage() {
         return this.view.children(1)
     }
     /** @returns {AppElement} */
-    #getTitle() {
+    getTitle() {
         return this.view.children(0).children(1)
     }
+
     /** @param {number} position @param {string} text @param {Listener|null} listener */
     #setButton(position, text, listener = null) {
         let buttons = this.view.children(3).style('display: flex')
@@ -8908,32 +9435,32 @@ class DialogProgress extends Dialog {
     setMaximum(maximum) {
         if (this.type == Dialog.TYPE_PROGRESS_BAR) {
             this.maximum = maximum
-            this.#getProgress().attribute(`max:${this.maximum}`)
+            this.getProgressBar().attribute(`max:${this.maximum}`)
         }
     }
     /** @param {number} progress @returns {void} */
     setProgress(progress) {
         if (this.type == Dialog.TYPE_PROGRESS_BAR) {
             this.progress = Math.min(this.maximum, progress)
-            this.#getProgress().attribute(`value:${this.progress}`)
+            this.getProgressBar().attribute(`value:${this.progress}`)
             let percentage = Math.round(this.progress * this.maximum) / this.maximum
-            this.#getProgressPercentage().text(`${percentage}%`)
+            this.getProgressPercentage().text(`${percentage}%`)
             let fractionNumerator = this.progress.toFixed(0)
             let fractionDenominator = this.maximum
-            this.#getProgressFraction().text(`${fractionNumerator}/${fractionDenominator}`)
+            this.getProgressFraction().text(`${fractionNumerator}/${fractionDenominator}`)
         }
     }
-    // 
+
     /** @returns {AppElement} */
-    #getProgress() {
+    getProgressBar() {
         return this.getBody().children(0)
     }
     /** @returns {AppElement} */
-    #getProgressFraction() {
+    getProgressFraction() {
         return this.getBody().children(1).children(1)
     }
     /** @returns {AppElement} */
-    #getProgressPercentage() {
+    getProgressPercentage() {
         return this.getBody().children(1).children(0)
     }
 }
@@ -8947,13 +9474,12 @@ class Divider extends View {
         // 
         super.view = app.element('div').view(super.getClassName()).attribute(`stlye: ${this.style}`)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @readonly @type {string} */
-    static STYLE_SOLID = 'solid'
+    static STYLE_SOLID           = "solid"
     /** @readonly @type {string} */
-    static STYLE_LINEAR_GRADIENT = 'linear-gradient'
+    static STYLE_LINEAR_GRADIENT = "linear-gradient"
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
@@ -8980,7 +9506,7 @@ class Divider extends View {
     /** @param {string} style @returns {void} */
     setStyle(style) {
         this.style = style
-        this.view.attribute(`stlye: ${this.style}`)
+        this.view.attribute(`stlye: ${this.style.toLowerCase()}`)
     }
 }
 class Drawer extends View {
@@ -9012,27 +9538,27 @@ class Drawer extends View {
     }
 
     /** @readonly @type {string} */
-    static LOCK_MODE_LOCKED_OPEN   = 'LOCKED_OPEN'
+    static LOCK_MODE_LOCKED_OPEN   = "LOCKED_OPEN"
     /** @readonly @type {string} */
-    static LOCK_MODE_LOCKED_CLOSED = 'LOCKED_CLOSED'
+    static LOCK_MODE_LOCKED_CLOSED = "LOCKED_CLOSED"
     /** @readonly @type {string} */
-    static LOCK_MODE_UNLOCKED      = 'UNLOCKED'
+    static LOCK_MODE_UNLOCKED      = "UNLOCKED"
 
     /** @readonly @type {string} */
-    static SIDE_LEFT  = 'LEFT'
+    static SIDE_LEFT  = "LEFT"
     /** @readonly @type {string} */
-    static SIDE_RIGHT = 'RIGHT'
+    static SIDE_RIGHT = "RIGHT"
 
     /** @readonly @type {string} */
-    static STATE_CLOSED   = 'CLOSED'
+    static STATE_CLOSED   = "CLOSED"
     /** @readonly @type {string} */
-    static STATE_DRAGGING = 'DRAGGING'
+    static STATE_DRAGGING = "DRAGGING"
     /** @readonly @type {string} */
-    static STATE_IDLE     = 'IDLE'
+    static STATE_IDLE     = "IDLE"
     /** @readonly @type {string} */
-    static STATE_OPEN     = 'OPEN'
+    static STATE_OPEN     = "OPEN"
     /** @readonly @type {string} */
-    static STATE_SETTLING = 'SETTLING'
+    static STATE_SETTLING = "SETTLING"
 
     /** @type {function(Drawer): void} */
     static onCloseListener = (popup) => { }
@@ -9197,9 +9723,9 @@ class Calender extends View {
         /** @type {Date} */
         this.selectedDate = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)
         /** @type {string} */
-        this.selectedDateColor = app.getColorAccent()
+        this.selectedDateColor = app.configuration("--color-accent")
         /** @type {string} */
-        this.selectedWeekColor = 'transparent'
+        this.selectedWeekColor = "transparent"
         /** @type {Date} */
         this.maxDate = null
         /** @type {Date} */
@@ -9207,14 +9733,14 @@ class Calender extends View {
         /** @type {Listener} */
         this.onDateChangeListener = Calender.onDateChangeListener
         /** @type {Listener} */
-        this.onSetupDateListener = Calender.onSetDate
+        this.onSetupDateListener = Calender.onSetupDateListener
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
             app.element('div').appendChild(
-                app.element('div'),
+                app.element('img').attribute('view: icon; type: button'),
                 app.element('div').innerHTML('Month'),
                 app.element('div').innerHTML('Year'),
-                app.element('div')
+                app.element('img').attribute('view: icon; type: button')
             ),
             app.element('div'),
             app.element('div')
@@ -9228,6 +9754,12 @@ class Calender extends View {
         app.addEventListenerInterface('click', this, true)
         super.setAttributes(attributes)
         // 
+        let svgCodeB = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" stroke="white" fill="none" style="stroke-width:2;"><path d="M10 2 L2 10 L10 18"/></svg>'
+        var url = URL.createObjectURL(new Blob([svgCodeB], { type: 'image/svg+xml' }));
+        this.getMonthBackward().src(url)
+        let svgCodeF = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" stroke="white" fill="none" style="stroke-width:2;"><path d="M10 2 L18 10 L10 18"/></svg>'
+        var url = URL.createObjectURL(new Blob([svgCodeF], { type: 'image/svg+xml' }));
+        this.getMonthForward().src(url)
         this.setFirstDayOfWeek(this.firstDayOfWeek)
     }
 
@@ -9271,62 +9803,48 @@ class Calender extends View {
     static MONTH_DECEMBER  = 11
 
     /** @readonly @type {string[]} */
-    static DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    static DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     /** @readonly @type {string[]} */
-    static MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    static MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
     /** @type {(calendar: Calender, date: Date) => void} */
     static onDateChangeListener = (calender, date) => { }
     /** @type {(calendar: Calender, element: AppElement) => void} */
-    static onSetDate = (calender, element) => { }
+    static onSetupDateListener = (calender, element) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        if (element.isEqualTo(this.#getMonthBackward())) {
+        if (element.isEqualTo(this.getMonthBackward())) {
             this.date.setMonth(this.date.getMonth() - 1)
             return this.#setDates()
         }
-        if (element.isEqualTo(this.#getMonthForward())) {
+        if (element.isEqualTo(this.getMonthForward())) {
             this.date.setMonth(this.date.getMonth() + 1)
             return this.#setDates()
         }
         /** @type {AppElement} */
-        for (let date of this.#getDates().children()) {
-            date.children(0).setStyleProperty('border-color', '')
+        for (let date of this.getDates().children()) {
+            date.setStyleProperty("border-color", '')
             if (element.isEqualTo(date)) {
                 this.selectedDate = date.something()
-                date.children(0).setStyleProperty('border-color', this.selectedDateColor)
+                date.setStyleProperty("border-color", this.selectedDateColor)
                 this.onDateChangeListener(this, date.something())
-            }
+            }5
         }
     }
 
-    /** @param {Date|number|string} date1 @param {Date|number|string} date2 @returns {boolean} */
-    static isSameDay(date1, date2 = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)) {
-        date1 = util.timestamp(date1, util.TIMESTAMP_OPTION_OBJECT)
-        date2 = util.timestamp(date2, util.TIMESTAMP_OPTION_OBJECT)
+    /** @param {Date} date1 @param {Date} date2 @returns {boolean} */
+    static isSameDay(date1, date2) {
         return date1.getFullYear() == date2.getFullYear() && date1.getMonth() == date2.getMonth() && date1.getDate() == date2.getDate()
     }
 
-    /** @returns {Date} */
-    getDate() {
-        return this.date
-    }
-    /** @returns {number} */
+    /** @returns {string} */
     getFirstDayOfWeek() {
-        return this.firstDayOfWeek
+        return Calender.DAYS_OF_WEEK[this.firstDayOfWeek]
     }
     /** @returns {Date} */
     getSelectedDate() {
         return this.selectedDate
-    }
-    /** @returns {string} */
-    getSelectedDateColor() {
-        return this.selectedDateColor
-    }
-    /** @returns {string} */
-    getSelectedWeekColor() {
-        return this.selectedWeekColor
     }
     /** @returns {Date} */
     getMaxDate() {
@@ -9336,111 +9854,106 @@ class Calender extends View {
     getMinDate() {
         return this.minDate
     }
-    /** @param {...number|Date} values */
-    setDate(...values) {
-        if (util.istype(values[0], 'date') && values.length == 1) {
-            this.date = values[0]
-        }
-        if (util.istype(values[0], 'number') && values.length == 1) {
-            this.date = util.timestamp(values[0])
-        }
-        if (values.every((value) => util.istype(value, 'number')) && values.length >= 3) {
-            this.date = new Date(...values)
-        }
+    /** @param {Date|number|string} date @returns {void} */
+    setDate(date) {
+        this.date = util.timestamp(date, util.TIMESTAMP_OPTION_OBJECT)
         this.#setDates()
     }
+    /** @param {string|number} firstDayOfWeek @returns {void} */
     setFirstDayOfWeek(firstDayOfWeek) {
         if (util.istype(firstDayOfWeek, 'string')) {
-            firstDayOfWeek = firstDayOfWeek.capitalize()
+            firstDayOfWeek = firstDayOfWeek.slice(0, 1).toUpperCase() + firstDayOfWeek.slice(1).toLowerCase()
             firstDayOfWeek = Calender.DAYS_OF_WEEK.index(firstDayOfWeek)
         }
-        if (firstDayOfWeek < 0 || 6 < firstDayOfWeek) {
+        if (!(0 <= firstDayOfWeek && firstDayOfWeek <= 6)) {
             return
         }
         this.firstDayOfWeek = firstDayOfWeek
-        for (let i = 0, index = this.firstDayOfWeek; i < 7; i++) {
-            let dayOfWeek = Calender.DAYS_OF_WEEK[index]
-            this.#getDaysOfWeek().children(i).innerHTML(dayOfWeek[0])
-            index = (index + 1) % 7
+        for (let i = 0, j = this.firstDayOfWeek; i < 7; i++) {
+            let dayOfWeek = Calender.DAYS_OF_WEEK[(j + i) % 7]
+            this.getDaysOfWeek().children(i).text(dayOfWeek[0])
         }
         this.#setDates()
     }
-    /** @param {Date} selectedDate */
+    /** @param {Date} selectedDate @returns {void} */
     setSelectedDate(selectedDate) {
         this.selectedDate = selectedDate
         this.#setDates()
     }
-    /** @param {string} selectedDateColor */
+    /** @param {string} selectedDateColor @returns {void} */
     setSelectedDateColor(selectedDateColor) {
         this.selectedDateColor = selectedDateColor
         this.#setDates()
     }
-    /** @param {string} selectedWeekColor */
+    /** @param {string} selectedWeekColor @returns {void} */
     setSelectedWeekColor(selectedWeekColor) {
         this.selectedWeekColor = selectedWeekColor
         this.#setDates()
     }
-    /** @param {Listener} listener */
+    /** @param {Listener} listener @returns {void} */
     setOnDateChangeListener(listener) {
         this.onDateChangeListener = listener
     }
-    /** @param {Listener} listener */
+    /** @param {Listener} listener @returns {void} */
     setOnSetupDateListener(listener) {
         this.onSetupDateListener = listener
     }
-    /** @param {number|string} month */
+    /** @param {number|string} month @returns {void} */
     setMonth(month) {
         if (util.istype(month, 'string')) {
-            month = month.capitalize()
+            month = month.slice(0, 1).toUpperCase() + month.slice(1).toLowerCase()
             month = Calender.MONTHS.index(month)
         }
-        if (month < 0 || 11 < month) {
+        if (!(0 <= month && month <= 11)) {
             return
         }
         this.date.setMonth(month)
         this.#setDates()
     }
-    /** @param {number} year */
+    /** @param {number} year @returns {void} */
     setYear(year) {
         this.date.setFullYear(year)
         this.#setDates()
     }
-    #getDaysOfWeek() {
+
+    getDaysOfWeek() {
         return this.view.children(1)
     }
     /** @returns {AppElement} */
-    #getMonth() {
+    getMonth() {
         return this.view.children(0).children(1)
     }
     /** @returns {AppElement} */
-    #getMonthBackward() {
+    getMonthBackward() {
         return this.view.children(0).children(0)
     }
     /** @returns {AppElement} */
-    #getMonthForward() {
+    getMonthForward() {
         return this.view.children(0).children(3)
     }
     /** @returns {AppElement} */
-    #getYear() {
+    getYear() {
         return this.view.children(0).children(2)
     }
     /** @returns {AppElement} */
-    #getDates() {
+    getDates() {
         return this.view.children(2)
     }
+
     #setDates() {
         let firstDayOfMonth = new Date(this.date)
         firstDayOfMonth.setHours(0, 0, 0, 0)
         firstDayOfMonth.setDate(1)
         let month = Calender.MONTHS[firstDayOfMonth.getMonth()]
-        super.setText(this.#getMonth(), month)
+        super.setText(this.getMonth(), month)
         let year = firstDayOfMonth.getFullYear()
-        super.setText(this.#getYear(), year)
+        super.setText(this.getYear(), year)
         let firstDayOfPeriod = new Date(firstDayOfMonth)
         while (firstDayOfPeriod.getDay() != this.firstDayOfWeek) {
             firstDayOfPeriod.setHours(firstDayOfPeriod.getHours() - 24)
         }
         let todayDate = util.timestamp(util.TIMESTAMP_OPTION_OBJECT)
+        todayDate.setHours(0, 0, 0, 0)
         let date = new Date(firstDayOfPeriod)
         for (let i = 0; i < 35; i++) {
             if (i == 0) {
@@ -9449,35 +9962,22 @@ class Calender extends View {
             if (i == 34) {
                 this.maxDate = date
             }
-            let element = this.#getDates().children(i)
+            let element = this.getDates().children(i)
+            element.setStyleProperty("border-color", "")
+            element.setStyleProperty("background-color", "")
             let inMonth = date.getMonth() == firstDayOfMonth.getMonth()
-            let isTodayDate = Calender.isSameDay(date, todayDate)
-            let isSelectDate = Calender.isSameDay(date, this.selectedDate)
             element.setStyleProperty('opacity', inMonth ? 1 : 0.5)
             element.something(new Date(date))
-            element.innerHTML(
-                app.element('div').
-                    style('background-color', isTodayDate ? this.selectedDateColor : '').style('border-color', isSelectDate ? this.selectedDateColor : '').
-                    innerHTML(date.getDate()).
-                    outerHTML()
-            )
+            element.text(date.getDate())
+            if (Calender.isSameDay(date, todayDate)) {
+                element.setStyleProperty("background-color", this.selectedDateColor)
+            }
+            if (Calender.isSameDay(date, this.selectedDate)) {
+                element.setStyleProperty("border-color", this.selectedDateColor)
+            }
             this.onSetupDateListener(element)
             date.setHours(date.getHours() + 24)
         }
-    }
-}
-class Canvas extends View {
-    constructor(attributes = {}) {
-        super()
-        // 
-        super.view = app.element('div').view(super.getClassName())
-        app.addEventListenerInterface('', this, true)
-        super.setAttributes(attributes)
-        // 
-    }
-
-    /** @param {Event} event @param {AppElement} element @returns {void} */
-    onEventListenerInterface(event, element) {
     }
 }
 class Checkbox extends View {
@@ -9492,7 +9992,6 @@ class Checkbox extends View {
         )
         app.addEventListenerInterface('click', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @type {(checkbox: Checkbox, checked: boolean) => void } */
@@ -9500,56 +9999,45 @@ class Checkbox extends View {
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        if (element.isEqualTo(this.#getInput())) {
+        if (element.isEqualTo(this.getInput())) {
             this.onCheckChangeListener(this, this.isChecked())
         }
     }
     /** @returns {string} */
-    getText() {
-        return this.#getText().innerHTML()
-    }
-    /** @returns {string} */
     getTitle() {
-        return this.#getTitle().innerHTML()
+        return this.getTitle().innerHTML()
     }
     /** @returns {boolean} */
     isChecked() {
-        return this.#getInput().getProperty('checked')
+        return this.getInput().getProperty('checked')
     }
     /** @returns {boolean} */
     isEnabled() {
-        return !this.#getInput().getProperty('disabled')
+        return !this.getInput().getProperty('disabled')
     }
     /** @param {boolean} checked @returns {void} */
     setChecked(checked) {
-        this.#getInput().setProperty('checked', checked)
+        this.getInput().setProperty('checked', checked)
     }
     /** @param {boolean} enabled @returns {void} */
     setEnabled(enabled) {
-        this.#getInput().setProperty('disabled', !enabled)
+        this.getInput().setProperty('disabled', !enabled)
     }
     /** @param {Listener} listener @returns {void} */
     setOnCheckChangeListener(listener) {
         this.onCheckChangeListener = listener
     }
-    /** @param {string} text @returns {void} */
-    setText(text) {
-        super.setText(this.#getText(), text)
-    }
     /** @param {string} title @returns {void} */
     setTitle(title) {
-        super.setText(this.#getTitle(), title)
+        super.setText(this.getTitle(), title)
     }
+
     /** @returns {AppElement} */
-    #getInput() {
+    getInput() {
         return this.view.children(1)
     }
     /** @returns {AppElement} */
-    #getText() {
-        return this.view.children(0)
-    }
-    /** @returns {AppElement} */
-    #getTitle() {
+    getTitle() {
         return this.view.children(0)
     }
 }
@@ -9564,13 +10052,12 @@ class Icon extends View {
         super.view = app.element('img').view(super.getClassName())
         app.addEventListenerInterface('click', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @readonly @type {string} */
-    static TYPE_BUTTON = "button"
+    static TYPE_BUTTON = "BUTTON"
     /** @readonly @type {string} */
-    static TYPE_PLAIN = "plain"
+    static TYPE_PLAIN  = "PLAIN"
 
     // place interfaces here ...
     /** @type {(icon: Icon) => void} */
@@ -9601,7 +10088,7 @@ class Icon extends View {
     }
     /** @param {boolean} enabled @returns {void} */
     setEnabled(enabled) {
-        this.view.setPropertyDisabled(!enabled)
+        this.view.setEnabled(enabled)
     }
     /** @param {string} icon @returns {void} */
     setIcon(icon) {
@@ -9614,14 +10101,16 @@ class Icon extends View {
     /** @param {string} type @returns {void} */
     setType(type) {
         this.type = type
-        this.view.setAttribute('type', this.type)
+        this.view.setAttribute('type', this.type.toLowerCase())
     }
 }
 class Item extends View {
-    constructor() {
+    constructor(attributes = {}) {
         super()
         /** @type {boolean} */
         this.enabled = true
+        /** @type {number} */
+        this.group = 0
         /** @type {PopupMenu|AppElement|string} */
         this.link = null
         // 
@@ -9632,16 +10121,16 @@ class Item extends View {
             ),
             app.element('div')
         )
-        // 
+        super.setAttributes(attributes)
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
     }
 
-    /** @returns {AppElement} */
-    getBody() {
-        return this.#getBody()
+    /** @returns {number} */
+    getGroup() {
+        return this.group
     }
     /** @returns {PopupMenu|AppElement|string} */
     getLink() {
@@ -9649,8 +10138,9 @@ class Item extends View {
     }
     /** @returns {number} */
     getOrder() {
-        for (let [order, element] of enumerate(this.getView().parent().children())) {
-            if (element.isEqualTo(this.getView())) {
+        let parent = this.view.parent()
+        for (let [order, element] of enumerate(parent.children())) {
+            if (element.isEqualTo(this.view)) {
                 return order
             }
         }
@@ -9659,9 +10149,8 @@ class Item extends View {
     /** @returns {number|null} */
     getPosition() {
         let parent = this.view.parent()
-        let children = new array(parent.children())
-        for (let [position, element] of children.enumerate()) {
-            if (element.isEqualTo(this.getView())) {
+        for (let [position, element] of enumerate(parent.children())) {
+            if (element.isEqualTo(this.view)) {
                 return position
             }
         }
@@ -9669,7 +10158,7 @@ class Item extends View {
     }
     /** @returns {string} */
     getTitle() {
-        return this.#getTitle().innerHTML()
+        return this.#getTitle().text()
     }
     /** @returns {boolean} */
     hasMenu() {
@@ -9681,11 +10170,11 @@ class Item extends View {
     }
     /** @returns {boolean} */
     isChecked() {
-        return this.#getIcon().getProperty('checked')
+        return this.getIcon().getProperty('checked')
     }
     /** @returns {boolean} */
     isCheckable() {
-        let icon = this.#getIcon()
+        let icon = this.getIcon()
         return icon.isTagName('input')
     }
     /** @returns {boolean} */
@@ -9694,8 +10183,8 @@ class Item extends View {
     }
     /** @param {number} order @returns {boolean} */
     isOrder(order) {
-        for (let [index, element] of enumerate(this.getView().parent().children())) {
-            if (element.isEqualTo(this.getView())) {
+        for (let [index, element] of enumerate(this.view.parent().children())) {
+            if (element.isEqualTo(this.view)) {
                 return index == order
             }
         }
@@ -9710,44 +10199,56 @@ class Item extends View {
     }
     /** @param {AppElement|string} body @returns {void} */
     setBody(body) {
-        super.setText(this.#getBody(), body)
+        super.setText(this.getBody(), body)
     }
     /** @param {boolean} checked @returns {void} */
     setChecked(checked) {
         if (!this.isCheckable()) {
             this.setCheckable(true)
         }
-        this.#getIcon().setProperty('checked', checked)
+        this.getIcon().setProperty('checked', checked)
     }
     /** @param {boolean} checkable @returns {void} */
     setCheckable(checkable) {
         if (checkable) {
             let view = app.element('input').attribute('type: checkbox; icon: check')
-            super.setElement(this.#getIcon(), view).show()
+            super.setElement(this.getIcon(), view).show()
         } else {
             let view = app.element('img').view('icon')
-            super.setElement(this.#getIcon(), view).hide()
+            super.setElement(this.getIcon(), view).hide()
         }
     }
     /** @param {boolean} enabled @returns {void} */
     setEnabled(enabled) {
         this.enabled = enabled
-        this.#getIcon().setProperty('disabled', !enabled)
+        if (enabled) {
+            this.view.delAttribute("disabled")
+        }
+        else {
+            this.view.setAttribute("disabled", "")
+        }
+        if (this.isCheckable()) {
+            this.getIcon().setProperty('disabled', !enabled)
+        }
+    }
+    /** @param {number} group @returns {void} */
+    setGroup(group) {
+        this.group = group
     }
     /** @param {string} icon @returns {void} */
     setIcon(icon) {
         if (icon instanceof Checkbox) {
-            super.setElement(this.#getIcon(), icon.getView()).show()
+            super.setElement(this.getIcon(), icon.getView()).show()
         }
         else {
-            super.setIcon(this.#getIcon(), icon).show()
+            super.setIcon(this.getIcon(), icon).show()
         }
     }
-    /** @param {PopupMenu|AppElement|string} link @returns {void} */
+    /** @param {View|AppElement|string} link @returns {void} */
     setLink(link) {
         this.link = link
         if (this.link instanceof PopupMenu) {
-            this.link.setAnchor(this.getView())
+            this.link.setAnchor(this.view)
             this.link.setTitle(this.getTitle())
         }
     }
@@ -9764,13 +10265,13 @@ class Item extends View {
         let visibility = visible ? 'visible' : 'hidden'
         this.view.setStyleProperty('visibility', visibility)
     }
-
+    // 
     /** @returns {AppElement} */
-    #getBody() {
+    getBody() {
         return this.view.children(1)
     }
     /** @returns {AppElement} */
-    #getIcon() {
+    getIcon() {
         return this.view.children(0).children(0)
     }
     /** @returns {AppElement} */
@@ -9848,7 +10349,7 @@ class List extends View {
 
     /** @param {string[]|string} data @returns {Item} */
     addItem(data = ['','','']) {
-        let [title, body, icon] = util.istype(data, 'string') ? array.fromstring(data, ':') : data
+        let [title, body, icon, attributes] = util.istype(data, 'string') ? array.fromstring(data, ':') : data
         let item = new Item()
         item.setTitle(title)
         item.setTag(util.identifier(title))
@@ -9864,6 +10365,12 @@ class List extends View {
         }
         this.items.append(item)
         this.view.appendChild(item.getView())
+        if (attributes) {
+            attributes = object.fromstring(attributes, ',', '=')
+            if ("divider" in attributes) {
+                item.getView().style("border-bottom-style: solid;")
+            }
+        }
         return item
     }
     /** @param {string[][]|string} data @returns {void} */
@@ -9953,7 +10460,7 @@ class Menu extends List {
         /** @type {Listener} */
         this.onMenuItemClickListener = Menu.onMenuItemClickListener
         // 
-        // 
+        super.setAttributes(attributes)
     }
 
     /** @type {(menu: Menu, item: Item) => void} */
@@ -9964,20 +10471,32 @@ class Menu extends List {
         super.onEventListenerInterface(event, element)
     }
 
-    /**@param {string} groupIdentifier @param {string} itemIdentifier @param {number} order @param {string} title @returns {void} */
-    add(groupIdentifier, itemIdentifier, order, title) {
-    }
-    /** @param {string} groupIdentifier @param {string} itemIdentifier @param {number} order @param {string} title @returns {void} */
-    addSubMenu(groupIdentifier, itemIdentifier, order, title) {
-    }
     /** @returns {boolean} */
     hasVisibleItems() {
-        for (let item of this.getItems()) {
-            if (item.isVisible()) {
-                return true
+        return this.getItems().some(item => item.isVisible())
+    }
+    /** @param {{string:}} data @returns {void} */
+    fromData(data) {
+        /** @param {Menu|MenuBar|PopupMenu} parent_menu @param {{string:}} menuData @param {Item} item @returns {void} */
+        function setSubMenu(parent_menu, menuData, item) {
+            let menu = app.createPopupMenu()
+            menu.setOnMenuItemClickListener(this.onMenuItemClickListener)
+            menu.setAnchorSide(parent_menu instanceof MenuBar ? Popup.SIDE_BOTTOM : Popup.SIDE_RIGHT)
+            menu.setAutoDismiss(false)
+            menu.setDepth(parent_menu.getDepth()+1)
+            item.setLink(menu)
+            for (let [itemData, submenuData] of enumerate(menuData)) {
+                let menuitem = menu.addItem(itemData)
+                if (!submenuData) continue
+                setSubMenu(menu, submenuData, menuitem)
             }
+            return menu
         }
-        return false
+        for (let [itemData, submenuData] of enumerate(data)) {
+            let menuitem = this.addItem(itemData)
+            if (!submenuData) continue
+            setSubMenu(this, submenuData, menuitem)
+        }
     }
     /** @returns {boolean} */
     isGroupDividerEnabled() {
@@ -9999,9 +10518,10 @@ class Menu extends List {
     /** @param {Listener} listener @returns {void} */
     setOnMenuItemClickListener(listener) {
         this.setOnItemClickListener(listener)
+        // TODO: set listener in submenu item if link
     }
 }
-class MenuBar extends List {
+class MenuBar extends Menu {
     constructor(attributes = {}) {
         super()
         /** @type {boolean} */
@@ -10011,7 +10531,6 @@ class MenuBar extends List {
         // 
         super.view = app.element('div').view(super.getClassName())
         super.setAttributes(attributes)
-        // 
     }
 
     /** @type {(menuBar: MenuBar, item: Item) => void} */
@@ -10020,37 +10539,6 @@ class MenuBar extends List {
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
         super.onEventListenerInterface(event, element)
-    }
-
-    /** @returns {boolean} */
-    hasVisibleItems() {
-        for (let item of this.getItems()) {
-            if (item.isVisible()) {
-                return true
-            }
-        }
-        return false
-    }
-    /** @returns {boolean} */
-    isGroupDividerEnabled() {
-        return this.groupDividerEnabled
-    }
-    /** @param {Item} item @returns {void} */
-    selectItem(item) {
-        item.getView().dispatchEvent('click')
-    }
-    /** @param {number} position @returns {void} */
-    selectItemAt(position) {
-        let item = this.getItemAt(position)
-        this.selectItem(item)
-    }
-    /** @param {boolean} groupDividerEnabled  @returns {void} */
-    setGroupDividerEnabled(groupDividerEnabled) {
-        this.groupDividerEnabled = groupDividerEnabled
-    }
-    /** @param {Listener} listener @returns {void} */
-    setOnMenuItemClickListener(listener) {
-        this.setOnItemClickListener(listener)
     }
 }
 class NavigationLink extends View {
@@ -10110,6 +10598,8 @@ class Popup extends View {
         this.dismissOnTouchOutside = false
         /** @type {number} */
         this.dismissTimeout = 2000
+        /** @type {number} */
+        this.dismissTimeoutID = null
         /** @type {Listener} */
         this.onDismissListener = Popup.onDismissListener
         /** @type {Listener} */
@@ -10120,31 +10610,28 @@ class Popup extends View {
         this.positionY = 0
         /** @type {number} */
         this.positionPadding = 3
-        /** @type {number} */
-        this.timeoutID = null
         // 
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('click', this, false)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @readonly @type {string} */
-    static SIDE_BOTTOM       = 'bottom'
+    static SIDE_BOTTOM       = "BOTTOM"
     /** @readonly @type {string} */
-    static SIDE_BOTTOM_LEFT  = 'bottom_left'
+    static SIDE_BOTTOM_LEFT  = "BOTTOM_LEFT"
     /** @readonly @type {string} */
-    static SIDE_BOTTOM_RIGHT = 'bottom_right'
+    static SIDE_BOTTOM_RIGHT = "BOTTOM_RIGHT"
     /** @readonly @type {string} */
-    static SIDE_LEFT         = 'left'
+    static SIDE_LEFT         = "LEFT"
     /** @readonly @type {string} */
-    static SIDE_RIGHT        = 'right'
+    static SIDE_RIGHT        = "RIGHT"
     /** @readonly @type {string} */
-    static SIDE_TOP          = 'top'
+    static SIDE_TOP          = "TOP"
     /** @readonly @type {string} */
-    static SIDE_TOP_LEFT     = 'top_left'
+    static SIDE_TOP_LEFT     = "TOP_LEFT"
     /** @readonly @type {string} */
-    static SIDE_TOP_RIGHT    = 'top_right'
+    static SIDE_TOP_RIGHT    = "TOP_RIGHT"
 
     /** @type {(popup: Popup) => void} */
     static onDismissListener = (popup) => { }
@@ -10156,16 +10643,18 @@ class Popup extends View {
         if (event.type == 'click') {
             if (this.isVisible() && this.isWithinView(element)) {
                 if (this.dismissOnTouchInside) {
-                    // delay dismissal for animation
-                    // NOTE: anchor non-existent provided that anchor is an popup menu item
-                    // timeout maintains anchor's existence during operations in Popup.showOn()
-                    let delay = this.view.getStylePropertyComputed('transition')
-                    delay = (util.ispattern(delay, /\d(.\d)?s/) ? delay.slice(0, delay.length-1) : 0.01) * 1000
+                    // NOTE: provided this superclass:PopupMenu contains a menuitem link serving as a anchor to a sub-popupmenu, the timeout maintains anchor existence during operations in Popup.showOn()
+                    function transistionToMilliseconds(val) {
+                        let num = parseFloat(val);
+                        if (isNaN(num)) return 0;
+                        return val.endsWith("ms") ? num : num * 1000;
+                    };
+                    let transition = this.view.getStylePropertyComputed('transition')
                     setTimeout(() => {
                         if (this.isVisible()) {
                             this.dismiss()
                         }
-                    }, delay)
+                    }, transistionToMilliseconds(transition))
                 }
             }
             if (this.isVisible() && !this.isWithinView(element) && !this.isAnchor(element)) {
@@ -10179,26 +10668,10 @@ class Popup extends View {
         }
     }
 
-    /** @param {boolean} delay @returns {void} */
-    dismiss(delay = null) {
-        // delay dismissal for animation
-        // NOTE: anchor non-existent provided that anchor is an popup menu item
-        // timeout maintains anchor's existence during operations in Popup.showOn()
-        if (delay == null) {
-            delay = this.view.getStylePropertyComputed('transition')
-            delay = (util.ispattern(delay, /\d(.\d)?s/) ? delay.slice(0, delay.length-1) : 0.01) * 1000
-        }
-        setTimeout(() => {
-            if (!this.isVisible()) return
-            clearTimeout(this.timeoutID)
-            app.body().removeChild(this.view)
-            this.onDismissListener(this)
-        }, delay)
-    }
     /** @returns {void} */
     dismiss() {
         if (!this.isVisible()) return
-        clearTimeout(this.timeoutID)
+        clearTimeout(this.dismissTimeoutID)
         app.body().removeChild(this.view)
         this.onDismissListener(this)
     }
@@ -10247,7 +10720,7 @@ class Popup extends View {
     }
     /** @param {AppElement|string} body @returns {void} */
     setBody(body) {
-        super.setText(this.#getBody(), body)
+        super.setText(this.getBody(), body)
     }
     /** @param {number} dismissTimeout @returns {void} */
     setDismissTimeout(dismissTimeout) {
@@ -10278,12 +10751,16 @@ class Popup extends View {
     show() {
         if (!this.isVisible()) {
             app.body().appendChild(this.view)
+            let top = this.view.getStylePropertyComputed("top")
+            this.view.setStyleProperty("max-height", `min(75dvw, calc(100dvh - ${top}px))`)
             this.onShowListener(this)
         }
     }
     /** @param {number} x @param {number} y @returns {void} */
     showAt(x = this.positionX, y = this.positionY) {
-        if (!this.isVisible()) app.body().appendChild(this.view)
+        if (!this.isVisible()) {
+            app.body().appendChild(this.view)
+        }
         let viewWidth = this.view.getWidth()
         let viewHeight = this.view.getHeight()
         let viewportWidth = app.body().getProperty('scrollWidth')
@@ -10295,28 +10772,29 @@ class Popup extends View {
         top = top + viewHeight >= viewportHeight ? viewportHeight - viewHeight - this.positionPadding : top
         this.view.setStyleProperty('left', left)
         this.view.setStyleProperty('top', top)
-        clearTimeout(this.timeoutID)
         if (this.autoDismiss) {
-            this.timeoutID = setTimeout(() => this.dismiss(), this.dismissTimeout)
+            clearTimeout(this.dismissTimeoutID)
+            this.dismissTimeoutID = setTimeout(() => this.dismiss(), this.dismissTimeout)
         }
+        // prevent window bottom overflow
+        this.view.setStyleProperty("max-height", `min(75dvw, calc(100dvh - ${top}px))`)
         this.onShowListener(this)
     }
     /** @param {AppElement|Element|string} anchor @param {string} side @returns {void} */
     showOn(anchor = this.anchor, anchorSide = this.anchorSide) {
-        if (!this.isVisible()) app.body().appendChild(this.view)
+        if (this.isVisible()) return
+        // view must be added to viewport inorder to obtain view dimensions
+        app.body().appendChild(this.view)
         this.setAnchor(anchor)
         this.setAnchorSide(anchorSide)
         let rect = this.anchor.getBoundingClientRect()
+        // top-left of anchor
         let x = rect.x
         let y = rect.y
-        // adjust for scrolling
         let element = this.anchor
-        do {
-            element = element.parentElement()
-            if (element.isTagName('body')) break
-            x += element.getProperty('scrollLeft')
-            y += element.getProperty('scrollTop')
-        } while (true)
+        // starting position adjusted for scrolling position
+        x += app.body().getProperty('scrollLeft')
+        y += app.body().getProperty('scrollTop')
         if (this.anchorSide == Popup.SIDE_BOTTOM) {
             x = x
             y = y + this.anchor.getHeight() + this.positionPadding
@@ -10350,11 +10828,6 @@ class Popup extends View {
             y = y - this.view.getHeight() - this.positionPadding
         }
         this.showAt(x, y)
-    }
-
-    /** @returns {AppElement} */
-    #getBody() {
-        return this.view
     }
 }
 class PopupMenu extends Popup {
@@ -10400,6 +10873,10 @@ class PopupMenu extends Popup {
     empty() {
         return this.menu.empty()
     }
+    /** @param {{string:}} data @returns {void} */
+    fromData(data) {
+        return this.menu.fromData(data)
+    }
     /** @returns {number} */
     getDepth() {
         return this.menu.getDepth()
@@ -10430,7 +10907,7 @@ class PopupMenu extends Popup {
     }
     /** @param {string} title @returns {boolean} */
     isTitle(title) {
-        return this.#getTitle().text() == title
+        return this.getTitle() == title
     }
     /** @returns {void} */
     removeAllItems() {
@@ -10480,10 +10957,6 @@ class PopupMenu extends Popup {
     }
 
     /** @returns {AppElement} */
-    #getBody() {
-        return this.view.children(1)
-    }
-    /** @returns {AppElement} */
     #getTitle() {
         return this.view.children(0)
     }
@@ -10508,13 +10981,12 @@ class ProgressBar extends View {
         // 
         super.view = app.element('div').view(super.getClassName())
         super.setAttributes(attributes)
-        // 
     }
 
     /** @readonly @type {string} */
-    static INDETERMINATE_BEHAVIOR_CYCLE  = 'CYCLE'
+    static INDETERMINATE_BEHAVIOR_CYCLE  = "CYCLE"
     /** @readonly @type {string} */
-    static INDETERMINATE_BEHAVIOR_REPEAT = 'REPEAT'
+    static INDETERMINATE_BEHAVIOR_REPEAT = "REPEAT"
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
@@ -10526,7 +10998,6 @@ class RadioButton extends View {
         // 
         super.view = app.element('div').view(super.getClassName())
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -10540,27 +11011,11 @@ class RadioGroup extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('click', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
     }
-}
-class SeekBar extends View {
-    constructor(attributes = {}) {
-        super()
-        // 
-        super.view = app.element('div').view(super.getClassName())
-        app.addEventListenerInterface('', this, true)
-        super.setAttributes(attributes)
-        // 
-    }
-
-    /** @param {Event} event @param {AppElement} element @returns {void} */
-    onEventListenerInterface(event, element) {
-    }
-
 }
 class Scroller extends View {
     constructor(attributes = {}) {
@@ -10570,7 +11025,6 @@ class Scroller extends View {
         // 
         super.view = app.element('div').view(super.getClassName())
         super.setAttributes(attributes)
-        // 
     }
 
     /** @type {(scroller: Scroller, event: Event) => void} */
@@ -10647,6 +11101,8 @@ class Scroller extends View {
 class Search extends View {
     constructor(attributes = {}) {
         super()
+        /** @type {boolean} */
+        this.autoFocus = true
         /** @type {Listener} */
         this.onCloseListener = Search.onCloseListener
         /** @type {Listener} */
@@ -10688,33 +11144,37 @@ class Search extends View {
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        if (event.type == 'click' && element.equals(this.#getIcon())) {
-            let input = this.#getInput()
-            if (input.style('visibility') == 'visible') {
+        if (event.type == 'click' && element.equals(this.getIcon())) {
+            let input = this.getInput()
+            if (input.isStyleProperty('visibility', 'visible')) {
                 this.close()
             } else {
                 this.open()
             }
         }
-        if (event.type == 'input' && element.equals(this.#getInput())) {
-            let text = this.#getInput().value()
+        if (event.type == 'input' && element.equals(this.getInput())) {
+            let text = this.getInput().text()
             this.onQueryTextListener(this, text)
         }
     }
 
-    /** @returns {void} */
-    close() {
-        this.#getInput().style('visibility: hidden; width: 0%;')
-        setTimeout(() => this.#getIcon().style('margin: unset;'), 500)
-        this.onCloseListener(this)
+    /** @param {boolean} executeListner @returns {void} */
+    close(executeListner = true) {
+        if (this.isOpen()) {
+            this.getInput().style('visibility: hidden; width: 0px;')
+            setTimeout(() => this.getIcon().style('margin: unset;'), 500)
+            if (executeListner) {
+                this.onCloseListener(this)
+            }
+        }
     }
     /** @returns {AppElement} */
     getInput() {
-        return this.#getInput()
+        return this.getInput()
     }
     /** @returns {string} */
     getInputType(inputType) {
-        return this.#getInput().getAttribute('type')
+        return this.getInput().getAttribute('type')
     }
     /** @returns {number|string} */
     getMaxWidth() {
@@ -10722,37 +11182,60 @@ class Search extends View {
     }
     /** @returns {string} */
     getQuery() {
-        return this.#getInput().value()
+        return this.getInput().value()
     }
     /** @returns {string} */
     getQueryHint() {
-        return this.#getInput().getAttribute('placeholder')
+        return this.getInput().getAttribute('placeholder')
     }
     /** @returns {string[]} */
     getSuggestions() {
         return this.suggestions
     }
     /** @returns {boolean} */
+    isAutoFocus() {
+        return this.autoFocus
+    }
+    /** @returns {boolean} */
     isIconified() {
-        return this.#getIcon().display()
+        return this.getIcon().isVisible()
+    }
+    /** @returns {boolean} */
+    isOpen() {
+        return this.getInput().isStyleProperty("visibility", "visible")
+    }
+    /** @returns {boolean} */
+    isQuery() {
+        return this.getQuery().length > 0
     }
     /** @returns {void} */
     open() {
-        this.#getIcon().style('margin: 0 0 0 10px;')
-        this.#getInput().style(`visibility: visible; width: ${this.maxWidth};`).focus()
-        this.onOpenListener(this)
+        if (!this.isOpen()) {
+            this.getIcon().style('margin: 0 0 0 10px;')
+            this.getInput().style(`visibility: visible; width: ${this.maxWidth};`)
+            if (this.autoFocus) {
+                setTimeout(() => {
+                    this.getInput().focus()
+                }, 100)
+            }
+            this.onOpenListener(this)
+        }
+    }
+    /** @param {boolean} autoFocus @returns {void} */
+    setAutoFocus(autoFocus) {
+        this.autoFocus = autoFocus
     }
     /** @param {string} icon @returns {void} */
     setIcon(icon) {
-        super.setIcon(this.#getIcon(), icon)
+        super.setIcon(this.getIcon(), icon)
     }
     /** @param {boolean} iconified @returns {void} */
     setIconified(iconified) {
-        this.#getIcon().display(iconified)
+        this.getIcon().display(iconified)
     }
     /** @param {string} inputType @returns {void} */
     setInputType(inputType) {
-        this.#getInput().setAttribute('type', inputType)
+        this.getInput().setAttribute('type', inputType)
     }
     /** @param {number|string} maxWidth @returns {void} */
     setMaxWidth(maxWidth) {
@@ -10780,30 +11263,32 @@ class Search extends View {
     }
     /** @param {string} query @param {boolean} submit  @returns {void} */
     setQuery(query, submit = false) {
-        this.#getInput().value(query)
+        this.getInput().value(query)
         if (submit) {
-            this.#getInput().dispatchEvent('input')
+            this.getInput().dispatchEvent('input')
         }
     }
-    /** @param {string} query @returns {void} */
+    /** @param {string} queryHint @returns {void} */
     setQueryHint(queryHint) {
-        this.#getInput().setAttribute('placeholder', queryHint)
+        this.getInput().setAttribute('placeholder', queryHint)
     }
     /** @param {string[]|string} data @returns {void} */
     setSuggestions(data) {
-        let suggestions = util.istype(data, 'string') ? array.fromstring(data, ',') : data
+        let suggestions = array.fromdata(data)
         let innerHTML = suggestions.map((suggestion) => `<option>${suggestion}</option>`).join('')
-        this.#getSuggestions().innerHTML(innerHTML)
+        this.getSuggestions().innerHTML(innerHTML)
     }
-    #getSuggestions() {
+
+    /** @returns {AppElement} */
+    getSuggestions() {
         return this.view.children(2)
     }
     /** @returns {AppElement} */
-    #getIcon() {
+    getIcon() {
         return this.view.children(1)
     }
     /** @returns {AppElement} */
-    #getInput() {
+    getInput() {
         return this.view.children(0)
     }
 }
@@ -10811,7 +11296,7 @@ class Selector extends View {
     constructor(attributes = {}) {
         super()
         /** @type {Listener} */
-        this.onItemClickListener = Selector.onItemClickListener
+        this.onItemSelectedListener = Selector.onItemSelectedListener
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
             app.element('div'),
@@ -10819,11 +11304,10 @@ class Selector extends View {
         )
         app.addEventListenerInterface('input', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @type {(selector: Selector, position: number, value: string) => void } */
-    static onItemClickListener = (selector, position, value) => { }
+    static onItemSelectedListener = (selector, position, value) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
@@ -10831,7 +11315,7 @@ class Selector extends View {
             for (let [position, item] of enumerate(this.getItems())) {
                 let value = item.value()
                 if (this.getSelectedItem() == value) {
-                    this.onItemClickListener(this, position, value)
+                    this.onItemSelectedListener(this, position, value)
                 }
             }
         }
@@ -10880,7 +11364,7 @@ class Selector extends View {
     /** @param {string} value @returns {boolean} */
     isItem(value) {
         for (let item of this.getItems()) {
-            if (item.value() == `${value}`) {
+            if (item.value() == String(value)) {
                 return true
             }
         }
@@ -10909,10 +11393,13 @@ class Selector extends View {
         if (item) this.getSelect().removeChildAt(position)
         return item
     }
-    /** @param {string} value @returns {void} */
-    selectItem(value) {
+    /** @param {string} value @param {boolean} dispatchEvent @returns {void} */
+    selectItem(value, dispatchEvent = true) {
         if (this.isItem(value)) {
             this.getSelect().value(value)
+            if (dispatchEvent) {
+                this.getSelect().dispatchEvent('input')
+            }
         }
     }
     /** @param {number} position @returns {void} */
@@ -10926,13 +11413,13 @@ class Selector extends View {
         this.addItems(data)
     }
     /** @param {Listener} listener */
-    setOnItemClickListener(listener) {
-        this.onItemClickListener = listener
+    setOnItemSelectedListener(listener) {
+        this.onItemSelectedListener = listener
     }
     /** @param {AppElement|number|string|null} title @returns {void} */
     setTitle(title) {
         super.setText(this.getTitle(), title)
-        this.getTitle().text(`${this.getTitle().text()}&colon;`)
+        this.getTitle().text(`${this.getTitle().text()}:`)
     }
     /** @returns {number} */
     size() {
@@ -10955,7 +11442,6 @@ class Slider extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -10969,7 +11455,6 @@ class Stepper extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -10987,31 +11472,32 @@ class Switch extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('click', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
     }
 
+    /** @returns {boolean} */
     getShowText() {
         return this.showText
     }
+    /** @returns {boolean} */
     isChecked() {
-        return
     }
+    /** @param {boolean} checked @returns {void} */
     setChecked(checked) {
-
     }
+    /** @param {boolean} showText @returns {void} */
     setShowText(showText) {
         this.showText = showText
     }
 
-    #getText() {
-
+    /** @returns {AppElement} */
+    getText() {
     }
-    #getThumb() {
-
+    /** @returns {AppElement} */
+    getThumb() {
     }
 }
 class Tab extends View {
@@ -11022,12 +11508,11 @@ class Tab extends View {
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
             app.element('div').appendChild(
-                app.element('img').class('icon'),
+                app.element('img').view('icon'),
                 app.element('div').class('single-line')
             )
         )
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11057,11 +11542,11 @@ class Tab extends View {
     }
     /** @param {string} icon @returns {void} */
     setIcon(icon) {
-        super.setIcon(this.#getIcon(), icon).show()
+        super.setIcon(this.getIcon(), icon).show()
     }
     /** @param {AppElement|string} text @returns {void} */
     setText(text) {
-        super.setText(this.#getText(), text)
+        super.setText(this.getText(), text)
         return this
     }
     /** @returns {void} */
@@ -11072,12 +11557,13 @@ class Tab extends View {
             this.view.setStyleProperty('border-bottom-color', color)
         }
     }
+
     /** @returns {AppElement} */
-    #getIcon() {
+    getIcon() {
         return this.view.children(0).children(0)
     }
     /** @returns {AppElement} */
-    #getText() {
+    getText() {
         return this.view.children(0).children(1)
     }
 }
@@ -11098,20 +11584,19 @@ class Tabs extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('click', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @readonly @type {string} */
-    static TAB_MODE_AUTO       = 'AUTO'
+    static TAB_MODE_AUTO       = "AUTO"
     /** @readonly @type {string} */
-    static TAB_MODE_FIXED      = 'FIXED'
+    static TAB_MODE_FIXED      = "FIXED"
     /** @readonly @type {string} */
-    static TAB_MODE_SCROLLABLE = 'SCROLLABLE'
+    static TAB_MODE_SCROLLABLE = "SCROLLABLE"
 
     /** @readonly @type {string} */
-    static TAB_LABEL_VISIBILITY_LABELED   = 'LABELED'
+    static TAB_LABEL_VISIBILITY_LABELED   = "LABELED"
     /** @readonly @type {string} */
-    static TAB_LABEL_VISIBILITY_UNLABELED = 'UNLABELED'
+    static TAB_LABEL_VISIBILITY_UNLABELED = "UNLABELED"
 
     /** @type {(tabs: Tabs, tab: Tab) => void} */
     static onTabSelectedListener = (tabs, tab) => { }
@@ -11262,7 +11747,7 @@ class Tabs extends View {
         }
     }
 }
-class Table extends View {
+class __Table extends View {
     constructor(attributes = {}) {
         super()
         /** @type {boolean} */
@@ -11280,11 +11765,10 @@ class Table extends View {
             app.element('div'),
             app.element('div'),
             app.element('div').appendChild(
-                app.element('button').identifier('insert'),
-                app.element('button').identifier('delete'),
-                app.element('button').identifier('update')
+                app.element('button').text('insert'),
+                app.element('button').text('delete'),
+                app.element('button').text('update')
             )
-
         )
         app.addEventListenerInterface('click', this, true)
         super.setAttributes(attributes)
@@ -11292,23 +11776,23 @@ class Table extends View {
     }
 
     /** @readonly @type {string} */
-    static ACTION_BUTTON_INSERT = 'insert'
+    static ACTION_BUTTON_INSERT = "insert"
     /** @readonly @type {string} */
-    static ACTION_BUTTON_DELETE = 'delete'
+    static ACTION_BUTTON_DELETE = "delete"
     /** @readonly @type {string} */
-    static ACTION_BUTTON_UPDATE = 'update'
+    static ACTION_BUTTON_UPDATE = "update"
 
     /** @readonly @type {string} */
-    static CELL_TYPE_TEXT     = 'text'
+    static CELL_TYPE_TEXT     = "text"
     /** @readonly @type {string} */
-    static CELL_TYPE_INPUT    = 'input'
+    static CELL_TYPE_INPUT    = "input"
     /** @readonly @type {string} */
-    static CELL_TYPE_SELECTOR = 'selector'
+    static CELL_TYPE_SELECTOR = "selector"
 
     /** @readonly @type {string} */
-    static SELECTION_TYPE_SINGLE   = 'SINGLE'
+    static SELECTION_TYPE_SINGLE   = "SINGLE"
     /** @readonly @type {string} */
-    static SELECTION_TYPE_MULTIPLE = 'MULTIPLE'
+    static SELECTION_TYPE_MULTIPLE = "MULTIPLE"
 
     /** @type {(table: Table, button: AppElement) => void} */
     static onActionButtonClickListener = (table, button) => { }
@@ -11335,10 +11819,10 @@ class Table extends View {
                 }
             }
             if (this.isActionButtonsEnabled()) {
-                for (let [position, button] of enumerate(this.#getActionButtons())) {
+                for (let [position, button] of enumerate(this.getActionButtons())) {
                     if (!element.isEqualTo(button)) continue
-                    this.#getActionButtonDelete().hide()
-                    this.#getActionButtonUpdate().hide()
+                    this.getActionButtonDelete().hide()
+                    this.getActionButtonUpdate().hide()
                     this.onActionButtonClickListener(this, element)
                     break
                 }
@@ -11349,8 +11833,6 @@ class Table extends View {
     /** @param {AppElement} row @param {string|{items:string|string[],type:string,text:string}} data @returns {AppElement} */
     addCell(row, data) {
         data = object.fromdata(data)
-        /** @type {AppElement} */
-        let header = null
         /** @type {AppElement} */
         let cell = null
         if (data.get('type') == Table.CELL_TYPE_TEXT) {
@@ -11368,8 +11850,7 @@ class Table extends View {
             cell.appendChild(...selector.getItems())
             cell.value(data.get('value', ''))
         }
-        header = this.getHeaderAt(this.getCellCount() % this.getHeaderCount())
-        // row = this.getRowAt(Math.floor(this.getCellCount() / this.getHeaderCount()))
+        let header = this.getHeaderAt(this.getCellCount() % this.getHeaderCount())
         cell.setStyleProperty('width', header.getStyleProperty('width'))
         row.appendChild(cell)
         return cell
@@ -11377,7 +11858,7 @@ class Table extends View {
     /** @returns {AppElement} */
     addRow() {
         let row = app.element('div')
-        this.#getBody().appendChild(row)
+        this.getBody().appendChild(row)
         return row
     }
     /** @returns {void} */
@@ -11404,13 +11885,9 @@ class Table extends View {
         }
         return cells
     }
-    /** @returns {AppElement} */
-    getFooter() {
-        return this.#getFooter()
-    }
     /** @param {number} position @returns {AppElement} */
     getHeaderAt(position) {
-        return this.#getHeader().children(position)
+        return this.getHeader().children(position)
     }
     /** @returns {number} */
     getHeaderCount() {
@@ -11418,7 +11895,7 @@ class Table extends View {
     }
     /** @returns {AppElement[]} */
     getHeaders() {
-        return this.#getHeader().children()
+        return this.getHeader().children()
     }
     /** @param {number} position @returns {AppElement} */
     getRowAt(position) {
@@ -11430,14 +11907,14 @@ class Table extends View {
     }
     /** @returns {AppElement[]} */
     getRows() {
-        return this.#getBody().children()
+        return this.getBody().children()
     }
     /** @param {AppElement} row @returns {{string: string}} */
     getRowValues(row) {
         let values = new object()
         values.set('identifier', row.getIdentifier())
         for (let [position, cell] of enumerate(row.children())) {
-            let rowKey = this.#getHeader().children(position).text()
+            let rowKey = this.getHeader().children(position).text()
             let rowValue
             if (cell.getAttribute('cell-type') == Table.CELL_TYPE_TEXT) {
                 rowValue = cell.text()
@@ -11488,11 +11965,11 @@ class Table extends View {
     }
     /** @returns {void} */
     removeAllRows() {
-        this.#getBody().innerHTML('')
+        this.getBody().innerHTML('')
     }
     /** @param {AppElement} row @returns {void} */
     removeRow(row) {
-        this.#getBody().removeChild(row)
+        this.getBody().removeChild(row)
     }
     /** @param {number} position @returns {void} */
     removeRowAt(position) {
@@ -11517,8 +11994,8 @@ class Table extends View {
             row.attribute('selected: ').style(`background-color: ${app.getStyleProperty(':root', '--color-select')}`)
         }
         if (this.isActionButtonsEnabled()) {
-            this.#getActionButtonDelete().show()
-            this.#getActionButtonUpdate().show()
+            this.getActionButtonDelete().show()
+            this.getActionButtonUpdate().show()
         }
     }
     /** @param {number} position @returns {void} */
@@ -11535,19 +12012,19 @@ class Table extends View {
     /** @param {boolean} enabled @returns {void} */
     setActionButtonsEnabled(enabled) {
         this.actionButtonsEnalbed = enabled
-        this.#getFooter().display(enabled)
+        this.getFooter().display(enabled)
     }
     /** @param {string[]|string} data @returns {void} */
     setHeaders(data) {
         // NOTE: requires execution of setView()
         this.headers = util.istype(data, 'string') ? array.fromitems(data, true) : data
-        this.#getHeader().innerHTML('')
+        this.getHeader().innerHTML('')
         let total = 0
         for (let header of this.headers) {
             let [title, width] = header
             total += Number(width)
             let cell = app.element('div').style(`width: ${width}%`).text(title)
-            this.#getHeader().appendChild(cell)
+            this.getHeader().appendChild(cell)
         }
         if (total != 100) {
             console.warn(`ValueError: table header width exceeds 100%, redefined header width(s)`)
@@ -11555,7 +12032,7 @@ class Table extends View {
     }
     /** @returns {AppElement|Element|number|string} */
     setFooter(footer) {
-        return super.setText(this.#getFooter(), footer)
+        return super.setText(this.getFooter(), footer)
     }
     /** @param {Listener} listener @returns {void} */
     setOnActionButtonClickListener(listener) {
@@ -11585,47 +12062,331 @@ class Table extends View {
             this.unselectRow(row)
         }
     }
+
     /** @returns {AppElement[]} */
-    #getActionButtons() {
+    getActionButtons() {
         return this.view.children(2).children()
     }
     /** @returns {AppElement} */
-    #getActionButtonInsert() {
+    getActionButtonInsert() {
         return this.view.children(2).children(0)
     }
     /** @returns {AppElement} */
-    #getActionButtonDelete() {
+    getActionButtonDelete() {
         return this.view.children(2).children(1)
     }
     /** @returns {AppElement} */
-    #getActionButtonUpdate() {
+    getActionButtonUpdate() {
         return this.view.children(2).children(2)
     }
     /** @returns {AppElement} */
-    #getBody() {
+    getBody() {
         return this.view.children(1)
     }
     /** @returns {AppElement} */
-    #getFooter() {
+    getFooter() {
         return this.view.children(2)
     }
     /** @returns {AppElement} */
-    #getHeader() {
+    getHeader() {
         return this.view.children(0)
     }
 }
-class TableRow extends View {
+class Table extends View {
     constructor(attributes = {}) {
-        super()
+        super(attributes)
+        /** @type {boolean} */
+        this.actionButtonsEnalbed = true
+        /** @type {[]} */
+        this.headers = []
+        /** @type {Listener} */
+        this.onActionButtonClickListener = Table.onActionButtonClickListener
+        /** @type {Listener} */
+        this.onRowSelectedListener = Table.onRowSelectedListener
+        /** @type {number} */
+        this.selectionType = Table.SELECTION_TYPE_SINGLE
         // 
-        super.view = app.element('div').view(super.getClassName())
-        app.addEventListenerInterface('', this, true)
+        super.view = app.element('div').view(super.getClassName()).appendChild(
+            app.element('div'),
+            app.element('div').appendChild(
+                app.element('button').identifier('insert').text('insert'),
+                app.element('button').identifier('delete').text('delete'),
+                app.element('button').identifier('update').text('update')
+            )
+        )
+        app.addEventListenerInterface('click', this, true)
         super.setAttributes(attributes)
-        // 
     }
+
+    /** @readonly @type {string} */
+    static ACTION_BUTTON_INSERT = "insert"
+    /** @readonly @type {string} */
+    static ACTION_BUTTON_DELETE = "delete"
+    /** @readonly @type {string} */
+    static ACTION_BUTTON_UPDATE = "update"
+
+    /** @readonly @type {string} */
+    static CELL_TYPE_TEXT     = "TEXT"
+    /** @readonly @type {string} */
+    static CELL_TYPE_INPUT    = "INPUT"
+    /** @readonly @type {string} */
+    static CELL_TYPE_SELECT = "SELECT"
+
+    /** @readonly @type {string} */
+    static SELECTION_TYPE_SINGLE   = "SINGLE"
+    /** @readonly @type {string} */
+    static SELECTION_TYPE_MULTIPLE = "MULTIPLE"
+
+    /** @type {(table: Table, button: AppElement) => void} */
+    static onActionButtonClickListener = (table, button) => { }
+    /** @type {(table: Table, row: AppElement) => void} */
+    static onRowSelectedListener = (table, row) => { }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
+        if (event.type == 'click') {
+            for (let row of this.getRows()) {
+                if (element.isEqualTo(row)) {
+                    if (this.selectionType == Table.SELECTION_TYPE_SINGLE) {
+                        this.unselectRows()
+                        this.selectRow(row)
+                    }
+                    if (this.selectionType == Table.SELECTION_TYPE_MULTIPLE) {
+                        if (this.isRowSelected(row)) {
+                            this.unselectRow(row)
+                        } else {
+                            this.selectRow(row)
+                        }
+                    }
+                    this.onRowSelectedListener(this, row)
+                }
+            }
+            if (this.isActionButtonsEnabled()) {
+                if (element.isEqualTo(this.getActionButtonInsert())) {
+                    this.onActionButtonClickListener(this, element)
+                }
+                if (element.isEqualTo(this.getActionButtonDelete())) {
+                    this.onActionButtonClickListener(this, element)
+                    this.getActionButtonDelete().hide()
+                    this.getActionButtonUpdate().hide()
+                }
+                if (element.isEqualTo(this.getActionButtonUpdate())) {
+                    this.onActionButtonClickListener(this, element)
+                    this.getActionButtonUpdate().hide()
+                }
+            }
+        }
+    }
+
+    /** @param {AppElement} row @param {string|{items:string|string[],type:string,text:string}} data @returns {AppElement} */
+    addCell(row, data) {
+        data = object.fromdata(data)
+        /** @type {AppElement} */
+        let cell = null
+        if (data.get('type').toUpperCase() == Table.CELL_TYPE_TEXT) {
+            cell = app.element('div').attribute(`cell: ${Table.CELL_TYPE_TEXT}`)
+            cell.text(data.get('text', ''))
+        }
+        if (data.get('type').toUpperCase() == Table.CELL_TYPE_INPUT) {
+            cell = app.element('input').attribute(`cell: ${Table.CELL_TYPE_INPUT}`)
+            cell.attribute('type: text; autocomplete: off').value(data.get('text', ''))
+        }
+        if (data.get('type').toUpperCase() == Table.CELL_TYPE_SELECT) {
+            cell = app.element('select').attribute(`cell: ${Table.CELL_TYPE_SELECT}`)
+            let selector = new Selector()
+            selector.setItems(data.get('items', []))
+            cell.appendChild(...selector.getItems())
+            cell.value(data.get('value', ''))
+        }
+        row.appendChild(cell)
+        return cell
+    }
+    /** @returns {AppElement} */
+    addRow() {
+        let headersCount = this.getHeaders().size()
+        let row = app.element('div').style(`grid-column: span ${headersCount};`)
+        this.getBody().appendChild(row)
+        return row
+    }
+    /** @returns {AppElement} */
+    getBody() {
+        return this.view.children(0)
+    }
+    /** @returns {AppElement} */
+    getActionButtonInsert() {
+        return this.getFooter().children(0)
+    }
+    /** @returns {AppElement} */
+    getActionButtonDelete() {
+        return this.getFooter().children(1)
+    }
+    /** @returns {AppElement} */
+    getActionButtonUpdate() {
+        return this.getFooter().children(2)
+    }
+    /** @param {AppElement|number} row @param {number} position @returns {AppElement} */
+    getCellAt(row, position) {
+        if (typeof row === "number") {
+            row = this.getRowAt(row)
+        } 
+        if (row instanceof AppElement) {
+            return row.children(position)
+        } else {
+            console.error(`ValueError: table row invalid`)
+        }
+    }
+    /** @returns {AppElement} */
+    getFooter() {
+        return this.view.children(1)
+    }
+    /** @returns {AppElement} */
+    getHeader() {
+        return this.getBody().children(0)
+    }
+    /** @param {number} position @returns {AppElement} */
+    getHeaderAt(position) {
+        return this.getHeader().children(position)
+    }
+    /** @returns {AppElement[]} */
+    getHeaders() {
+        return this.getHeader().children()
+    }
+    /** @param {number} position @returns {AppElement} */
+    getRowAt(position) {
+        return this.getRows().get(position)
+    }
+    /** @returns {AppElement[]} */
+    getRows() {
+        return this.view.children(0).children().slice(1)
+    }
+    /** @param {AppElement} row @returns {{string: string}} */
+    getRowValues(row) {
+        let values = new object()
+        values.set('identifier', row.getIdentifier())
+        for (let [position, cell] of enumerate(row.children())) {
+            let key = this.getHeaders().get(position).text().toLowerCase()
+            let value
+            if (cell.isAttribute('cell', Table.CELL_TYPE_TEXT)) {
+                value = cell.text()
+            }
+            if (cell.isAttribute('cell', Table.CELL_TYPE_INPUT)) {
+                value = cell.value()
+            }
+            if (cell.isAttribute('cell', Table.CELL_TYPE_SELECT)) {
+                value = cell.value()
+            }
+            values.set(key, value)
+        }
+        return values
+    }
+    /** @returns {AppElement|null} */
+    getSelectedRow() {
+        return this.getSelectedRows().get(0)
+    }
+    /** @returns {AppElement[]} */
+    getSelectedRows() {
+        return this.getRows().filter(row => this.isRowSelected(row))
+    }
+    /** @returns {AppElement[]} */
+    getUnselectedRows() {
+        return this.getRows().filter(row => !this.isRowSelected(row))
+    }
+    /** @returns {boolean} */
+    isActionButtonsEnabled() {
+        return this.actionButtonsEnalbed
+    }
+    /** @param {AppElement} row @returns {boolean} */
+    isRowSelected(row) {
+        return row.hasAttribute('selected')
+    }
+    /** @returns {void} */
+    removeAllRows() {
+        this.getBody().removeChild(...this.getRows())
+    }
+    /** @param {AppElement|number} row @returns {void} */
+    removeRow(row) {
+        if (typeof row === "number") {
+            row = this.getRowAt(row)
+        }
+        this.getBody().removeChild(row)
+    }
+    /** @returns {void} */
+    removeSelectedRows() {
+        for (let row of this.getSelectedRows()) {
+            this.removeRow(row)
+        }
+    }
+    /** @returns {void} */
+    removeUnselectedRows() {
+        for (let row of this.getUnselectedRows()) {
+            this.removeRow(row)
+        }
+    }
+    /** @param {AppElement|number} row @returns {void} */
+    selectRow(row) {
+        if (typeof row === "number") {
+            row = this.getRowAt(row)
+        }
+        row.attribute('selected: ').style(`background-color: ${app.configuration('--color-select')}`)
+        if (this.isActionButtonsEnabled()) {
+            this.getActionButtonDelete().show()
+            this.getActionButtonUpdate().show()
+        }
+    }
+    /** @returns {void} */
+    selectRows() {
+        for (let row of this.getRows()) {
+            this.selectRow(row)
+        }
+    }
+    /** @param {boolean} enabled @returns {void} */
+    setActionButtonsEnabled(enabled) {
+        this.actionButtonsEnalbed = enabled
+        this.getFooter().display(enabled)
+    }
+    /** @param {string[]|string} data @returns {void} */
+    setHeaders(data) {
+        // NOTE: requires execution of setView()
+        let headers = object.fromdata(data)
+        let row = app.element('div').style(`grid-column: span ${headers.size()};`)
+        let grid_columns = ''
+        for (let [title, width] of enumerate(headers)) {
+            grid_columns += width + ' '
+            let cell = app.element('div').text(title)
+            row.appendChild(cell)
+        }
+        this.getBody().appendChild(row)
+        this.getBody().setStyleProperty('grid-template-columns', grid_columns)
+    }
+    /** @returns {AppElement|Element|number|string} */
+    setFooter(footer) {
+        return super.setText(this.getFooter(), footer)
+    }
+    /** @param {Listener} listener @returns {void} */
+    setOnActionButtonClickListener(listener) {
+        this.onActionButtonClickListener = listener
+    }
+    /** @param {Listener} listener @returns {void} */
+    setOnRowSelectedListener(listener) {
+        this.onRowSelectedListener = listener
+    }
+    /** @param {number} selectionType @returns {void} */
+    setSelectionType(selectionType) {
+        this.selectionType = selectionType
+        this.unselectRows()
+    }
+    /** @param {AppElement|number} row @returns {void} */
+    unselectRow(row) {
+        if (typeof row === "number") {
+            row = this.getRowAt(row)
+        }
+        row.removeAttribute('selected').style('background-color: ')
+    }
+    /** @returns {void} */
+    unselectRows() {
+        for (let row of this.getRows()) {
+            this.unselectRow(row)
+        }
     }
 }
 class Text extends View {
@@ -11635,7 +12396,6 @@ class Text extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11655,21 +12415,6 @@ class TextEditor extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('', this, true)
         super.setAttributes(attributes)
-        // 
-    }
-
-    /** @param {Event} event @param {AppElement} element @returns {void} */
-    onEventListenerInterface(event, element) {
-    }
-}
-class TextField extends View {
-    constructor(attributes = {}) {
-        super()
-        // 
-        super.view = app.element('div').view(super.getClassName())
-        app.addEventListenerInterface('', this, true)
-        super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11683,7 +12428,6 @@ class Toggle extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11696,7 +12440,6 @@ class Toolbar extends View {
         // 
         super.view = app.element('div').view(super.getClassName())
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11704,10 +12447,8 @@ class Toolbar extends View {
     }
 
     setNavigatorIcon(navigatorIcon) {
-
     }
     setSubtitle(subtitle) {
-
     }
     setTitle(title) {
     }
@@ -11715,10 +12456,10 @@ class Toolbar extends View {
     #setNavigatorIcon() {
 
     }
-    #getSubtitle() {
+    getSubtitle() {
 
     }
-    #getTitle() {
+    getTitle() {
     }
 }
 class Video extends View {
@@ -11728,7 +12469,6 @@ class Video extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11744,7 +12484,6 @@ class ViewPager extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @type {(tabs: Tabs, tab: Tab) => void} */
@@ -11781,7 +12520,6 @@ class ViewSwitcher extends View {
         // 
         super.view = app.element('div').view(super.getClassName())
         super.setAttributes(attributes)
-        // 
     }
 
     /** @type {(viewSwitcher: ViewSwitcher, view: AppElement) => void} */
@@ -11903,7 +12641,6 @@ class WebView extends View {
         super.view = app.element('div').view(super.getClassName())
         app.addEventListenerInterface('', this, true)
         super.setAttributes(attributes)
-        // 
     }
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
@@ -11921,16 +12658,20 @@ class Widget extends View {
         this.menubar = new MenuBar()
         /** @type {boolean} */
         this.moving = false
+        /** @type {TouchEvent} */
+        this.movingEvent = false
         /** @type {Listener} */
-        this.onClickListener = View.onListener
+        this.onClickListener = Widget.onClickListener
         /** @type {Listener} */
-        this.onCloseListener = View.onListener
+        this.onCloseListener = Widget.onCloseListener
         /** @type {Listener} */
-        this.onMaximizeListener = View.onListener
+        this.onMaximizeListener = Widget.onMaximizeListener
         /** @type {Listener} */
-        this.onMinimizeListener = View.onListener
+        this.onMinimizeListener = Widget.onMinimizeListener
         /** @type {Listener} */
-        this.onOpenListener = View.onListener
+        this.onMoveListener = Widget.onMoveListener
+        /** @type {Listener} */
+        this.onOpenListener = Widget.onOpenListener
         /** @type {number} */
         this.positionX = 0
         /** @type {number} */
@@ -11939,6 +12680,8 @@ class Widget extends View {
         this.size = Widget.SIZE_MAXIMIZE
         /** @type {number} */
         this.width = 0
+        /** @type {number} */
+        this.widthMinimized = 200
         // 
         super.view = app.element('div').view(super.getClassName()).appendChild(
             app.element('div').appendChild(
@@ -11951,13 +12694,13 @@ class Widget extends View {
             app.element('div'),
             app.element('div')
         )
-        app.addEventListenerInterface('click|mousedown', this, true)
+        app.addEventListenerInterface('click|mousedown|touchstart|touchmove|touchend', this, true)
         app.addEventListenerInterface('mousemove|mouseup', this, false)
         super.setAttributes(attributes)
         // 
-        super.setIcon(this.#getSizer(), 'minimize')
-        super.setIcon(this.#getCloser(), 'close')
-        this.setGeometry(Widget.POSITION_CENTER, Widget.POSITION_CENTER, '75%', '75%')
+        super.setIcon(this.getSizer(), 'minimize')
+        super.setIcon(this.getCloser(), 'close')
+        this.setGeometry(Widget.POSITION_CENTER, Widget.POSITION_CENTER)
         // 
         let mutationObserver = new MutationObserver((mutationsRecords, mutationObserver) => {
             for (let mutationRecord of mutationsRecords) {
@@ -11971,27 +12714,27 @@ class Widget extends View {
                 }
             }
         })
-        mutationObserver.observe(this.#getBody().getElement(), { childList: true, subtree: true });
+        mutationObserver.observe(this.getBody().getElement(), { childList: true, subtree: true });
     }
 
     /** @readonly @type {string} */
-    static POSITION_CENTER = 'CENTER'
+    static POSITION_CENTER = "CENTER"
     /** @readonly @type {string} */
-    static POSITION_END   = 'END'
+    static POSITION_END    = "END"
     /** @readonly @type {string} */
-    static POSITION_START = 'START'
+    static POSITION_START  = "START"
 
     /** @readonly @type {string} */
-    static SIZE_MAXIMIZE = 'MAXIMIZE'
+    static SIZE_MAXIMIZE = "MAXIMIZE"
     /** @readonly @type {string} */
-    static SIZE_MINIMIZE = 'MINIMIZE'
+    static SIZE_MINIMIZE = "MINIMIZE"
 
     /** @type {(widget: Widget, event: PointerEvent, element: AppElement) => void} */
     static onClickListener = (widget, event, element) => { }
     /** @type {(widget: Widget) => void} */
     static onCloseListener = (widget) => { }
-    /** @type {(menuBar: MenuBar, item: Item) => void} */
-    static onMenuItemClickListener = (menuBar, item) => { }
+    /** @type {(widget: Widget, positionX: number, positionY: number) => void} */
+    static onMoveListener = (widget, positionX, positionY) => { }
     /** @type {(widget: Widget) => void} */
     static onOpenListener = (widget) => { }
     /** @type {(widget: Widget) => void} */
@@ -12001,8 +12744,8 @@ class Widget extends View {
 
     /** @param {Event} event @param {AppElement} element @returns {void} */
     onEventListenerInterface(event, element) {
-        if (event.type == 'click') {
-            if (element.isEqualTo(this.#getSizer())) {
+        if (event.type == "click") {
+            if (element.isEqualTo(this.getSizer())) {
                 if (this.isMaximized()) {
                     this.minimize()
                 }
@@ -12010,18 +12753,21 @@ class Widget extends View {
                     this.maximize()
                 }
             }
-            if (element.isEqualTo(this.#getCloser())) {
+            if (element.isEqualTo(this.getCloser())) {
                 this.close()
             }
             this.onClickListener(this, event, element)
         }
         // TODO: determine when mouse leaves header while movement is activated
-        if (event.type == 'mousedown') {
+        if (event.type == "mousedown" || event.type == "touchstart") {
             this.sendForward()
-            this.moving = element.isEqualTo(this.#getHeader())
+            this.moving = element.isEqualTo(this.getHeader(), true)
+            if (event.type == "touchstart") {
+                this.movingEvent = event.touches[0]
+            }
         }
-        if (event.type == 'mousemove') {
-            let DOMRect = this.#getHeader().getBoundingClientRect()
+        if (event.type == "mousemove") {
+            let DOMRect = this.getHeader().getBoundingClientRect()
             if (this.moving) {
                 if (event.x <= DOMRect.x || event.y <= DOMRect.y || event.x >= DOMRect.x + DOMRect.width || event.y >= DOMRect.y + DOMRect.height) {
                     this.moving = false
@@ -12030,9 +12776,27 @@ class Widget extends View {
             if (this.moving) {
                 this.setPositionX(this.positionX + event.movementX)
                 this.setPositionY(this.positionY + event.movementY)
+                this.onMoveListener(this, this.positionX, this.positionY)
             }
         }
-        if (event.type == 'mouseup') {
+        if (event.type == "touchmove") {
+            let DOMRect = this.getHeader().getBoundingClientRect()
+            let [clientX, clientY] = [event.touches[0].clientX, event.touches[0].clientY]
+            if (this.moving) {
+                if (clientX <= DOMRect.x || clientY <= DOMRect.y || clientX >= DOMRect.x + DOMRect.width || clientY >= DOMRect.y + DOMRect.height) {
+                    this.moving = false
+                }
+            }
+            if (this.moving) {
+                let movementX = clientX - this.movingEvent.clientX;
+                let movementY = clientY - this.movingEvent.clientY;
+                this.setPositionX(this.positionX + movementX)
+                this.setPositionY(this.positionY + movementY)
+                this.onMoveListener(this, this.positionX, this.positionY)
+            }
+            this.movingEvent = event.touches[0]
+        }
+        if (event.type == "mouseup" || event.type == "touchend") {
             this.moving = false
         }
     }
@@ -12040,21 +12804,13 @@ class Widget extends View {
     /** @returns {void} */
     close() {
         if (this.isVisible() && this.isCloseable()) {
-            app.body().removeChild(this.getView())
+            app.body().removeChild(this.view)
             this.onCloseListener(this)
         }
-    }
-    /** @returns {AppElement} */
-    getBody() {
-        return this.#getBody()
     }
     /** @returns {number} */
     getHeight() {
         return this.height
-    }
-    /** @returns {AppElement} */
-    getFooter() {
-        return this.#getFooter()
     }
     /** @returns {number} */
     getPositionX() {
@@ -12074,7 +12830,7 @@ class Widget extends View {
     }
     /** @returns {string} */
     getTitle() {
-        return this.#getTitle().text()
+        return this.getViewTitle().text()
     }
     /** @returns {boolean} */
     isCloseable() {
@@ -12092,10 +12848,10 @@ class Widget extends View {
     maximize() {
         if (this.isMaximized()) return
         this.size = Widget.SIZE_MAXIMIZE
-        super.setIcon(this.#getSizer(), 'minimize')
-        this.#getMenuBar().show()
-        this.#getBody().show()
-        this.#getFooter().show()
+        super.setIcon(this.getSizer(), 'minimize')
+        this.menubar.getView().show()
+        this.getBody().show()
+        this.getFooter().show()
         this.view.setStyleProperty('height', this.getHeight())
         this.view.setStyleProperty('width', this.getWidth())
         this.onMaximizeListener(this)
@@ -12104,18 +12860,18 @@ class Widget extends View {
     minimize() {
         if (this.isMinimized()) return
         this.size = Widget.SIZE_MINIMIZE
-        super.setIcon(this.#getSizer(), 'maximize')
-        this.#getMenuBar().hide()
-        this.#getBody().hide()
-        this.#getFooter().hide()
-        this.view.setStyleProperty('height', this.#getHeader().getHeight())
-        this.view.setStyleProperty('width', 200)
+        super.setIcon(this.getSizer(), 'maximize')
+        this.menubar.getView().hide()
+        this.getBody().hide()
+        this.getFooter().hide()
+        this.view.setStyleProperty('height', this.getHeader().getHeight())
+        this.view.setStyleProperty('width', this.widthMinimized)
         this.onMinimizeListener(this)
     }
     /** @returns {void} */
     open() {
         if (!this.isVisible()) {
-            app.body().appendChild(this.getView())
+            app.body().appendChild(this.view)
             this.sendForward()
             this.onOpenListener(this)
             this.#setMaxHeight()
@@ -12146,11 +12902,11 @@ class Widget extends View {
     }
     /** @param {AppElement|Element|string} body @returns {void} */
     setBody(body) {
-        super.setText(this.#getBody(), body)
+        super.setText(this.getBody(), body)
     }
     /** @param {AppElement|Element|string} footer @returns {void} */
     setFooter(footer) {
-        super.setText(this.#getFooter(), footer)
+        super.setText(this.getFooter(), footer)
     }
     /** @param {number} positionX @param {number} positionY @param {number} width @param {number} height @returns {void} */
     setGeometry(positionX = this.positionX, positionY = this.positionY, width = this.width, height = this.height) {
@@ -12185,7 +12941,7 @@ class Widget extends View {
     }
     /** @param {string} icon @returns {void} */
     setIcon(icon) {
-        super.setIcon(this.#getIcon(), icon).show()
+        super.setIcon(this.getIcon(), icon).show()
     }
     /** @param {MenuBar} menubar @returns {void} */
     setMenuBar(menubar) {
@@ -12210,6 +12966,10 @@ class Widget extends View {
     /** @param {Listener} listener @returns {void} */
     setOnMinimizeListener(listener) {
         this.onMinimizeListener = listener
+    }
+    /** @param {Listener} listener @returns {void} */
+    setOnMoveListener(listener) {
+        this.onMoveListener = listener
     }
     /** @param {Listener} listener @returns {void} */
     setOnOpenListener(listener) {
@@ -12258,12 +13018,12 @@ class Widget extends View {
     }
     /** @param {string} title @returns {void} */
     setTitle(title) {
-        super.setText(this.#getTitle(), title)
+        super.setText(this.getViewTitle(), title)
     }
     /** @param {number|string} width @returns {void} */
     setWidth(width) {
         let viewport = app.body()
-        width = `${width}`
+        width = String(width)
         if (width.endswith('%')) {
             let percentage = Number(width.slice(0, -1)) / 100
             width = viewport.getWidth() * percentage
@@ -12273,11 +13033,11 @@ class Widget extends View {
             width = pixels
         }
         else if (width == 'fit-content') {
-            let menuBarWidth = this.#getMenuBar().getWidthChildren(true)
+            let menuBarWidth = this.menubar.getView().getWidthChildren(true)
             if (menuBarWidth == 0) {
-                width = this.#getBody().getWidth(true)
+                width = this.getBody().getWidth(true)
             } else {
-                width = this.#getMenuBar().getWidthChildren(true) + 5
+                width = this.menubar.getView().getWidthChildren(true) + 5
             }
         }
         else {
@@ -12286,47 +13046,47 @@ class Widget extends View {
         this.width = width
         this.view.setStyleProperty('width', width)
     }
+
     /** @returns {AppElement} */
-    #getBody() {
+    getBody() {
         return this.view.children(2)
     }
     /** @returns {AppElement} */
-    #getCloser() {
+    getCloser() {
         return this.view.children(0).children(3)
     }
     /** @returns {AppElement} */
-    #getFooter() {
+    getFooter() {
         return this.view.children(3)
     }
     /** @returns {AppElement} */
-    #getHeader() {
+    getHeader() {
         return this.view.children(0)
     }
     /** @returns {AppElement} */
-    #getIcon() {
+    getIcon() {
         return this.view.children(0).children(0)
     }
     /** @returns {AppElement} */
-    #getMenuBar() {
-        return this.view.children(1)
-    }
-    /** @returns {AppElement} */
-    #getSizer() {
+    getSizer() {
         return this.view.children(0).children(2)
     }
     /** @returns {AppElement} */
-    #getTitle() {
+    getViewTitle() {
         return this.view.children(0).children(1)
     }
+    
     /** @returns {void} */
     #setMaxHeight() {
+        let viewport = app.body()
         // NOTE: set view and body style property max-height to active y-axis scrollbar provided that the body's content exceeds calculated max-height
-        let heightView = this.getView().getHeight()
-        let heightHeader = this.#getHeader().getHeight()
-        let heightMenuBar = this.#getMenuBar().getHeight()
-        let heightFooter = this.#getFooter().getHeight()
-        let heightBody = heightView - (heightHeader + heightMenuBar + heightFooter) - 5
-        // this.#getBody().setStyleProperty('max-height', heightBody)
+        // let heightView = this.getView().getHeight()
+        // let heightHeader = this.#getHeader().getHeight()
+        // let heightMenuBar = this.#getViewMenuBar().getHeight()
+        // let heightFooter = this.#getFooter().getHeight()
+        // let heightBody = heightView - (heightHeader + heightMenuBar + heightFooter) - 5
+        let height = viewport.getHeight() * 0.7
+        this.getBody().setStyleProperty("max-height", height)
     }
 }
 class _ extends View {
@@ -12361,7 +13121,7 @@ class _ extends View {
         this.parameter = parameter
     }
 }
-//__________________________________________________________________________________________________________________________________________________//
+//____________________________________________________________________________//
 
 /** @param {boolean[]|string[]|{}} iterable @returns {boolean} */
 function all(iterable) {
@@ -12420,7 +13180,7 @@ function len(iterable) {
         return iterable.length
     }
 }
-/** @generator @param {any[]|{}} iterable @yields {[string,any]} @returns {Generator<[string,any], void>} */
+/** @generator @param {any[]|{}} iterable @yields {[string,any]} @returns {Generator<[number|string,any], void>} */
 function* enumerate(iterable) {
     if (util.istype(iterable, 'array')) {
         for (let index = 0; index < iterable.length; index++) {

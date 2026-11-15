@@ -3,7 +3,7 @@
 # Date created: XXXX-XX-XX
 # Last modified: XXXX-XX-XX
 
-import datetime, inspect, json, math, os, re, socket, time, threading
+import datetime, json, math, os, re, time, threading
 from typing import Callable, Any, TypeVar
 
 class address(str): pass
@@ -102,6 +102,7 @@ html
 html-tag
 identifier
 number
+number-complex
 number-decimal
 number-float
 number-integer
@@ -120,6 +121,7 @@ string-array
 string-array-object
 string-boolean
 string-number
+string-number-complex
 string-number-decimal
 string-number-float
 string-number-integer
@@ -193,6 +195,15 @@ class util:
     HASH_SHA384 = "sha384"
     HASH_SHA512 = "sha512"
 
+    NUMBER_COMPLEX_SYNTAX1 = r"^(?P<real>[+-]?\d*\.?\d+(e[+-]\d+)?)\s*(?P<operation>[+-])\s*(?P<imaginary>\d*\.?\d+(e[+-]\d+)?)(i|j)$"
+    NUMBER_COMPLEX_SYNTAX2 = r"^(?P<real>[+-]?\d*\.?\d+(e[+-]\d+)?)\s*(?P<operation>[+-])\s*j(?P<imaginary>\d*\.?\d+(e[+-]\d+)?)$"
+    # NUMBER_DECIMAL_SYNTAX  = r"^[+-]?\d*\.?\d+(e[+-]\d+)?$"
+    # NUMBER_DECIMAL_SYNTAX  = r"^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$"
+    # NUMBER_INTEGER_SYNTAX  = r"^[+-]?\d+([eE][+-]\d+)?$"
+    # decimals (must contain a dot OR use scientific notation E/e, allows underscores)
+    NUMBER_DECIMAL_SYNTAX = r"^[+-]?(?:\d+(?:_\d+)*\.(?:\d+(?:_\d+)*)?|\.\d+(?:_\d+)*)(?:[eE][+-]?\d+(?:_\d+)*)?$|^[+-]?\d+(?:_\d+)*[eE][+-]?\d+(?:_\d+)*$"
+    # pure integers (optional sign, digits, allows underscores, NO scientific notation)
+    NUMBER_INTEGER_SYNTAX = r"^[+-]?\d+(?:_\d+)*$"
     NUMBER_PLACEMENT = {
         13:  "trillions",
         12:  "hundred billions",
@@ -224,18 +235,6 @@ class util:
         -14: "hundred trillionths"
     }
 
-    REFERENCE_TAG_ABBREVIATIONS = "ABBREVIATIONS"
-    REFERENCE_TAG_ACRONYMS      = "ACRONYMS"
-    REFERENCE_TAG_DEFINITIONS   = "DEFINITIONS"
-    REFERENCE_TAG_LIST          = "LIST"
-    REFERENCE_TAG_NAME          = "NAME"
-    REFERENCE_TAG_OBJECT        = "OBJECT"
-    REFERENCE_TAG_QUESTIONS     = "QUESTIONS"
-    REFERENCE_TAG_SOURCE        = "SOURCE"
-    REFERENCE_TAG_SUBTITLE      = "SUBTITLE"
-    REFERENCE_TAG_TABLE         = "TABLE"
-    REFERENCE_TAG_TITLE         = "TITLE"
-
     STRING_INTERPOLATION_SYNTAX1 = r"<\w+(?:[-_]\w+)*>"
     STRING_INTERPOLATION_SYNTAX2 = r"\{\w+(?:[-_]\w+)*\}"
     STRING_INTERPOLATION_SYNTAX3 = r"%\w+(?:[-_]\w+)*%"
@@ -254,14 +253,14 @@ class util:
     TIMESTAMP_OPTION_STRING       = "string"
     TIMESTAMP_OPTION_TEXT         = "text"
 
-    TIMESTAMP_PATTERN_YEAR        = r"(?P<year>19[7-9][0-9]|[2-9][0-9][0-9][0-9])"
+    TIMESTAMP_PATTERN_YEAR        = r"(?P<year>19[7-9]\d|[2-9]\d\d\d)"
     TIMESTAMP_PATTERN_MONTH       = r"(?P<month>0[1-9]|1[0-2])"
-    TIMESTAMP_PATTERN_DAY         = r"(?P<day>0[1-9]|1[0-9]|2[0-9]|3[0-2])"
-    TIMESTAMP_PATTERN_HOUR        = r"(?P<hour>0[0-9]|1[0-9]|2[0-3])"
+    TIMESTAMP_PATTERN_DAY         = r"(?P<day>0[1-9]|1\d|2\d|3[0-2])"
+    TIMESTAMP_PATTERN_HOUR        = r"(?P<hour>0\d|1\d|2[0-3])"
     TIMESTAMP_PATTERN_MINUTE      = r"(?P<minute>0\d|[1-5]\d)"
     TIMESTAMP_PATTERN_SECOND      = r"(?P<second>0\d|[1-5]\d)"
-    TIMESTAMP_PATTERN_MILLISECOND = r"(?P<millisecond>\d\d\d)?"
-    TIMESTAMP_PATTERN_ZONE        = r"(?P<zone>[A-I]|[K-Z])?"
+    TIMESTAMP_PATTERN_MILLISECOND = r"(?P<millisecond>\d\d\d)"
+    TIMESTAMP_PATTERN_ZONE        = r"(?P<zone>[A-I]|[K-Z])"
 
     TIMEZONE_DESIGNATIONS = {
         'A': "Etc/GMT-1",
@@ -318,7 +317,7 @@ class util:
         'Z': +0,
     }
 
-    variables: dict[str, str] = {
+    variables: dict[str, str] = { # require lowercase key characters
     }
 
     """
@@ -330,45 +329,32 @@ class util:
     spherical   = (r, theta, phi)
     """
 
-    def arguments(parameters: dict[str]|list[str], arguments: list[str]):
-        object = {}
-        if isinstance(parameters, dict):
-            for index, key in enumerate(parameters.keys()):
-                object[key] = arguments[index] if len(arguments) > index else parameters[key]
-        if isinstance(parameters, list):
-            for index, key in enumerate(parameters):
-                object[key] = arguments[index] if len(arguments) > index else ''
-        return object
     def ispattern(value: str, pattern: str) -> bool:
-        return bool(re.match(pattern, f"{value}"))
-    def istype(value, types: str):
-        def toBinary(value: str, type: str) -> str:
-            if util.ispattern(value, r"^(0|1)+$"):
-                return value
-            elif type.startswith("address-ipv4") or type.startswith("address-internet_protocol_v4"):
-                return util.address_ipv4(value)
-            elif type.startswith("address-ipv6") or type.startswith("address-internet_protocol_v6"):
-                return util.address_ipv6(value)
-            elif type.startswith("address-mac") or type.startswith("address-media_access_control"):
-                return util.address_mac(value)
-        def istype(value, type: str):
-            if type == "address":
+        return bool(re.search(pattern, f"{value}"))
+    def istype(value, data_types: str):
+        def istype(value, data_type: str):
+            def toBinary(value: str, data_type: str) -> str:
+                if util.ispattern(value, r"^(0|1)+$"): return value
+                elif data_type.startswith("address-ipv4") or data_type.startswith("address-internet_protocol_v4"): return util.address_ipv4(value)
+                elif data_type.startswith("address-ipv6") or data_type.startswith("address-internet_protocol_v6"): return util.address_ipv6(value)
+                elif data_type.startswith("address-mac")  or data_type.startswith("address-media_access_control"): return util.address_mac(value)
+            if data_type == "address":
                 return istype(value, "address-ipv4") or istype(value, "address-ipv6") or istype(value, "address-mac")
-            if type == "address-ip" or type == "address-internet_protocol":
+            if data_type == "address-ip" or data_type == "address-internet_protocol":
                 return istype(value, "address-ipv4") or istype(value, "address-ipv6")
-            if type == "address-ip-local" or type == "address-internet_protocol-local":
+            if data_type == "address-ip-local" or data_type == "address-internet_protocol-local":
                 return istype(value, "address-ipv4-local") or istype(value, "address-ipv6-local")
-            if type == "address-ip-local-link" or type == "address-internet_protocol-local-link":
+            if data_type == "address-ip-local-link" or data_type == "address-internet_protocol-local-link":
                 return istype(value, "address-ipv4-local-link") or istype(value, "address-ipv6-local-link")
-            if type == "address-ip-local-unique" or type == "address-internet_protocol-local-unique":
+            if data_type == "address-ip-local-unique" or data_type == "address-internet_protocol-local-unique":
                 return istype(value, "address-ipv4-local-unique") or istype(value, "address-ipv6-local-unique")
-            if type == "address-ip-loopback" or type == "address-internet_protocol-loopback":
+            if data_type == "address-ip-loopback" or data_type == "address-internet_protocol-loopback":
                 return istype(value, "address-ipv4-loopback") or istype(value, "address-ipv6-loopback")
-            if type == "address-ip-multicast" or type == "address-internet_protocol-multicast":
+            if data_type == "address-ip-multicast" or data_type == "address-internet_protocol-multicast":
                 return istype(value, "address-ipv4-multicast") or istype(value, "address-ipv6-multicast")
-            if type == "address-ip-unspecified" or type == "address-internet_protocol-unspecified":
+            if data_type == "address-ip-unspecified" or data_type == "address-internet_protocol-unspecified":
                 return istype(value, "address-ipv4-unspecified") or istype(value, "address-ipv6-unspecified")
-            if type == "address-ipv4" or type == "address-internet_protocol_v4":
+            if data_type == "address-ipv4" or data_type == "address-internet_protocol_v4":
                 if istype(value, "string"):
                     if istype(value, "binary"):
                         return len(value) == 32
@@ -381,69 +367,69 @@ class util:
                                 if not istype(string, "string-number"): return False
                                 if int(string) < 0 or int(string) > 255: return False
                             return True
-            if type == "address-ipv4-benchmarking" or type == "address-internet_protocol_v4-benchmarking":
+            if data_type == "address-ipv4-benchmarking" or data_type == "address-internet_protocol_v4-benchmarking":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:15] == "110001100001001"
-            if type == "address-ipv4-broadcast" or type == "address-internet_protocol_v4-broadcast":
+            if data_type == "address-ipv4-broadcast" or data_type == "address-internet_protocol_v4-broadcast":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == "11111111111111111111111111111111"
-            if type == "address-ipv4-dummy" or type == "address-internet_protocol_v4-dummy":
+            if data_type == "address-ipv4-dummy" or data_type == "address-internet_protocol_v4-dummy":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == "11000000000000000000000000001000"
-            if type == "address-ipv4-local" or type == "address-internet_protocol_v4-local":
+            if data_type == "address-ipv4-local" or data_type == "address-internet_protocol_v4-local":
                 return istype(value, "address-ipv4-local-link") or istype(value, "address-ipv4-local-unique")
-            if type == "address-ipv4-local-link" or type == "address-internet_protocol_v4-local-link":
+            if data_type == "address-ipv4-local-link" or data_type == "address-internet_protocol_v4-local-link":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:16] == "1010100111111110"
-            if type == "address-ipv4-local-unique" or type == "address-internet_protocol_v4-local-unique":
+            if data_type == "address-ipv4-local-unique" or data_type == "address-internet_protocol_v4-local-unique":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:8] == "10100000" or value[0:12] == "101011000001" or value[0:16] == "1100000010101000"
-            if type == "address-ipv4-loopback" or type == "address-internet_protocol_v4-loopback":
+            if data_type == "address-ipv4-loopback" or data_type == "address-internet_protocol_v4-loopback":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:8] == "01111111"
-            if type == "address-ipv4-mask" or type == "address-internet_protocol_v4-mask":
+            if data_type == "address-ipv4-mask" or data_type == "address-internet_protocol_v4-mask":
                 return istype(value, "address-ipv4-networkmask") or istype(value, "address-ipv4-wildcardmask")
-            if type == "address-ipv4-multicast" or type == "address-internet_protocol_v4-multicast":
+            if data_type == "address-ipv4-multicast" or data_type == "address-internet_protocol_v4-multicast":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:4] == "1110"
-            if type == "address-ipv4-netmask" or type == "address-internet_protocol_v4-netmask":
+            if data_type == "address-ipv4-netmask" or data_type == "address-internet_protocol_v4-netmask":
                 return istype(value, "address-ipv4-networkmask")
-            if type == "address-ipv4-networkmask" or type == "address-internet_protocol_v4-networkmask":
+            if data_type == "address-ipv4-networkmask" or data_type == "address-internet_protocol_v4-networkmask":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     if "0" in value:
                         return value.find("0") > value.rfind("1")
                     else:
                         return value == "11111111111111111111111111111111"
-            if type == "address-ipv4-prefix-length" or type == "address-internet_protocol_v4-prefix-length":
+            if data_type == "address-ipv4-prefix-length" or data_type == "address-internet_protocol_v4-prefix-length":
                 if istype(value, "number") or istype(value, "string-number"):
-                    return util.ispattern(value, r"^(0?[0-9]|1[0-9]|2[0-9]|3[1-2])$")
-            if type == "address-ipv4-subnetmask" or type == "address-internet_protocol_v4-subnetmask":
+                    return util.ispattern(value, r"^(0?\d|1\d|2\d|3[1-2])$")
+            if data_type == "address-ipv4-subnetmask" or data_type == "address-internet_protocol_v4-subnetmask":
                 return istype(value, "address-ipv4-networkmask")
-            if type == "address-ipv4-subnetworkmask" or type == "address-internet_protocol_v4-subnetworkmask":
+            if data_type == "address-ipv4-subnetworkmask" or data_type == "address-internet_protocol_v4-subnetworkmask":
                 return istype(value, "address-ipv4-networkmask")
-            if type == "address-ipv4-unicast" or type == "address-internet_protocol_v4-unicast":
+            if data_type == "address-ipv4-unicast" or data_type == "address-internet_protocol_v4-unicast":
                 if istype(value, "address-ipv4"):
                     return not (istype(value, "address-ipv4-broadcast") or istype(value, "address-ipv4-multicast"))
-            if type == "address-ipv4-unspecified" or type == "address-internet_protocol_v4-unspecified":
+            if data_type == "address-ipv4-unspecified" or data_type == "address-internet_protocol_v4-unspecified":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == "00000000000000000000000000000000"
-            if type == "address-ipv4-wildcardmask" or type == "address-internet_protocol_v4-wildcardmask":
+            if data_type == "address-ipv4-wildcardmask" or data_type == "address-internet_protocol_v4-wildcardmask":
                 if istype(value, "address-ipv4"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     if "1" in value:
                         return value.find("1") > value.rfind("0")
                     else:
                         return value == "00000000000000000000000000000000"
-            if type == "address-ipv6" or type == "address-internet_protocol_v6":
+            if data_type == "address-ipv6" or data_type == "address-internet_protocol_v6":
                 if istype(value, "string"):
                     if istype(value, "binary"):
                         return len(value) == 128
@@ -457,62 +443,62 @@ class util:
                             return True
                         elif '::' in value:
                             return util.ispattern(value, r"^(:|[0-9]|[A-F]|[a-f])+$") and len(value) <= 39
-            if type == "address-ipv6-4to6" or type == "address-internet_protocol_v6-4to6":
+            if data_type == "address-ipv6-4to6" or data_type == "address-internet_protocol_v6-4to6":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:96] == "000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111"
-            if type == "address-ipv6-ipv4-mapped" or type == "address-internet_protocol_v6-internet_protocol_v4-mapped":
+            if data_type == "address-ipv6-ipv4-mapped" or data_type == "address-internet_protocol_v6-internet_protocol_v4-mapped":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:96] == "000000000000000000000000000000000000000000000000000000000000000000000000000000001111111111111111"
-            if type == "address-ipv6-6to4" or type == "address-internet_protocol_v6-6to4":
+            if data_type == "address-ipv6-6to4" or data_type == "address-internet_protocol_v6-6to4":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:16] == "0010000000000010"
-            if type == "address-ipv6-anycast" or type == "address-internet_protocol_v6-anycast":
+            if data_type == "address-ipv6-anycast" or data_type == "address-internet_protocol_v6-anycast":
                 return istype(value, "address-ipv6-global")
-            if type == "address-ipv6-benchmarking" or type == "address-internet_protocol_v6-benchmarking":
+            if data_type == "address-ipv6-benchmarking" or data_type == "address-internet_protocol_v6-benchmarking":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:48] == "001000000000000100000000000000100000000000000000"
-            if type == "address-ipv6-documentation" or type == "address-internet_protocol_v6-documentation":
+            if data_type == "address-ipv6-documentation" or data_type == "address-internet_protocol_v6-documentation":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:32] == "00100000000000010000110110111000"
-            if type == "address-ipv6-global" or type == "address-internet_protocol_v6-global":
+            if data_type == "address-ipv6-global" or data_type == "address-internet_protocol_v6-global":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:3] == "001"
-            if type == "address-ipv6-local" or type == "address-internet_protocol_v6-local":
+            if data_type == "address-ipv6-local" or data_type == "address-internet_protocol_v6-local":
                 return istype(value, "address-ipv6-local-link") or istype(value, "address-ipv6-local-unique")
-            if type == "address-ipv6-local-link" or type == "address-internet_protocol_v6-local-link":
+            if data_type == "address-ipv6-local-link" or data_type == "address-internet_protocol_v6-local-link":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:10] == "1111111010"
-            if type == "address-ipv6-local-unique" or type == "address-internet_protocol_v6-local-unique":
+            if data_type == "address-ipv6-local-unique" or data_type == "address-internet_protocol_v6-local-unique":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:7] == "1111110"
-            if type == "address-ipv6-loopback" or type == "address-internet_protocol_v6-loopback":
+            if data_type == "address-ipv6-loopback" or data_type == "address-internet_protocol_v6-loopback":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
-            if type == "address-ipv6-multicast" or type == "address-internet_protocol_v6-multicast":
+            if data_type == "address-ipv6-multicast" or data_type == "address-internet_protocol_v6-multicast":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:8] == "11111111"
-            if type == "address-ipv6-teredo" or type == "address-internet_protocol_v6-teredo":
+            if data_type == "address-ipv6-teredo" or data_type == "address-internet_protocol_v6-teredo":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:32] == "00100000000000010000000000000000"
-            if type == "address-ipv6-unicast" or type == "address-internet_protocol_v6-unicast":
+            if data_type == "address-ipv6-unicast" or data_type == "address-internet_protocol_v6-unicast":
                 if istype(value, "address-ipv6"):
                     return istype(value, "address-ipv6-global") or istype(value, "address-ipv6-local")
-            if type == "address-ipv6-unspecified" or type == "address-internet_protocol_v6-unspecified":
+            if data_type == "address-ipv6-unspecified" or data_type == "address-internet_protocol_v6-unspecified":
                 if istype(value, "address-ipv6"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-            if type == "address-mac" or type == "address-media_access_control":
+            if data_type == "address-mac" or data_type == "address-media_access_control":
                 if istype(value, "string"):
                     if istype(value, "binary"):
                         return len(value) == 48
@@ -524,282 +510,295 @@ class util:
                                 if len(string) != 2: return False
                                 if not istype(string, "hexadecimal"): return False
                             return True
-            if type == "address-mac-broadcast" or type == "address-media_access_control-broadcast":
+            if data_type == "address-mac-broadcast" or data_type == "address-media_access_control-broadcast":
                 if istype(value, "address-mac"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value == "111111111111111111111111111111111111111111111111"
-            if type == "address-mac-multicast" or type == "address-media_access_control-multicast":
+            if data_type == "address-mac-multicast" or data_type == "address-media_access_control-multicast":
                 return istype(value, "address-mac-multicast-ipv4") or istype(value, "address-mac-multicast-ipv6")
-            if type == "address-mac-multicast-ipv4" or type == "address-media_access_control-multicast-internet_protocol_v4":
+            if data_type == "address-mac-multicast-ipv4" or data_type == "address-media_access_control-multicast-internet_protocol_v4":
                 if istype(value, "address-mac"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:25] == "0000000100000000010111100"
-            if type == "address-mac-multicast-ipv6" or type == "address-media_access_control-multicast-internet_protocol_v6":
+            if data_type == "address-mac-multicast-ipv6" or data_type == "address-media_access_control-multicast-internet_protocol_v6":
                 if istype(value, "address-mac"):
-                    value = toBinary(value, type)
+                    value = toBinary(value, data_type)
                     return value[0:16] == "0011001100110011"
-            if type == "address-mac-unicast" or type == "address-media_access_control-unicast":
+            if data_type == "address-mac-unicast" or data_type == "address-media_access_control-unicast":
                 if istype(value, "address-mac"):
                     return not (istype(value, "address-mac-broadcast") or istype(value, "address-mac-multicast"))
-            if type == "array":
+            if data_type == "array":
                 return isinstance(value, list)
-            if type == "array-boolean":
+            if data_type == "array-boolean":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "boolean"): return False
                     return True
-            if type == "array-bytes":
+            if data_type == "array-bytes":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "bytes"): return False
                     return True
-            if type == "array-number":
+            if data_type == "array-number":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "number"): return False
                     return True
-            if type == "array-object":
+            if data_type == "array-object":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "object"): return False
                     return True
-            if type == "array-string":
+            if data_type == "array-string":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "string"): return False
                     return True
-            if type == "array-string-array":
+            if data_type == "array-string-array":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "string-array"): return False
                     return True
-            if type == "array-string-array-object":
+            if data_type == "array-string-array-object":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "string-array-object"): return False
                     return True
-            if type == "array-string-boolean":
+            if data_type == "array-string-boolean":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "string-boolean"): return False
                     return True
-            if type == "array-string-number":
+            if data_type == "array-string-number":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "string-number"): return False
                     return True
-            if type == "array-string-object":
+            if data_type == "array-string-object":
                 if istype(value, "array"):
                     for value_ in value:
                         if not istype(value_, "string-object"): return False
                     return True
-            if type == "base64":
+            if data_type == "base64":
                 if istype(value, "string"):
                     return util.ispattern(value, r"^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$")
-            if type == "binary":
+            if data_type == "binary":
                 if istype(value, "string"):
                     return util.ispattern(value, r"^(0|1)+$")
-            if type == "boolean":
+            if data_type == "boolean":
                 return isinstance(value, bool)
-            if type == "bytes":
+            if data_type == "bytes":
                 return isinstance(value, bytes) or isinstance(value, bytearray)
-            if type == "bytes-array":
+            if data_type == "bytes-array":
                 if istype(value, "bytes"):
                     return istype(util.byt2str(value), "string-array")
-            if type == "bytes-array-object":
+            if data_type == "bytes-array-object":
                 if istype(value, "bytes"):
                     return istype(util.byt2str(value), "string-array-object")
-            if type == "bytes-object":
+            if data_type == "bytes-object":
                 if istype(value, "bytes"):
                     return istype(util.byt2str(value), "string-object")
-            if type == "character":
+            if data_type == "character":
                 if istype(value, "string"):
                     return util.ispattern(value, r"^([A-Z]|[a-z])$")
-            if type == "coordinates-geographic":
+            if data_type == "coordinates-geographic":
                 return istype(value, "coordinates-geographic-ddd") or istype(value, "coordinates-geographic-ddm") or istype(value, "coordinates-geographic-dms")
-            if type == "coordinates-geographic-ddd":
+            if data_type == "coordinates-geographic-ddd":
                 if istype(value, "string"):
                     return istype(value, "coordinates-geographic-latitude-ddd") or istype(value, "coordinates-geographic-longitude-ddd")
                 elif istype(value, "array-number") or istype(value, "array-string"):
                     if len(value) == 2:
                         return istype(value[0], "coordinates-geographic-latitude-ddd") and istype(value[1], "coordinates-geographic-longitude-ddd")
-            if type == "coordinates-geographic-ddm":
+            if data_type == "coordinates-geographic-ddm":
                 if istype(value, "string"):
                     return istype(value, "coordinates-geographic-latitude-ddm") or istype(value, "coordinates-geographic-longitude-ddm")
                 elif istype(value, "array-string"):
                     if len(value) == 2:
                         return istype(value[0], "coordinates-geographic-latitude-ddm") and istype(value[1], "coordinates-geographic-longitude-ddm")
-            if type == "coordinates-geographic-dms":
+            if data_type == "coordinates-geographic-dms":
                 if istype(value, "string"):
                     return istype(value, "coordinates-geographic-latitude-dms") or istype(value, "coordinates-geographic-longitude-dms")
                 elif istype(value, "array-string"):
                     if len(value) == 2:
                         return istype(value[0], "coordinates-geographic-latitude-dms") and istype(value[1], "coordinates-geographic-longitude-dms")
-            if type == "coordinates-geographic-latitude":
+            if data_type == "coordinates-geographic-latitude":
                 if istype(value, "string"):
                     return istype(value, "coordinates-geographic-latitude-ddd") or istype(value, "coordinates-geographic-latitude-ddm") or istype(value, "coordinates-geographic-latitude-dms")
-            if type == "coordinates-geographic-latitude-ddd":
+            if data_type == "coordinates-geographic-latitude-ddd":
                 if istype(value, "number") or istype(value, "string-number"):
                     return 0 <= abs(float(value)) and abs(float(value)) <= 90
                 if istype(value, "string"):
                     pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT1}" if not ('*' in value or '°' in value or 'º' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LATITUDE_OPT2}"
                     return util.ispattern(value, f"^{pattern}$")
-            if type == "coordinates-geographic-latitude-ddm":
+            if data_type == "coordinates-geographic-latitude-ddm":
                 if istype(value, "string"):
                     pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}" if not ('*' in value or '°' in value or 'º' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}"
                     return util.ispattern(value, f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$") or util.ispattern(value, f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}{pattern}$")
-            if type == "coordinates-geographic-latitude-dms":
+            if data_type == "coordinates-geographic-latitude-dms":
                 if istype(value, "string"):
                     pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}" if not ('*' in value or '°' in value or 'º' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LATITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}"
                     return util.ispattern(value, f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}$") or util.ispattern(value, f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LATITUDE}{pattern}$")
-            if type == "coordinates-geographic-longitude":
+            if data_type == "coordinates-geographic-longitude":
                 if istype(value, "string"):
                     return istype(value, "coordinates-geographic-longitude-ddd") or istype(value, "coordinates-geographic-longitude-ddm") or istype(value, "coordinates-geographic-longitude-dms")
-            if type == "coordinates-geographic-longitude-ddd":
+            if data_type == "coordinates-geographic-longitude-ddd":
                 if istype(value, "number") or istype(value, "string-number"):
                     return 0 <= abs(float(value)) and abs(float(value)) <= 180
                 if istype(value, "string"):
                     pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT1}" if not ('*' in value or '°' in value or 'º' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_DECIMAL_LONGITUDE_OPT2}"
                     return util.ispattern(value, f"^{pattern}$")
-            if type == "coordinates-geographic-longitude-ddm":
+            if data_type == "coordinates-geographic-longitude-ddm":
                 if istype(value, "string"):
                     pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT1}" if not ('*' in value or '°' in value or 'º' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_DECIMAL_OPT2}"
                     return util.ispattern(value, f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$") or util.ispattern(value, f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}{pattern}$")
-            if type == "coordinates-geographic-longitude-dms":
+            if data_type == "coordinates-geographic-longitude-dms":
                 if istype(value, "string"):
                     pattern = f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT1}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT1}" if not ('*' in value or '°' in value or 'º' in value) else f"{util.GEOGRAPHIC_COORDINATES_PATTERN_DEGREES_LONGITUDE_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_MINUTES_OPT2}{util.GEOGRAPHIC_COORDINATES_PATTERN_SECONDS_OPT2}"
                     return util.ispattern(value, f"^{pattern}{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}$") or util.ispattern(value, f"^{util.GEOGRAPHIC_COORDINATES_PATTERN_DIRECTION_LONGITUDE}{pattern}$")
-            if type == "date":
+            if data_type == "date":
                 return isinstance(value, datetime.datetime)
-            if type == "decimal":
+            if data_type == "decimal":
                 return istype(value, "number") or istype(value, "string-number")
-            if type == "degrees":
-                return util.ispattern(value, r"^(0?\d?\d|[1-2]\d\d|3[0-5]\d)(°(M|T))?$")
-            if type == "hexadecimal":
+            if data_type == "degrees":
+                return util.ispattern(value, r"^-?(0?\d?\d|[1-2]\d\d|3[0-5]\d)(\.\d+)?(°(M|T))?$")
+            if data_type == "hexadecimal":
                 if istype(value, "string"):
                     return util.ispattern(value, r"^([0-9]|[A-F]|[a-f])+$")
-            if type == "html":
+            if data_type == "html":
                 pass
-            if type == "html-tag":
+            if data_type == "html-tag":
                 if istype(value, "string"):
                     strings = '!doctype|a|abbr|address|area|article|aside|audio|b|base|bb|bdi|bdo|big|blockquote|br|button|canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|dfn|dialog|div|dl|dt|em|embed|fieldset|figcaption|figure|footer|form|h1|h2|h3|h4|h5|h6|head|header|hr|html|i|iframe|img|input|ins|kbd|label|legend|li|link|main|map|mark|meta|meter|nav|noscript|object|ol|optgroup|option|p|param|picture|polyline|polygon|pre|progress|q|rp|rt|ruby|s|samp|script|section|select|small|source|span|strong|style|sub|summary|sup|svg|table|tbody|td|template|textarea|tfoot|th|thead|tr|track|u|ul|var|video|wbr'.split('|')
                     return value in strings
-            if type == "identifier":
+            if data_type == "identifier":
                 if istype(value, "string"):
                     return util.ispattern(value, r"^([0-9]|[A-Z]|[a-z]|_)+$")
-            if type == "number":
-                return istype(value, "number-decimal") or istype(value, "number-integer")
-            if type == "number-decimal" or type == "number-float":
+            if data_type == "number":
+                return istype(value, "number-complex") or istype(value, "number-decimal") or istype(value, "number-integer")
+            if data_type == "number-complex":
+                if istype(value, "object"):
+                    return value["real"] and (value["imag"] or value["imaginary"])
+                else:
+                    return isinstance(value, complex)
+            if data_type == "number-decimal" or data_type == "number-float":
                 return isinstance(value, float)
-            if type == "number-integer":
+            if data_type == "number-integer":
                 return isinstance(value, int)
-            if type == "object":
+            if data_type == "object":
                 return isinstance(value, dict)
-            if type == "octal":
+            if data_type == "octal":
                 if istype(value, "string"):
                     return util.ispattern(value, r"^[0-7]+$")
-            if type == "port":
+            if data_type == "port":
                 if istype(value, "number") or istype(value, "string-number"):
                     return 0 <= int(value) and int(value) <= 65535
-            if type == "port-ephemeral":
+            if data_type == "port-ephemeral":
                 if istype(value, "number") or istype(value, "string-number"):
                     return 1024 <= int(value) and int(value) <= 65535
-            if type == "port-ephemeral-registered":
+            if data_type == "port-ephemeral-registered":
                 if istype(value, "number") or istype(value, "string-number"):
                     return 1024 <= int(value) and int(value) <= 49151
-            if type == "port-ephemeral-unregistered" or type == "port-ephemeral-dynamic" or type == "port-ephemeral-private":
+            if data_type == "port-ephemeral-unregistered" or data_type == "port-ephemeral-dynamic" or data_type == "port-ephemeral-private":
                 if istype(value, "number") or istype(value, "string-number"):
                     return 49152 <= int(value) and int(value) <= 65535
-            if type == "port-nonephemeral" or type == "port-wellknown":
+            if data_type == "port-nonephemeral" or data_type == "port-wellknown":
                 if istype(value, "number") or istype(value, "string-number"):
                     return 0 <= int(value) and int(value) <= 1023
-            if type == "string":
+            if data_type == "string":
                 return isinstance(value, str)
-            if type == "string-array":
+            if data_type == "string-array":
                 if istype(value, "string"):
                     if len(value) >= 2:
                         return value[0] == '[' and value[-1] == ']'
-            if type == "string-array-object":
+            if data_type == "string-array-object":
                 if istype(value, "string"):
                     if len(value) >= 4:
                         return value[0] == '[' and value[-1] == ']' and value[1] == '{' and value[-2] == '}'
-            if type == "string-boolean":
+            if data_type == "string-boolean":
                 if istype(value, "string"):
                     assert isinstance(value, str)
                     return value.lower() == "true" or value.lower() == "false"
-            if type == "string-number":
-                 return istype(value, "string-number-decimal") or istype(value, "string-number-integer")
-            if type == "string-number-decimal" or type == "string-number-float":
+            if data_type == "string-number":
+                 return istype(value, "string-number-complex") or istype(value, "string-number-decimal") or istype(value, "string-number-integer")
+            if data_type == "string-number-complex":
                 if istype(value, "string"):
-                    return util.ispattern(value, r"^(-|\+)?\d+\.\d+$")
-            if type == "string-number-integer":
+                    return util.ispattern(value, util.NUMBER_COMPLEX_SYNTAX1) or util.ispattern(value, util.NUMBER_COMPLEX_SYNTAX2)
+            if data_type == "string-number-decimal" or data_type == "string-number-float":
                 if istype(value, "string"):
-                    return util.ispattern(value, r"^(-|\+)?\d+$")
-            if type == "string-object":
+                    return util.ispattern(value, util.NUMBER_DECIMAL_SYNTAX)
+            if data_type == "string-number-integer":
+                if istype(value, "string"):
+                    return util.ispattern(value, util.NUMBER_INTEGER_SYNTAX)
+            if data_type == "string-object":
                 if istype(value, "string"):
                     if len(value) >= 2:
                         return value[0] == '{' and value[-1] == '}'
-            if type == "timestamp":
+            if data_type == "timestamp":
                 if istype(value, "string"):
                     if len(value) >= 4:
                         pattern = ""
                         if '-' in value:
-                            if len(value) == 4 or len(value) == 5:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
-                            if len(value) == 7 or len(value) == 8:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}"
+                            if len(value) ==  4 or len(value) ==  5: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
+                            if len(value) ==  7 or len(value) ==  8: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}"
                             if len(value) == 10 or len(value) == 11: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}"
-                            if len(value) == 13 or len(value) == 14: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}"
-                            if len(value) == 16 or len(value) == 17: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}"
-                            if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}"
-                            if len(value) == 23 or len(value) == 24: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
+                            if len(value) == 13 or len(value) == 14: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}"
+                            if len(value) == 16 or len(value) == 17: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}"
+                            if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}"
+                            if len(value) == 23 or len(value) == 24: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
                         else:
-                            if len(value) == 4 or len(value) == 5:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
-                            if len(value) == 6 or len(value) == 7:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}"
-                            if len(value) == 8 or len(value) == 9:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}"
-                            if len(value) == 11 or len(value) == 12: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}"
-                            if len(value) == 13 or len(value) == 14: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}"
-                            if len(value) == 15 or len(value) == 16: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}"
-                            if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
-                        return util.ispattern(value, f"^{pattern}{util.TIMESTAMP_PATTERN_ZONE}$")
-            if type == "timestamp-date":
+                            if len(value) ==  4 or len(value) ==  5: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
+                            if len(value) ==  6 or len(value) ==  7: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}"
+                            if len(value) ==  8 or len(value) ==  9: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}"
+                            if len(value) == 11 or len(value) == 12: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}"
+                            if len(value) == 13 or len(value) == 14: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}"
+                            if len(value) == 15 or len(value) == 16: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}"
+                            if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
+                        return util.ispattern(value, f"^{pattern}{util.TIMESTAMP_PATTERN_ZONE}?$")
+            if data_type == "timestamp-date":
                 if istype(value, "string"):
                     if len(value) > 0:
                         if '-' in value:
-                            return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}{util.TIMESTAMP_PATTERN_ZONE}$")
+                            return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}{util.TIMESTAMP_PATTERN_ZONE}?$")
                         else:
-                            return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}{util.TIMESTAMP_PATTERN_ZONE}$")
-            if type == "timestamp-time":
+                            return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}{util.TIMESTAMP_PATTERN_ZONE}?$")
+            if data_type == "timestamp-time":
                 if istype(value, "string"):
                     if len(value) > 0:
                         if ':' in value:
-                            return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}{util.TIMESTAMP_PATTERN_ZONE}$")
+                            return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}{util.TIMESTAMP_PATTERN_ZONE}?$")
                         else:
-                            return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}{util.TIMESTAMP_PATTERN_ZONE}$")
-            if type == "timestamp-zone":
+                            return util.ispattern(value, f"^{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}{util.TIMESTAMP_PATTERN_ZONE}?$")
+            if data_type == "timestamp-zone":
                 if istype(value, "string"):
                     if len(value) == 1:
                         return util.ispattern(value, util.TIMESTAMP_PATTERN_ZONE)
-            # 
-            if type[-2:len(type)] == '[]':
+            # array of type
+            if data_type.startswith("[") and data_type.endswith("]"):
                 if istype(value, "array"):
-                    for value_ in value:
-                        if not istype(value_, type[0:-2]):
-                            return False
-                    return True
+                    return all([istype(val, data_type[1:-1]) for val in value])
             return False
         if value == None: return False
         delimiters = ['&','|']
-        delimiter = next((delimiter for delimiter in delimiters if delimiter in types), None)
-        if all([delimiter in types for delimiter in delimiters]): raise Exception(f"ValueError: conflicting delimiters")
-        if delimiter == None: return istype(value, types)
-        else:
-            results = [istype(value, type) for type in types.split(delimiter)]
+        delimiter = next((delimiter for delimiter in delimiters if delimiter in data_types), None)
+        if all([delimiter in data_types for delimiter in delimiters]): raise Exception(f"ValueError: conflicting delimiters")
+        if delimiter:
+            results = [istype(value, data_type) for data_type in data_types.split(delimiter)]
             if delimiter == '&': return all(results)
             if delimiter == '|': return any(results)
-    def importModule(name: str):
-        # if util.importModule(''): import
-        return not name in dir()
+        else:
+            return istype(value, data_types)
     def get(method: str, *arguments):
         return getattr(globals()["util"], method)(*arguments)
+    def get_variable(key: str, value = None) -> str:
+        if isinstance(key, str):
+            key = key.lower()
+        if key not in util.variables:
+            raise Exception(f"KeyError: utilities variable '{key}' nonexistent")
+        elif value == None:
+            value = util.variables[key]
+        else:
+            util.variables[key] = value
+        return value
     # a
     def abbreviation(string: str, delimiter: str = ' ') -> str:
         specials = {
@@ -1512,7 +1511,18 @@ class util:
         f = int(30.6001 * (month + 1))
         julian_day_number = c + day + e + f - 1524
         return julian_day_number
-
+    def dictionary_string_encode(data: dict, delimiter: str = ":", fillChar: str = " ", encoder: Callable[[Any], str] = None) -> str:
+        key_length = max(len(str(key)) for key in data.keys())
+        # lines = [f"{key}".ljust(key_length, fillChar) + f"{delimiter} {util.string_conversion_encode(val)}" for key, val in data.items()]
+        lines = []
+        for key, val in data.items():
+            # use callback if provided, otherwise fallback to a default encoding representation
+            val_encoded = encoder(val) if encoder else util.string_conversion_encode(val)
+            padded_key = str(key).ljust(key_length, fillChar)
+            lines.append(f"{padded_key} {delimiter} {val_encoded}")
+        return "\n".join(lines)
+    def dictionary_string_decode(data: str) -> dict:
+        return {}
     def dump(value: dict|list, tabs: int = 0):
         def tab(count: int, size: int = 4):
             return " " * count * size
@@ -1671,46 +1681,52 @@ class util:
         file.write(data)
         file.flush()
         file.close()
-    def file_directory(path: str, excludedPaths: list[str] = [], deep: int = None) -> dict:
+    def file_directory(root: str, excludedPaths: list[str] = [], max_depth: int = None) -> dict:
+        excludedPaths = [util.string_interpolation_decode(excludedPath) for excludedPath in excludedPaths]
         directory = {}
         def isExcludedPath(path: str) -> bool:
             path = path.lower()
             for excludedPath in excludedPaths:
                 excludedPath = excludedPath.lower()
+                # exclude directories containing: **\folder\*
                 if '**\\' == excludedPath[:3] and '\\*' == excludedPath[-2:]:
                     if excludedPath[2:-1] in path: return True
+                # exclude directories ending with: **\folder?\file.ext or **\file.ext
                 elif '**\\' == excludedPath[:3]:
                     if path.endswith(excludedPath[2:]): return True
+                # exclude directories starting with: c:\folder\*
                 elif '\\*' == excludedPath[-2:]:
                     if path.startswith(excludedPath[:-1]): return True
+                # exclude directories equaling
                 else:
                     if path == excludedPath: return True
             return False
-        def directoryItem(name: str, path: str) -> dict:
+        def getEntry(name: str, path: str) -> dict:
             return {
                 "isdir": 1 if os.path.isdir(path) else 0,
                 "items": {},
                 "name": name,
                 "path": path,
-                "size": util.file_size(path),
+                "size": util.file_size(path), # bytes
                 "timestamp": util.file_timestamp(path, "milliseconds"),
             }
-        if deep != None:
-            deep = len(path.split('\\')) + deep
-        for (path, folders, files) in os.walk(path):
-            if deep != None:
-                if len(path.split('\\')) >= deep: continue
+        for (path, folders, files) in os.walk(root):
             if isExcludedPath(path): continue
-            items = directory
+            if max_depth != None:
+                if len(path.replace(f"{root}", "").split('\\')) > max_depth: continue
+            # navigate to directory item entry
+            entries = directory
             for name in path.split('\\'):
-                if name in items:
-                    items = items[name]["items"]
+                if name in entries:
+                    entries = entries[name]["items"]
+            # add folder entries to current directory
             for name in folders:
                 if isExcludedPath(f"{path}\\{name}"): continue
-                items[name] = directoryItem(name, f"{path}\\{name}")
+                entries[name] = getEntry(name, f"{path}\\{name}")
+            # add file entries to current directory
             for name in files:
                 if isExcludedPath(f"{path}\\{name}"): continue
-                items[name] = directoryItem(name, f"{path}\\{name}")
+                entries[name] = getEntry(name, f"{path}\\{name}")
         return directory
     def file_hash(path: str, mode: str = "md5") -> str:
         data = util.file_read(path)
@@ -1907,8 +1923,6 @@ class util:
         file = open(path, "wb")
         file.write(value)
         file.close()
-    def file_write_data(path: str, data: dict):
-        pass
     def file_write_list(path: str, value: list):
         value = '\n'.join(value).encode()
         util.file_write(path, value)
@@ -2258,6 +2272,9 @@ class util:
         return base * height
     def geometry_area_rectangle(length: float, width: float) -> float:
         return length * width
+    def geometry_area_ring(radius_outer: float, radius_inner: float = None, thickness: float = None) -> float:
+        radius_inner = radius_outer - thickness if isinstance(thickness, int|float) else radius_inner
+        return math.pi * (radius_outer ** 2 - radius_inner ** 2)
     def geometry_area_semicircle(radius: float) -> float:
         return (math.pi * radius ** 2) / 2
     def geometry_area_sphere(radius: float) -> float:
@@ -2268,6 +2285,23 @@ class util:
         return (base_1 + base_2) / 2 * height
     def geometry_area_triangle(base: float, height: float) -> float:
         return (base * height) / 2
+    def geometry_circle_diameter(length, width):
+        # find the diameter of a circle with a perimeter equal to a rectangle
+        diameter = (2 * (length + width)) / math.pi
+        return diameter
+    def __geometry_cylinder_diameter(length: float = 0.0, width: float = 0.0, height: float = 0.0) -> float:
+        # calculates the diameter of a cylinder needed to match the total surface area of a given cuboid.
+        cuboid_area = 2 * (length * width + length * height + width * height)
+        h_2 = height ** 2
+        term_1 = (math.pi ** 2) * h_2
+        term_2 = 2 * math.pi * cuboid_area
+        diameter = (math.sqrt(term_1 + term_2) - (math.pi * height)) / math.pi
+        return diameter
+    def geometry_cylinder_diameter(length: float, width: float, height: float):
+        # find the diameter of a cylinder with a surface area equal to a cuboid
+        cuboid_area = 2 * (length * width + length * height + width * height)
+        diameter = math.sqrt(height**2 + (2 * cuboid_area) / math.pi) - height
+        return diameter
     def geometry_distance_formula(point1: list[float], point2: list[float]) -> float:
         return util.cartesian_to_distance(point1, point2)
     def geometry_midpoint_formula(point1: list[float], point2: list[float]) -> float:
@@ -2381,12 +2415,12 @@ class util:
         return math.pi * radius ** 2 * (height / 3)
     def geometry_volume_cube(side: float) -> float:
         return side ** 3
+    def geometry_volume_cuboid(length: float, width: float, height: float) -> float:
+        return length * width * height
     def geometry_volume_cylinder(radius: float, height: float) -> float:
         return math.pi * radius ** 2 * height
     def geometry_volume_cylinder_hollow(radius_outer: float, radius_inner: float, height: float) -> float:
         return math.pi * (radius_outer ** 2 - radius_inner ** 2) * height
-    def geometry_volume_rectangle(length: float, width: float, height: float) -> float:
-        return length * width * height
     def geometry_volume_sphere(radius: float) -> float:
         return (4/3) * math.pi * radius ** 3
     def geometry_volume_triangular_prism(side_1: float, side_2: float, side_3: float, height) -> float:
@@ -2520,13 +2554,22 @@ class util:
         # runs in only ECMAScript 5
         return js2py.eval_js(path)
     def json_encode(value: dict|list) -> str:
+        class Encoder(json.JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, complex):
+                    return {"real": obj.real, "imaginary": obj.imag}
+                return super().default(obj)
         try:
-            return json.dumps(value)
+            return json.dumps(value, cls=Encoder)
         except:
             raise Exception(f"Error: json encoding unsuccessful")
     def json_decode(value: str) -> dict|list:
+        def decoder(obj):
+            if len(obj) == 2 and "real" in obj and ("imag" in obj or "imaginary" in obj):
+                return complex(obj["real"], (obj["imag"] if "imag" in obj else obj["imaginary"]))
+            return obj
         try:
-            return json.loads(value)
+            return json.loads(value, object_hook=decoder)
         except:
             raise Exception(f"Error: json decoding unsuccessful")
     # k
@@ -2534,37 +2577,15 @@ class util:
     # l
     def len(value, base: int = 1) -> int:
         return util.mathematics_block_count(value, base)
-    def logic_gate_and(inputs: list[bool]) -> bool:
-        # (A ⋅ B) = AND
-        return all(inputs)
-    def logic_gate_buffer(inputs: list[bool]) -> bool:
-        # BUFFER
-        return inputs[0]
-    def logic_gate_imply(inputs: list[bool]) -> bool:
-        # (A' + B) = IMPLY
-        return (not all(inputs[:-1])) or inputs[-1]
-    def logic_gate_nand(inputs: list[bool]) -> bool:
-        # (A ⋅ B)' = AND + NOT = NAND
-        return not all(inputs)
-    def logic_gate_nimply(inputs: list[bool]) -> bool:
-        # (A' + B)' = IMPLY + NOT = NIMPLY
-        return not ((not all(inputs[:-1])) or inputs[-1])
-    def logic_gate_not(inputs: list[bool]) -> bool:
-        # A' = NOT
-        return not inputs[0]
-    def logic_gate_nor(inputs: list[bool]) -> bool:
-        # (A + B)' = OR + NOT = NOR
-        return not any(inputs)
-    def logic_gate_or(inputs: list[bool]) -> bool:
-        # (A + B) = OR
-        return any(inputs)
-    def logic_gate_xnor(inputs: list[bool]) -> bool:
-        # (A ⋅ B) + (A' ⋅ B') = XOR + NOT = XNOR
-        return not (sum(inputs) % 2 == 1)
-    def logic_gate_xor(inputs: list[bool]) -> bool:
-        # (A ⋅ B') + (A' ⋅ B) = XOR
-        return sum(inputs) % 2 == 1
     # m
+    def mathematics_copysign_complex(x: complex, y: complex|float) -> complex:
+        real = math.copysign(x.real, y.real if isinstance(y, complex) else y)
+        imag = math.copysign(x.imag, y.imag if isinstance(y, complex) else y)
+        return complex(real, imag)
+    def mathematics_copysign_complex_directional(x: complex, y: complex) -> complex:
+        # scale magnitude of x in the geometric direction sign of y
+        if y == 0: return 0j # division by zero
+        return abs(x) * (y / abs(y))
     def mathematics_constrain(number: float, minimum: float, maximum: float) -> float:
         if minimum <= number and number <= maximum:
             return number
@@ -2586,7 +2607,7 @@ class util:
             number = eval(argument)
         else: 
             number = 0
-        return f"{number:.15f}".rstrip('0').rstrip('.')
+        return f"{number:.17f}".rstrip('0').rstrip('.')
     def mathematics_number_to_scientific_notation(argument) -> str:
         number = util.mathematics_number_to_decimal_notation(argument)
         bDigits, aDigits = number.split('.') if '.' in number else [number, ""]
@@ -2646,6 +2667,65 @@ class util:
                 number_range = [int(number_range[0]*multiple), int(number_range[1]*multiple)]
                 random_number = random.randint(number_range[0], number_range[1])
                 return util.mathematics_round(random_number, placement) / multiple
+    def mathematics_random_sum(ranges: list, target: float = 100):
+        # pick random number from n specified ranges that sum up to the target
+        if len(ranges) < 2:
+            raise Exception("ValueError: requires at least 2 ranges.")
+        import random
+        # check if solution is mathematically possible
+        min_possible_sum = sum(r[0] for r in ranges)
+        max_possible_sum = sum(r[1] for r in ranges)
+        if not (min_possible_sum <= target <= max_possible_sum): raise Exception("ValueError: mathematically impossible to reach target with provided ranges.")
+        chosen_numbers = []
+        remaining_target = target
+        # dynamically adjust bounds for each range
+        for i in range(len(ranges) - 1):
+            current_range = ranges[i]
+            # calculate min and max the remaining ranges can handle
+            min_remainder = sum(r[0] for r in ranges[i+1:])
+            max_remainder = sum(r[1] for r in ranges[i+1:])
+            # clip the current range so we don't pick a number that leaves the rest stranded
+            lowest_valid = max(current_range[0], remaining_target - max_remainder)
+            highest_valid = min(current_range[1], remaining_target - min_remainder)
+            # pick a safe random number within these tightened boundaries
+            picked_num = random.randint(lowest_valid, highest_valid)
+            chosen_numbers.append(picked_num)
+            remaining_target -= picked_num
+        chosen_numbers.append(remaining_target)
+        return chosen_numbers
+    def mathematics_random_sum(ranges: list, target: float = 100):
+        # pick random number from n specified ranges that sum up to the target
+        # shuffles range order before picking to remove positional bias and preserves input mapping
+        if len(ranges) < 2:
+            raise Exception("ValueError: requires at least 2 ranges.")
+        import random
+        # check if solution is mathematically possible
+        min_possible_sum = sum(r[0] for r in ranges)
+        max_possible_sum = sum(r[1] for r in ranges)
+        if not (min_possible_sum <= target <= max_possible_sum): raise Exception("ValueError: mathematically impossible to reach target with provided ranges.")
+        # attach original indices to track position, then shuffle
+        indexed_ranges = list(enumerate(ranges))
+        shuffled_indexed_ranges = random.sample(indexed_ranges, len(indexed_ranges))
+        shuffled_results = [0] * len(ranges)
+        chosen_numbers = []
+        remaining_target = target
+        # dynamically adjust bounds for each range
+        for step, (original_index, current_range) in enumerate(shuffled_indexed_ranges):
+            min_curr, max_curr = current_range
+            if step == len(ranges) - 1:
+                shuffled_results[original_index] = remaining_target
+                break
+            # calculate the min/max limits of the remaining shuffled items
+            min_remainder = sum(item[1][0] for item in shuffled_indexed_ranges[step+1:])
+            max_remainder = sum(item[1][1] for item in shuffled_indexed_ranges[step+1:])
+            # clip boundaries to prevent trapping future selections
+            # pick a safe random number within boundaries
+            lowest_valid = max(min_curr, remaining_target - max_remainder)
+            highest_valid = min(max_curr, remaining_target - min_remainder)
+            picked_num = random.randint(lowest_valid, highest_valid)
+            shuffled_results[original_index] = picked_num
+            remaining_target -= picked_num
+        return shuffled_results
     def mathematics_round(number: float, placement: int = 1) -> int|float:
         multiplier = 10**placement
         if placement > 0:
@@ -2656,6 +2736,56 @@ class util:
             number = round(number, -placement)
         number = util.mathematics_simplify(number)
         return number
+    def mathematics_round(number: float, placement: int = None) -> int|float:
+        """
+        rounds number to specified placement.
+        detects repeating/consecutive sequences in decimal expansions and dynamically
+        rounds the number to an appropriate placement, provided placement not specified.
+        """
+        is_complex = isinstance(number, complex)
+        if isinstance(number, complex):
+            imaginary = number.imag
+            number = number.real
+        if placement == None:
+            num_str = f"{number}"
+            if '.' not in num_str:
+                return number
+            integer_part, decimal_part = num_str.rstrip('0').split('.')
+            # find digit with highest consecutive count
+            consecutive_counter_map = {}
+            current_digit = ""
+            current_count = 0
+            for digit in decimal_part:
+                if digit == current_digit:
+                    current_count += 1
+                else:
+                    current_digit = digit
+                    current_count = 1
+                consecutive_counter_map[digit] = max(consecutive_counter_map.get(digit, 0), current_count)
+            # handle empty map case
+            if len(consecutive_counter_map) == 0:
+                return number
+            max_consecutive_digit = max(consecutive_counter_map, key=consecutive_counter_map.get)
+            last_digit = decimal_part[-1]
+            second_last_digit = decimal_part[-2]
+            nth_digit = last_digit if last_digit == second_last_digit else second_last_digit
+            if consecutive_counter_map[max_consecutive_digit] >= 3 and max_consecutive_digit == nth_digit:
+                # find index where consecutive digit starts and convert to placement
+                for i in range(len(decimal_part) - (1 if last_digit == second_last_digit else 2), -1, -1):
+                    if not decimal_part[i] == nth_digit or i == 0:
+                        placement = -(i + 1)
+                        break
+        if placement is not None:
+            if placement > 0:
+                multiplier = 10**placement
+                number = round(number / multiplier, 1) * multiplier
+                # correct floating point precision errors when handling large numbers
+                number = round(number)
+            elif placement < 0:
+                number = round(number, -placement)
+        if is_complex:
+            return complex(number, imaginary)
+        return util.mathematics_simplify(number)
     def mathematics_simplify(number: int|float) -> int|float:
         return int(number) if str(number)[-2:] == '.0' else number
     def mathematics_volume(x: float, y: float, z: float) -> float:
@@ -2691,6 +2821,7 @@ class util:
         return nMatrix
     # n
     def network_ip() -> str:
+        import socket
         return socket.gethostbyname(socket.gethostname())
     def network_mtu(address: str) -> int:
         size = 1500
@@ -2703,6 +2834,7 @@ class util:
             else:
                 size -= 10
     def network_online(address: tuple = ("8.8.8.8", 53)) -> bool:
+        import socket
         try:
             socket.setdefaulttimeout(1)
             connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP).connect(address)
@@ -2728,15 +2860,20 @@ class util:
         #   maintaining direction (smaller error) suggest a movement towards the correct answer
         consecutive_steps = 0
         error = 0
-        error_previous, kwargs = function(x, kwargs)
+        # error_previous, kwargs = function(x, **kwargs)
+        result = function(x, **kwargs)
+        error_previous = result[0] if isinstance(result, tuple) else result
+        kwargs = result[1] if isinstance(result, tuple) else {}
         error_previous = abs(error_previous)
         for iteration in range(1, max_iterations + 1):
             if iteration == max_iterations: print("Error: numerical solver reached maximum iteration")
             # calculate current error
-            error, kwargs = function(x, kwargs)
+            result = function(x, **kwargs)
+            error = result[0] if isinstance(result, tuple) else result
+            kwargs = result[1] if isinstance(result, tuple) else {}
             error = abs(error)
             if error <= tolerance:
-                return x, kwargs
+                break
             # error increase (overshot): flip direction and decrease speed
             # precision: decrease step magnitude after direction change, answer fine tunning (zoom in to precise value)
             if error > error_previous:
@@ -2756,7 +2893,8 @@ class util:
             # safety: magnitude approaches float precision error
             if magnitude < 1e-18:
                 break
-        return x, kwargs
+        if kwargs: return x, kwargs
+        return x
     # o
 
     # p
@@ -2793,47 +2931,65 @@ class util:
         pass
     def reference_decode(data: str) -> dict:
         results = {
+            # key: {string: string}
             "ABBREVIATIONS": {},
             # key: {string: string}
             "ACRONYMS": {},
+            # string
+            "ALIAS": '',
             # key: {string: string}
             "DEFINITIONS": {},
+            # string
+            "DESCRIPTION": '',
             # key: {string: string}
-            "LIST": {},
+            "DICTIONARY": {},
+            # string
+            "LINK": '',
             # key: [string]
+            "LIST": {},
+            # string
             "NAME": '',
-            # string
-            "OBJECT": {},
             # key: {string: string}
-            "QUESTIONS": {},
+            "OBJECT": {},
             # [{question: string, answers: [string], comment: string}]
-            "SOURCE": [],
+            "QUESTIONS": {},
             # [string]
+            "SOURCE": [],
+            # string
             "SUBTITLE": '',
-            # string
-            "TABLE": {},
             # key: [{string: string}]
-            "TITLE": '',
+            "TABLE": {},
             # string
+            "TITLE": '',
+            # {string: string}
+            "VARIABLE": {}
         }
         #
+        def isTagOnLine(line: str) -> bool:
+            return any(line.startswith(tagKey) for tagKey in results.keys())
+        def isVariableOnLine(line: str) -> bool:
+            return bool(re.match(r"^@(_[a-z0-9])+", line))
         def getTagValue(tagKey: str, line: str) -> str:
             tagValue: str = line[0+len(tagKey)+1:]
             tagValue = tagValue.strip(' ')
             tagValue = util.identifier() if tagValue == '' else tagValue
             return tagValue
-        def getTagContent(lines: list, index: int, endKey = '') -> list[str]:
+        def getTagContent(lines: list, index: int) -> list[str]:
             tagContent = []
             while index + 1 < len(lines):
                 index += 1
                 line: str = lines[index]
                 if line.startswith('#') or line.startswith('-----'): continue
-                if line == endKey:
-                    break
+                if line == "BREAK" or isTagOnLine(line): break
                 tagContent += [line]
             return tagContent
+        def getVariable(line: str) -> str:
+            line.index('=')
+            name = line[1:line.index('=')].strip(' ')
+            data = line[line.index('=')+1:].strip(' ')
+            return name, data
         #
-        lines = [line.strip(' ') for line in data.splitlines()]
+        lines = [line.strip(' ') for line in data.splitlines() if line.strip(' ')]
         index = -1
         while index < len(lines) - 1:
             index += 1
@@ -2844,35 +3000,52 @@ class util:
             tagKey = "ABBREVIATIONS"
             if line.startswith(tagKey):
                 tag = results[tagKey]
-                assert isinstance(tag, dict)
                 tagValue = getTagValue(tagKey, line)
                 tagContentLines = getTagContent(lines, index)
-                tagContent = dict([(s.lower().strip(' ') for s in line.split(':')) for line in tagContentLines])
+                tagContent = dict([(s.strip(' \t') for s in line.split(':', 1)) for line in tagContentLines])
+                tagContent = dict((key.upper(), val) for key, val in tagContent.items())
                 tag[tagValue] = tagContent
                 index += len(tagContent) + 1
             tagKey = "ACRONYMS"
             if line.startswith(tagKey):
                 tag = results[tagKey]
-                assert isinstance(tag, dict)
                 tagValue = getTagValue(tagKey, line)
                 tagContentLines = getTagContent(lines, index)
-                tagContent = dict([(s.strip(' ') for s in line.split(':')) for line in tagContentLines])
-                tagContent = dict((sk.upper(), sv) for sk, sv in tagContent.items())
+                tagContent = dict([(s.strip(' \t') for s in line.split(':', 1)) for line in tagContentLines])
+                tagContent = dict((key.upper(), val) for key, val in tagContent.items())
                 tag[tagValue] = tagContent
                 index += len(tagContent) + 1
+            tagKey = "ALIAS"
+            if line.startswith(tagKey):
+                results[tagKey] = getTagValue(tagKey, line)
             tagKey = "DEFINITIONS"
             if line.startswith(tagKey):
                 tag = results[tagKey]
-                assert isinstance(tag, dict)
                 tagValue = getTagValue(tagKey, line)
                 tagContentLines = getTagContent(lines, index)
-                tagContent = dict([(s.strip(' ') for s in line.split(':')) for line in tagContentLines])
+                tagContent = dict([(s.strip(' \t') for s in line.split(':', 1)) for line in tagContentLines])
                 tag[tagValue] = tagContent
                 index += len(tagContent) + 1
+            tagKey = "DESCRIPTION"
+            if line.startswith(tagKey):
+                tagValue = getTagValue(tagKey, line)
+                tagContentLines = getTagContent(lines, index)
+                tagContent = tagValue + ' ' + ' '.join(tagContentLines)
+                results[tagKey] = tagContent
+            tagKey = "DICTIONARY"
+            if line.startswith(tagKey):
+                tag = results[tagKey]
+                tagValue = getTagValue(tagKey, line)
+                tagContentLines = getTagContent(lines, index)
+                tagContent = dict([(s.strip(' \t') for s in line.split(':', 1)) for line in tagContentLines])
+                tag[tagValue] = tagContent
+                index += len(tagContent) + 1
+            tagKey = "LINK"
+            if line.startswith(tagKey):
+                results[tagKey] = getTagValue(tagKey, line)
             tagKey = "LIST"
             if line.startswith(tagKey):
                 tag = results[tagKey]
-                assert isinstance(tag, dict)
                 tagValue = getTagValue(tagKey, line)
                 tagContentLines = getTagContent(lines, index)
                 tagContent = tagContentLines
@@ -2880,24 +3053,12 @@ class util:
                 index += len(tagContent) + 1
             tagKey = "NAME"
             if line.startswith(tagKey):
-                tag = results[tagKey]
-                assert isinstance(tag, str)
-                tag = getTagValue(tagKey, line)
-            tagKey = "OBJECT"
-            if line.startswith(tagKey):
-                tag = results[tagKey]
-                assert isinstance(tag, dict)
-                tagValue = getTagValue(tagKey, line)
-                tagContentLines = getTagContent(lines, index)
-                tagContent = dict([(s.strip(' ') for s in line.split(':')) for line in tagContentLines])
-                tag[tagValue] = tagContent
-                index += len(tagContent) + 1
+                results[tagKey] = getTagValue(tagKey, line)
             tagKey = "QUESTIONS"
             if line.startswith(tagKey):
                 tag = results[tagKey]
-                assert isinstance(tag, dict)
                 tagValue = getTagValue(tagKey, line)
-                tagContentLines = getTagContent(lines, index, "BREAK")
+                tagContentLines = getTagContent(lines, index)
                 tagContent = []
                 i = 0
                 # ignore initial empty lines
@@ -2921,18 +3082,14 @@ class util:
             tagKey = "SOURCE"
             if line.startswith(tagKey):
                 tag = results[tagKey]
-                assert isinstance(tag, list)
                 tagValue = getTagValue(tagKey, line)
-                tag.append(tagValue)
+                tag += [tagValue]
             tagKey = "SUBTITLE"
             if line.startswith(tagKey):
-                tag = results[tagKey]
-                assert isinstance(tag, str)
-                tag = getTagValue(tagKey, line)
+                results[tagKey] = getTagValue(tagKey, line)
             tagKey = "TABLE"
             if line.startswith(tagKey):
                 tag = results[tagKey]
-                assert isinstance(tag, dict)
                 tagValue = getTagValue(tagKey, line)
                 tagContentLines = getTagContent(lines, index)
                 tagContent = util.table_decode(tagContentLines)
@@ -2940,9 +3097,12 @@ class util:
                 index += len(tagContent) + 1
             tagKey = "TITLE"
             if line.startswith(tagKey):
-                tag = results[tagKey]
-                assert isinstance(tag, str)
-                tag = getTagValue(tagKey, line)
+                results[tagKey] = getTagValue(tagKey, line)
+            if isVariableOnLine(line):
+                name, data = getVariable(line)
+                results["VARIABLE"][name] = data
+
+        # TODO: link variables
         return results
     def regular_expression_match(pattern: str, value: str) -> bool:
         return util.ispattern(value, pattern)
@@ -2952,84 +3112,129 @@ class util:
     def rgb_to_hex(r, g, b):
         return '#{:02x}{:02x}{:02x}'.format(int(r), int(g), int(b))
     # s
-    def statistics_correlation_coefficient(numbers1: list[float], numbers2: list[float]):
-        if len(numbers1) != len(numbers2): raise Exception("RangeError: numbers length mismatch")
-        xMean = util.statistics_mean(numbers1)
-        yMean = util.statistics_mean(numbers2)
-        xStandardDeviation = util.statistics_standard_deviation(numbers1)
-        yStandardDeviation = util.statistics_standard_deviation(numbers2)
+    def statistics_coefficient_of_range(numbers: list[float]) -> float:
+        return (max(numbers) - min(numbers)) / (max(numbers) + min(numbers))
+    def statistics_correlation_coefficient(xNumbers: list[float], yNumbers: list[float]):
+        if len(xNumbers) != len(yNumbers): raise Exception("ValueError: arrays must be the same size and not empty")
+        xMean = sum(xNumbers) / len(xNumbers)
+        yMean = sum(yNumbers) / len(yNumbers)
+        xStandardDeviation = util.statistics_standard_deviation(xNumbers)
+        yStandardDeviation = util.statistics_standard_deviation(yNumbers)
         if xStandardDeviation == 0 or yStandardDeviation == 0: return 0.0
-        zScores1 = [(number - xMean) / xStandardDeviation for number in numbers1]
-        zScores2 = [(number - yMean) / yStandardDeviation for number in numbers2]
-        zScoresProduct = [zScore1 * zScore2 for zScore1, zScore2 in zip(zScores1, zScores2)]
-        zScoreSum = util.statistics_sum(zScoresProduct)
-        return (1 / (len(numbers1) - 1)) * zScoreSum
+        zNumbers1 = [(number - xMean) / xStandardDeviation for number in xNumbers]
+        zNumbers2 = [(number - yMean) / yStandardDeviation for number in yNumbers]
+        zProduct = [zScore1 * zScore2 for zScore1, zScore2 in zip(zNumbers1, zNumbers2)]
+        zSum = util.statistics_sum(zProduct)
+        return (1 / (len(xNumbers) - 1)) * zSum
     def statistics_correlation_matrix(numbers: list[float]):
         return
+    def statistics_covariance(xNumbers: list[float], yNumbers: list[float]) -> float:
+        # covariance: evaluate direction of the linear relationship between two variables
+        if len(xNumbers) != len(yNumbers) or not xNumbers:
+            raise Exception(f"ValueError: arrays must be the same size and not empty")
+        xMean = sum(xNumbers) / len(xNumbers)
+        yMean = sum(yNumbers) / len(yNumbers)
+        sum_prod = sum((xNumbers[i] - xMean) * (yNumbers[i] - yMean) for i in range(len(xNumbers)))
+        return sum_prod / (len(xNumbers) - 1)
     def statistics_count(numbers: list[float]) -> float:
         return len(numbers)
     def statistics_maximum(numbers: list[float]) -> float:
-        return max(*numbers)
+        return max(numbers)
     def statistics_mean(numbers: list[float]) -> float:
         return sum(numbers) / len(numbers)
+    def statistics_mean_weighted(numbers: list[float], weights: list[float]) -> float:
+        if len(numbers) != len(weights):
+            raise Exception(f"ValueError: data and weights must be the same size")
+        weighted_sum = sum(n * w for n, w in zip(numbers, weights))
+        return weighted_sum / sum(weights)
     def statistics_median(numbers: list[float]) -> float:
-        numbers.sort()
+        sorted_data = sorted(numbers)
         n = len(numbers)
-        if n % 2 == 0:
-            return (numbers[math.floor(n / 2)] + numbers[math.floor((n / 2) - 1)]) / 2
+        mid = n // 2
+        if n % 2 == 1:
+            return sorted_data[mid]
         else:
-            return numbers[math.floor((n / 2) - .5)]
+            return (sorted_data[mid - 1] + sorted_data[mid]) / 2
+    def statistics_midrange(numbers: list[float]) -> float:
+        return (max(numbers) + min(numbers)) / 2
     def statistics_minimum(numbers: list[float]) -> float:
-        return min(*numbers)
+        return min(numbers)
     def statistics_mode(numbers: list[float]) -> float:
-        frequencyCounts = {}
-        maxFrequency = 0
-        modes = []
-        # Count the occurrences of each number
-        for number in numbers:
-            frequencyCounts[number] = (frequencyCounts[number] if number in frequencyCounts else 0) + 1
-            maxFrequency = max(maxFrequency, frequencyCounts[number])
-        # Find the numbers with the maximum frequency
-        for number in frequencyCounts.keys():
-            if frequencyCounts[number] == maxFrequency:
-                modes.append(number)
-        # return number with greatest occurrence
+        frequency = {}
+        for number in numbers: frequency[number] = frequency.get(number, 0) + 1
+        max_count = max(frequency.values())
+        modes = [number for number, count in frequency.items() if count == max_count]
+        # return modes if len(modes) > 1 else modes[0]
         return modes[0]
     def statistics_range(numbers: list[float]) -> float:
-        return max(*numbers) - min(*numbers)
+        return max(numbers) - min(numbers)
+    def statistics_range_coefficient(numbers: list[float]) -> float:
+        return util.statistics_coefficient_of_range(numbers)
+    def statistics_rate_of_change_average(xNumbers: list[float], yNumbers: list[float]) -> float:
+        return (yNumbers[-1] - yNumbers[0]) / (xNumbers[-1] - xNumbers[0])
+    def statistics_rate_of_change_instantaneous(xNumbers: list[float], yNumbers: list[float], x: float) -> float:
+        # use linear interpolation to estimate the instantaneous rate of change at any specific x value
+        # calculate average rate of change between the two closest points 
+        if x <= xNumbers[0]:
+            return (yNumbers[1] - yNumbers[0]) / (xNumbers[1] - xNumbers[0])
+        if x >= xNumbers[-1]:
+            return (yNumbers[-1] - yNumbers[-2]) / (xNumbers[-1] - xNumbers[-2])
+        for i in range(len(xNumbers) - 1):
+            if xNumbers[i] <= x <= xNumbers[i+1]:
+                dx = xNumbers[i+1] - xNumbers[i]
+                dy = yNumbers[i+1] - yNumbers[i]
+                return dy / dx
+        return 0.0
+    def statistics_percentile(self, numbers: list[float], percentile: float) -> float:
+        if not (0 <= percentile <= 100):
+            raise Exception(f"ValueError: percentile invalid, must be between 0 and 100")
+        sorted_data = sorted(numbers)
+        n = len(sorted_data)
+        index = (percentile / 100) * (n - 1)
+        if index.is_integer():
+            return sorted_data[int(index)]
+        else:
+            lower = sorted_data[int(index // 1)]
+            upper = sorted_data[int(index // 1 + 1)]
+            fraction = index % 1
+            return lower + fraction * (upper - lower)
+    def statistics_pearson_correlation(xNumbers: list[float], yNumbers: list[float]) -> float:
+        # pearson correlation coefficient: quantify the strength and direction of the linear relationship between two variables
+        cov_xy = util.statistics_covariance(xNumbers, yNumbers)
+        std_x = util.statistics_standard_deviation(xNumbers)
+        std_y = util.statistics_standard_deviation(yNumbers)
+        if std_x == 0 and std_y == 0:
+            return 0.0 # undefined, no variance
+        return cov_xy / (std_x * std_y)
     def statistics_product(numbers: list[int]) -> int:
         if len(numbers) == 0: return 0
         product = 1
         for number in numbers: product *= number
         return product
-    def statistics_standard_deviation(numbers: list[float]):
-        return math.sqrt(util.statistics_variation(numbers))
+    def statistics_standard_deviation(numbers: list[float], sample: bool = True):
+        # standard deviation: quantify the amount of variation or dispersion of a set of data values
+        return util.statistics_variation(numbers, sample) ** 0.5
     def statistics_sum(numbers: list[float]) -> float:
         return sum(numbers)
-    def statistics_variation(numbers: list[float]) -> float:
+    def statistics_variation(numbers: list[float], sample: bool = True) -> float:
+        if len(numbers) < 2:
+            raise Exception(f"ValueError: require at least two numbers")
         n = len(numbers)
-        mean = util.statistics_mean(numbers)
-        return sum([((number - mean) ** 2) for number in numbers]) / (n - 1)
-    def string_conversion_encode(value: bool|dict|int|float|list) -> str:
-        if value == None:
-            return value
-        elif util.istype(value, "array"):
-            return util.json_encode(value)
-        elif util.istype(value, "boolean"):
-            return f"{value}"
-        elif util.istype(value, "number"):
-            return f"{value}"
-        elif util.istype(value, "object"):
-            return util.json_encode(value)
-        else:
-            return value
+        mean = sum(numbers) / len(numbers)
+        return sum(((number - mean) ** 2) for number in numbers) / (n - 1 if sample else n)
     def string_conversion_decode(value: str) -> bool|dict|int|float|list:
-        if value == None:
-            return value
+        if value == None or not isinstance(value, str): return value
         elif util.istype(value, "string-array"):
             return util.json_decode(value)
         elif util.istype(value, "string-boolean"):
             return value.lower() == "true"
+        elif util.istype(value, "string-number-complex"):
+            match = re.match(util.NUMBER_COMPLEX_SYNTAX1, value)
+            if match:
+                return complex(float(match.group("real")), float(match.group("imaginary")) * (1 if match.group("operation") == "+" else -1))
+            match = re.match(util.NUMBER_COMPLEX_SYNTAX2, value)
+            if match:
+                return complex(float(match.group("real")), float(match.group("imaginary")) * (1 if match.group("operation") == "+" else -1))
         elif util.istype(value, "string-number-decimal"):
             return float(value)
         elif util.istype(value, "string-number-integer"):
@@ -3037,18 +3242,29 @@ class util:
         elif util.istype(value, "string-object"):
             return util.json_decode(value)
         else:
+            # raise Exception(f"TypeError: require type <string>", value)
             return value
-    def string_interpolation_encode(string: str, variables: dict) -> str:
-        # find & replace variable value w/ variable placeholder
-        # prioritize longer variable value
-        matches = [[key, value, len(value)] for key, value in variables.items() if value in string]
-        matches.sort(key=lambda entry : entry[2])
-        matches.reverse()
-        for entry in matches:
-            if not entry[1] in string: continue
-            string = string.replace(entry[1], f"%{entry[0]}%")
-        return string
-    def string_interpolation_decode(string: str, variables: dict) -> str:
+    def string_conversion_encode(value) -> str:
+        if value == None or isinstance(value, str): return value
+        elif util.istype(value, "array"):
+            return util.json_encode(value)
+        elif util.istype(value, "boolean"):
+            return f"{value}"
+        elif util.istype(value, "number-complex"):
+            if isinstance(value, complex):
+                op = '+' if value.imag >= 0 else ''
+                return f"{value.real}{op}{value.imag}"
+            if isinstance(value, dict):
+                op = '+' if value["imaginary"] >= 0 else ''
+                return f"{value['real']}{op}{value['imaginary']}"
+        elif util.istype(value, "number-integer|number-decimal"):
+            return f"{value}"
+        elif util.istype(value, "object"):
+            return util.json_encode(value)
+        else:
+            raise Exception(f"TypeError: type <{type(value).__name__}> unsupported")
+    def string_interpolation_decode(string: str, variables: dict[str, str] = None) -> str:
+        if not variables: variables = util.variables
         # find & replace variable placeholder w/ variable value
         def isKey(key: str) -> bool:
             # determine whether key exist in variables set (case insensitive)
@@ -3071,6 +3287,18 @@ class util:
                 print(f"KeyError: '{key}' not found in provided variables")
                 continue
             string = string.replace(match, str(variables[key.lower()]))
+        return string
+    def string_interpolation_encode(string: str, variables: dict[str, str] = None) -> str:
+        if not variables: variables = util.variables
+        # find & replace variable value w/ variable placeholder
+        # prioritize longer variable value
+        matches = sorted(
+            [[key, value] for key, value in variables.items() if value in string],
+            key=lambda entry: len(entry[1]), reverse=True
+        )
+        for entry in matches:
+            if not entry[1] in string: continue
+            string = string.replace(entry[1], f"%{entry[0].upper()}%")
         return string
     def string_pad(string: str, width: int, align: str = "left", fillChar: str = ' ') -> str:
         if len(string) >= width: return string
@@ -3119,8 +3347,34 @@ class util:
     def system_pid() -> int:
         return os.getpid()
     # t
+    def table_decode(data: list|str, orientation = "vertical", delimiter: str = '     ') -> list[dict[str, int|str]]:
+        # NOTE: each header name must be unique
+        rows = [  ]
+        if util.istype(data, "array-string"):
+            lines = data
+        if util.istype(data, "string"):
+            lines = data.splitlines()
+        lines = [line for line in lines if line.strip()]
+        headers = [substr.strip() for substr in lines[0].split(delimiter) if substr.strip()]
+        if len(headers) == 0:
+            raise Exception(f"ValueError: table headers not found")
+        for line in lines[1:]:
+            if len(delimiter) == 1:
+                # requires cell contain characters other than space
+                row = [substr.strip() for substr in line.split(delimiter) if substr.strip()]
+            else:
+                row = [''] * len(headers)
+                for j in range(len(headers)):
+                    sIndex = lines[0].index(headers[j])
+                    eIndex = lines[0].index(headers[j+1]) if j < len(headers)-1 else len(line)
+                    row[j] = line[sIndex:eIndex].strip()
+            if len(row) != len(headers):
+                raise Exception(f"RangeError: table row to header column count mismatch")
+            rows.append(dict(zip(headers, row)))
+        return rows
     def table_encode(entries: list[dict[str, int|str]], orientation = "vertical", delimiter: str = '     ') -> str:
         if entries == []: return ""
+        # headers = list({key for obj in entries for key in obj.keys()})
         headers = [*entries[0].keys()]
         rows = [[*entry.values()] for entry in entries]
         results = ""
@@ -3150,36 +3404,13 @@ class util:
                     results += delimiter if x < len(rows) else ""
             return results
         return ""
-    def table_decode(data: list|str, orientation = "vertical", delimiter: str = '     ') -> list[dict[str, int|str]]:
-        # NOTE: each header name must be unique
-        rows = [  ]
-        if util.istype(data, "array-string"):
-            lines = data
-        if util.istype(data, "string"):
-            lines = data.splitlines()
-        lines = [line for line in lines if line.strip()]
-        headers = [substr.strip() for substr in lines[0].split(delimiter) if substr.strip()]
-        if len(headers) == 0:
-            raise Exception(f"ValueError: table headers not found")
-        for line in lines[1:]:
-            if len(delimiter) == 1:
-                # requires cell contain characters other than space
-                row = [substr.strip() for substr in line.split(delimiter) if substr.strip()]
-            else:
-                row = [''] * len(headers)
-                for j in range(len(headers)):
-                    sIndex = lines[0].index(headers[j])
-                    eIndex = lines[0].index(headers[j+1]) if j < len(headers)-1 else len(line)
-                    row[j] = line[sIndex:eIndex].strip()
-            if len(row) != len(headers):
-                raise Exception(f"RangeError: table row to header column count mismatch")
-            rows.append(dict(zip(headers, row)))
-        return rows
     def timestamp(value: datetime.datetime|int|str = None, convert_to: str = None) -> datetime.datetime|dict|int|str:
         def convert(date: datetime.datetime, option: str) -> datetime.datetime|int|str:
             if option == None:
                 return date
             if option.lower() == util.TIMESTAMP_OPTION_DICTIONARY:
+                zone_utc_offset = round(date.utcoffset().total_seconds() / 3600)
+                zone = next((k for k, v in util.TIMEZONE_DESIGNATION_OFFSETS.items() if v == zone_utc_offset), "Z")
                 return {
                     "year"       : date.year,
                     "month"      : date.month,
@@ -3188,7 +3419,7 @@ class util:
                     "minute"     : date.minute,
                     "second"     : date.second,
                     "millisecond": int(date.microsecond / 1000) % 1000,
-                    "zone"       : 'Z',
+                    "zone"       : zone,
                 }
             if option.lower() == util.TIMESTAMP_OPTION_MILLISECONDS:
                 return round((date.timestamp()) * 1000)
@@ -3213,19 +3444,23 @@ class util:
                 if len(value) == 4 or len(value) == 5:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
                 if len(value) == 7 or len(value) == 8:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}"
                 if len(value) == 10 or len(value) == 11: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}"
-                if len(value) == 13 or len(value) == 14: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}"
-                if len(value) == 16 or len(value) == 17: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}"
-                if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}"
-                if len(value) == 23 or len(value) == 24: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
+                if len(value) == 13 or len(value) == 14: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}"
+                if len(value) == 16 or len(value) == 17: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}"
+                if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}"
+                if len(value) == 23 or len(value) == 24: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}-{util.TIMESTAMP_PATTERN_MONTH}-{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}:{util.TIMESTAMP_PATTERN_MINUTE}:{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
             else:
                 if len(value) == 4 or len(value) == 5:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}"
                 if len(value) == 6 or len(value) == 7:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}"
                 if len(value) == 8 or len(value) == 9:   pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}"
-                if len(value) == 11 or len(value) == 12: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}"
-                if len(value) == 13 or len(value) == 14: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}"
-                if len(value) == 15 or len(value) == 16: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}"
-                if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}T{util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
-            return re.match(f"^{pattern}{util.TIMESTAMP_PATTERN_ZONE}$", value).groupdict()
+                if len(value) == 11 or len(value) == 12: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}"
+                if len(value) == 13 or len(value) == 14: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}"
+                if len(value) == 15 or len(value) == 16: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}"
+                if len(value) == 19 or len(value) == 20: pattern = f"{util.TIMESTAMP_PATTERN_YEAR}{util.TIMESTAMP_PATTERN_MONTH}{util.TIMESTAMP_PATTERN_DAY}( |T){util.TIMESTAMP_PATTERN_HOUR}{util.TIMESTAMP_PATTERN_MINUTE}{util.TIMESTAMP_PATTERN_SECOND}.{util.TIMESTAMP_PATTERN_MILLISECOND}"
+            match = re.match(f"^{pattern}{util.TIMESTAMP_PATTERN_ZONE}?$", value)
+            if not match:
+                print(f"Error: invalid timestamp pattern, decode unsuccessful")
+                return { "zone": "Z" }
+            return match.groupdict()
         date = datetime.datetime.now(tz=datetime.timezone.utc)
         timezone = datetime.timezone(datetime.timedelta(hours=0))
         if value == None:
@@ -3250,7 +3485,7 @@ class util:
             elif util.istype(value, "string-number-integer") and len(value) == 13:
                 date = datetime.datetime.fromtimestamp(int(value)/1000, tz=timezone)
                 return convert(date, convert_to)
-            elif len(value) > 0 and bool(getString(value)):
+            elif len(value) > 0:
                 groups = getString(value)
                 year        = int(groups["year"])               if "year"        in groups else 1970
                 month       = int(groups["month"])              if "month"       in groups else 1
@@ -3308,7 +3543,7 @@ class util:
         return timestamp.timetuple().tm_yday
     def timestamp_difference(timestamp_start: datetime.datetime|int|str, timestamp_end: datetime.datetime|int|str = None, short: bool = True) -> str:
         timestamp_start = util.timestamp(timestamp_start, util.TIMESTAMP_OPTION_SECONDS)
-        timestamp_end = util.timestamp(timestamp_end, util.TIMESTAMP_OPTION_SECONDS)
+        timestamp_end = util.timestamp(timestamp_end, util.TIMESTAMP_OPTION_SECONDS) if timestamp_end else util.timestamp(util.TIMESTAMP_OPTION_SECONDS)
         difference = abs(timestamp_end - timestamp_start)
         if difference == 0: return "Now"
         if difference <= 1: return "1sec" if short else "1 second"
@@ -3450,7 +3685,7 @@ class util:
         return f"{hour}:{minute}:{second}" if short else f"{hour}:{minute}:{second}.{millisecond}"
     def timestamp_to_zone(timestamp: datetime.datetime|int|str, zone: str) -> datetime.datetime:
         timestamp: datetime.datetime = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
-        zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[zone]
+        zone_utc_offset = util.TIMEZONE_DESIGNATION_OFFSETS[zone] if zone in util.TIMEZONE_DESIGNATION_OFFSETS else 0
         timezone = datetime.timezone(datetime.timedelta(hours=zone_utc_offset))
         return timestamp.astimezone(timezone)
     def timestamp_weekday(timestamp: datetime.datetime|int|str = None, short: bool = False) -> str:
@@ -3460,42 +3695,144 @@ class util:
     def timestamp_year(timestamp: datetime.datetime|int|str = None) -> str:
         timestamp = util.timestamp(timestamp, util.TIMESTAMP_OPTION_OBJECT)
         return f"{timestamp.year}"
-    def title(string: str) -> str:
-        lowers = [
-            'a', 'at',
-            'be',
-            'for',
-            'in',
-            'of',
-            'nor',
-        ]
-        uppers = [
-            "arcnet", "arp", "atm",
+    def title(value: str) -> str:
+        CONSONANT = "(?![aeiouy])[a-z]" # any consonant letter only (excluding numbers, symbols, and whitespace)
+        VOWEL = "[aeiouy]" # any vowel letter
+        PUNCTUATION = "[^\w\s-]" # not a word character or whitespace excluding hyphen | any punctuation character (\p{P})
+        words = {
+            "articles": [
+                "a", "an",
+                # "the",
+            ],
+            "conjunctions": [
+                "after", "although", "and", "as",
+                "because", "before", "both", "but",
+                "either", "even though",
+                "for",
+                "if",
+                "just as",
+                "neither", "nor",
+                "once", "or",
+                "since", "so",
+                "than", "that", "though",
+                "unless", "until",
+                "when", "whenever", "where", "whereas", "wherever", "whether", "while",
+                "yet",
+                "as / as", "both / and", "neither / or", "neither / nor", "not only / but also", "rather than", "so that", "such that", "whether / or",
+            ],
+            "prepositions": [
+                "aboard", "about", "above", "across", "after", "against", "along", "among", "around", "at", 
+                "before", "behind", "below", "beneath", "beside", "besides", "between", "beyond", "by", 
+                "despite", "down", "during",
+                "except",
+                "following", "for", "from",
+                "in", "inside", "into", 
+                "like",
+                "near",
+                "of", "off", "on", "onto", "opposite", "out", "outside", "over",
+                "past", 
+                "regarding",
+                "since",
+                "through", "throughout", "to", "toward",
+                "under", "underneath", "unlike", "until", "up", "upon",
+                "via",
+                "with", "within", "without",
+                "according to", "because of", "due to", "instead of", "next to", "out of", "prior to", "thanks to",
+            ],
+            "2": [ # 2-letter words that are not articles, conjunctions, prepositions
+                "am",
+                "be",
+                "do",
+                "go",
+                "he",
+                "is", "it",
+                "me", "my",
+                "no", 
+                "us",
+                "we"
+            ],
+            "3": [ # 3-letter words excluded
+                # CCC
+                "brr",
+                "gym",
+                "hmm",
+                "nth",
+                "shh",
+                # CVV
+                "bee", "bio", "boo", "bye",
+                "coo", "cue",
+                "die", "doe", "due", "duo", 
+                "fee", "foe", "foo",
+                "hie", "hoe", "hue",
+                "lie",
+                "moo",
+                "pea", "pee", "pie", "poo",
+                "roe", "rue",
+                "sea", "see", "sue",
+                "tau", "tea", "tee", "tie", "toe", "too",
+                "vee", "via", "vie", "voe",
+                "wee", "woe", "woo",
+                "yea", "you", "zoo",
+                # VVC
+                "aid", "aim", "air",
+                "ear", "eat", "eek",
+                "ion",
+                "oaf", "oak", "oar", "oat", "oil", "our", "out",
+                # VCV
+                "ace", "age", "ago", "aha", "ale", "any", "ape", "are", "ate", "axe", "aye",
+                "ego", "eke", "era", "eve", "ewe", "eye",
+                "ice", "icy", "ire", "ivy", 
+                "one", "ore", "owe",
+                "use"
+            ],
+            "4": [ # 4-letter words that do not have a vowel as their second or third character
+                "arch",
+                "echo", "etch",
+                "gyms",
+                "idle","imps", "inch", "isms",
+                "lynx"
+            ],
+        }
+        acronyms = [ # +3-letters acronyms with vowels letters
+            "arcnet",
             "ciaddr", "chaddr",
-            "dhcp", "drarp",
+            "drarp",
             "giaddr",
-            "hdlc",
-            "icmp", "ieee", "ip", "id",
-            "mac",
-            "ok",
-            "rarp", "rfc",
-            "siaddr", "sha", "spa",
-            "tha", "tpa",
-            "udp",
+            "ieee",
+            "mac", "mosfet",
+            "nand",
+            "rarp",
+            "siaddr",
+            "uhf",
+            "xnor", "xor",
             "yiaddr"
         ]
-        specials = [
-            "ICMPv6", "InARP", "IPv4", "IPv6"
+        acronyms_special = [ # acronyms with lower case letters
+            "DHCPv6",
+            "ICMPv6", "InARP", "IPv4", "IPv6",
         ]
-        def convert(string: str) -> str:
-            if string == '': return ''
-            if string in lowers: return string
-            if string in uppers: return string.upper()
-            for special in specials:
-                if special.lower() == string:
-                    return special
-            return string.capitalize()
-        return ' '.join([convert(substring.lower()) for substring in string.split('_')])
+        def is_vowel(char: str) -> bool: return bool(re.search(char, VOWEL, flags=re.IGNORECASE))
+        def convert(substring: str, hyphenated: bool) -> str:
+            substring_f = re.sub(PUNCTUATION, "", substring)
+            # words
+            if hyphenated and substring_f == 'a': return 'A'
+            if substring_f in words["articles"] or substring_f in words["conjunctions"] or substring_f in words["prepositions"]: return substring.lower()
+            # acronyms
+            if substring_f in acronyms: return substring.upper()
+            special_acronym = next((acronym for acronym in acronyms_special if acronym.lower() == substring_f), None)
+            if special_acronym: return re.sub(substring_f, special_acronym, substring) # keeps punctuation characters
+            if len(substring_f) < 3 and (substring_f not in words["2"]):
+                return substring.upper()
+            if len(substring_f) == 3 and (substring_f not in words["3"] and not re.search(r"^([^aeiou][aeiouy][^aeiou]|[^aeiou][^aeiou][aeiouy]|[aeiou][^aeiou][^aeiou])$", substring_f)): # CVC|CCV|VCC
+                return substring.upper()
+            if len(substring_f) == 4 and (substring_f not in words["4"] and not re.search(f"^\w+{VOWEL}\w+$", substring_f)):
+                return substring.upper()
+            if len(substring_f) > 4 and re.search(r"^((?![aeiou])[a-z])+$", substring_f):
+                return substring.upper()
+            if "-" in substring:
+                return '-'.join([convert(sub_substring, True) for sub_substring in re.split(r'-', substring)])
+            return re.sub(substring_f, substring_f.capitalize(), substring) # keeps punctuation characters
+        return ' '.join([convert(substring, False) for substring in re.split(r'[_\s]', value.lower())])
     def type_to_value(data_type: str|type):
         if data_type == array   or data_type == "array"         : return array()
         if data_type == bool    or data_type == "boolean"       : return False
@@ -4067,7 +4404,7 @@ class object(dict):
         elif util.istype(data, "string"):
             nObject = object.fromstring(data)
         else:
-            raise Exception(f"TypeError: type {type(data)} unsupported")
+            raise Exception(f"TypeError: type {type(data)} unsupported", data)
         return nObject
     @staticmethod
     def fromarray(data: list):
@@ -4150,6 +4487,8 @@ class object(dict):
         return util.ispattern(self.get(key), pattern)
     def isvalue(self, key: str, value: Any) -> bool:
         return self.get(key) == value
+    def isvalue(self, key: str, *values) -> bool:
+        return any(self.get(key) == value for value in values)
     def isvaluein(self, key: str, value: Any) -> bool:
         target = self.get(key)
         return isinstance(target, list) and value in target
@@ -4172,6 +4511,8 @@ class object(dict):
         for key in keys:
             if key in cObject:
                 self[key] = cObject.pop(key)
+            else:
+                self[key] = None
         # retain unlisted keys at the end
         self.update(cObject)
     def remove(self, *values):
@@ -4238,9 +4579,9 @@ class app:
     Application
     
     """
-    STRING_INTERPOLATION_SYNTAX1 = r"<\w+(?:[-_]\w+)*>"
-    STRING_INTERPOLATION_SYNTAX2 = r"\{\w+(?:[-_]\w+)*\}"
-    STRING_INTERPOLATION_SYNTAX3 = r"%\w+(?:[-_]\w+)*%"
+    STRING_INTERPOLATION_SYNTAX1 = r"<\w+(?:[-_]\w+)*>" # <KEY>
+    STRING_INTERPOLATION_SYNTAX2 = r"\{\w+(?:[-_]\w+)*\}" # {KEY}
+    STRING_INTERPOLATION_SYNTAX3 = r"%\w+(?:[-_]\w+)*%" # %KEY%
     
     def __init__(self):
         pass
@@ -4251,7 +4592,7 @@ class app:
         # do not insert blank entries
     })
     
-    executionTimerEntries: dict[str, list]|object = object()
+    executionTimerEntries: dict[str, int]|object = object()
     executionTimerPerformance: dict[str, list]|object = object()
 
     @staticmethod
@@ -4270,8 +4611,6 @@ class app:
                     pointer(val)
                 elif isinstance(val, str):
                     obj[key] = util.string_interpolation_decode(val, app.__variables__)
-                elif isinstance(val, list):
-                    obj[key] = [util.string_interpolation_decode(item, app.__variables__) for item in val]
         pointer(data)
         return data
     @staticmethod
@@ -4287,9 +4626,7 @@ class app:
         util.file_write(f"{app.variables('path')}\\configuration.json", data)
 
     def main(path: str) -> None:
-        """
-        the path parameter holds the file path of application, use __file__
-        """
+        # the path parameter holds the file path of application, use __file__
         print(f"{app.getProcessIdentifier()}.{util.path_info(path, 'filename')}.{__name__}\n")
         app.__setArguments()
         app.__variables__.update(util.variables)
@@ -4317,20 +4654,33 @@ class app:
         try: pyperclip.copy(text)
         except pyperclip.PyperclipException as e: print(f"ClipboardCopyError: {e}")
     def executionTimerStart(identifier: str = util.identifier()) -> None:
-        app.executionTimerEntries.set(identifier, util.timestamp(util.TIMESTAMP_OPTION_MILLISECONDS))
+        app.executionTimerEntries.set(identifier, time.time_ns())
     def executionTimerEnd(identifier: str = None, log: bool = True) -> int:
         if not identifier:
             identifier = app.executionTimerEntries.keys().get(0)
         if not app.executionTimerEntries.iskey(identifier): return -1
-        milliseconds = util.timestamp(util.TIMESTAMP_OPTION_MILLISECONDS) - app.executionTimerEntries.get(identifier)
+        nanoseconds = time.time_ns() - app.executionTimerEntries.get(identifier)
+        milliseconds = nanoseconds // 1000000
         app.executionTimerEntries.pop(identifier)
         if app.executionTimerPerformance.iskey(identifier):
-            app.executionTimerPerformance.get(identifier).append(milliseconds)
+            data = app.executionTimerPerformance.get(identifier)
+            if len(data) == 100: data.pop(0)
+            data.append(milliseconds)
         else:
             app.executionTimerPerformance.set(identifier, [milliseconds])
         average = int(util.statistics_mean(app.executionTimerPerformance.get(identifier)))
         if log: print(f"ExecutionTimer: identifier:{identifier} milliseconds:{milliseconds:04d} average:{average:04d}")
         return milliseconds
+    def executionTimerStatistics(identifier: str = None, log: bool = True) -> int:
+        if not identifier:
+            identifier = app.executionTimerPerformance.keys().get(0)
+        if not app.executionTimerPerformance.iskey(identifier): return -1
+        data = app.executionTimerPerformance.get(identifier)
+        maximum = max(data)
+        mean = int(sum(data) / len(data))
+        minimum = min(data)
+        if log: print(f"ExecutionTimer: ident={identifier} min={minimum:03d} max={maximum:03d} mean={mean:03d}")
+        return { "mean": mean }
     def exit() -> None:
         import sys
         sys.exit(0)
@@ -4345,6 +4695,7 @@ class app:
     def isArgument(key: str) -> bool:
         return app.__arguments__.iskey(key)
     def isOnline(address: tuple[str, int] = ("8.8.8.8", 53)) -> bool:
+        import socket
         try:
             socket.setdefaulttimeout(1000)
             socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP).connect(address)
@@ -4428,7 +4779,6 @@ class app:
             if not app.__configuration__.iskey(key):
                 raise Exception(f"KeyError: application configuration '{key}' nonexistent")
             else:
-                value = util.string_conversion_encode(value)
                 app.__configuration__.set(key, value)
             if write: app.__setConfiguration()
             return value
@@ -4440,17 +4790,16 @@ class app:
                 print(f"KeyError: application variable '{key}' nonexistent")
             else:
                 value = app.__variables__.get(key, None)
-                value = util.string_conversion_decode(value)
             return value
         else:
-            value = util.string_conversion_encode(value)
             app.__variables__.set(key, value)
             return value
     
     def setArguments(keys: list[str]) -> object:
         for index, key in enumerate(keys):
-            app.__arguments__.set(key, app.__arguments__.get(index, None))
-            app.__arguments__.pop(index)
+            if index in app.__arguments__:
+                app.__arguments__.set(key, app.__arguments__.get(index, None))
+                app.__arguments__.pop(index)
 
     def setConfiguration(data):
         app.__configuration__ = object.fromdata(data)
@@ -4460,8 +4809,6 @@ class FaaS:
     Function as a Service
     """
     class address:
-        def _():
-            return
         def address_space_registry_searcher(address: str, filter_enabled: bool = True) -> dict:
             def constructBinaryVariablePossibility(binary_variable: str, decimal: int):
                 index_start = binary_variable.index('X')
@@ -4551,7 +4898,6 @@ class FaaS:
             {"altitude": "09500", "temperature": "-03.6"},
             {"altitude": "10000", "temperature": "-04.6"}
         ]
-        
         PARAMETER_PATTERN_ALTITUDE    = r"^\d{1,5}$"
         PARAMETER_PATTERN_AZIMUTH     = r"^(0?\d?\d|[1-2]\d\d|3[0-5]\d)(\.\d)?$"
         PARAMETER_PATTERN_COORDINATE  = r"^-?([0-8]?\d)(\.\d+)? -?(0?\d?\d|1[0-7]\d)(\.\d+)?$"
@@ -4563,8 +4909,8 @@ class FaaS:
         PARAMETER_PATTERN_PRESSURE    = r"^\d\d\.\d\d?$"
         PARAMETER_PATTERN_SPEED       = r"^\d{1,3}$"
         PARAMETER_PATTERN_TEMPERATURE = r"^-?\d\d?(\.\d)?$"
-        PARAMETER_PATTERN_ZENITH      = r"^-?([0-8]?\d(\.\d\d?)?|90(\.00?)?)$"
-        
+        PARAMETER_PATTERN_ZENITH      = r"^-?([0-8]?\d(\.\d+)?|90(\.0+)?)$"
+        PARAMETER_PATTERN_WEIGHT      = r"^\d{1,6}$"
         def density_altitude(altitude: float, pressure: float, temperature: float) -> str:
             pressure_altitude = (29.92 - pressure) * 1000 + altitude
             standard_air_temperature = 15.2 - 0.002 * pressure_altitude
@@ -4643,7 +4989,10 @@ class FaaS:
             wind_angle = math.radians(aircraft_course - (180 + wind_direction))
             wind_correction_angle = math.asin((wind_speed * math.sin(wind_angle))/aircraft_true_airspeed)
             wind_correction_angle = math.degrees(wind_correction_angle)
-            return f"{wind_correction_angle:04.1f}"
+            return ("" if wind_correction_angle > 0 else "-") + f"{abs(wind_correction_angle):04.1f}"
+        def zero_fuel_weight(takeoff_weight: int, takeoff_fuel_weight: int):
+            zero_fuel_weight = takeoff_weight - takeoff_fuel_weight
+            return f"{zero_fuel_weight:06d}"
         def VAPP(VREF: float, runway_direction: float, wind_direction: float, wind_speed: float, wind_gust: float = 0) -> str:
             headwind = wind_speed * math.cos(math.radians(abs(runway_direction - wind_direction)))
             correction = max(min(headwind/2 + wind_gust, 20), 5)
@@ -4655,6 +5004,150 @@ class FaaS:
         def VREF(VSO: float) -> str:
             VREF = 1.3 * VSO
             return f"{VREF:03.0f}"
+    class digital_logic:
+        def full_adder(a: bool, b: bool, c_in: bool) -> tuple[bool, bool]:
+            sum = a ^ b ^ c_in
+            carry_out = (a and b) or (c_in and (a ^ b))
+            return sum, carry_out
+        def full_subtractor(a: bool, b: bool, b_in: bool) -> tuple[bool, bool]:
+            difference = a ^ b ^ b_in
+            borrow_out = (not a and b) or (not (a ^ b) and b_in)
+            return difference, borrow_out
+        def half_adder(a: bool, b: bool) -> tuple[bool, bool]:
+            sum = a ^ b
+            carry = a and b
+            return sum, carry
+        def half_subtractor(a: bool, b: bool) -> tuple[bool, bool]:
+            difference = a ^ b
+            borrow = (not a) and b
+            return difference, borrow
+        def logic_gate_and(inputs: list[bool]) -> bool:
+            return all(inputs)
+        def logic_gate_imply(inputs: list[bool]) -> bool:
+            return (not all(inputs[:-1])) or inputs[-1]
+        def logic_gate_nand(inputs: list[bool]) -> bool:
+            return not all(inputs)
+        def logic_gate_nimply(inputs: list[bool]) -> bool:
+            return not ((not all(inputs[:-1])) or inputs[-1])
+        def logic_gate_not(inputs: list[bool]) -> bool:
+            return not inputs[0]
+        def logic_gate_nor(inputs: list[bool]) -> bool:
+            return not any(inputs)
+        def logic_gate_or(inputs: list[bool]) -> bool:
+            return any(inputs)
+        def logic_gate_xnor(inputs: list[bool]) -> bool:
+            return sum(inputs) % 2 == 0
+        def logic_gate_xor(inputs: list[bool]) -> bool:
+            return sum(inputs) % 2 == 1
+    class electrical:
+        PARAMETER_PATTERN_NUMBER  = r"^([+-]?\d*\.?\d+(e[+-]\d+)?|[+-]?\d*\.?\d+(e[+-]\d+)?\s*[+-]\s*\d*\.?\d+(e[+-]\d+)?i|[+-]?\d*\.?\d+(e[+-]\d+)?\s*[+-]\s*j\d*\.?\d+(e[+-]\d+)?)$"
+        PARAMETER_PATTERN_NUMBER_REAL  = r"^[+-]?\d*\.?\d+(e[+-]\d+)?$"
+        PARAMETER_PATTERN_NUMBER_COMPLEX = r"^([+-]?\d*\.?\d+(e[+-]\d+)?\s*[+-]\s*\d*\.?\d+(e[+-]\d+)?i|[+-]?\d*\.?\d+(e[+-]\d+)?\s*[+-]\s*j\d*\.?\d+(e[+-]\d+)?)$"
+
+        def admittance(capacitive_susceptance: float = 0, inductive_susceptance: float = 0, conductance: float = 0):
+            # return (conductance ** 2 + (capacitive_susceptance - inductive_susceptance) ** 2)**0.5
+            return complex(conductance, (capacitive_susceptance - inductive_susceptance))
+        def attenuation(inductance: float = 0, resistance: float = 0):
+            return resistance / (2.0 * inductance) if inductance else 0.0
+        def capacitance(charge: float = 0, voltage: float = 0):
+            return (charge / voltage) if voltage else 0
+        def charge_capacitor(capacitance: float = 0, energy: float = 0, voltage: complex|float = 0):
+            voltage = voltage.real if isinstance(voltage, complex) else voltage
+            return (2 * energy * capacitance) ** 0.5 if energy else capacitance * voltage
+        def current(impedance: complex|float = 0, voltage: complex|float = 0):
+            return (voltage / impedance) if impedance else 0
+        def current_circuit(capacitance: float = 0, inductance: float = 0, resistance: float = 0, voltage: complex|float = 0, frequency: float = 0, angular_frequency: float = 0):
+            reactance_capacitive = FaaS.electrical.reactance_capacitive(capacitance, frequency, angular_frequency)
+            reactance_inductive = FaaS.electrical.reactance_inductive(inductance, frequency, angular_frequency)
+            impedance = complex(resistance, reactance_inductive - reactance_capacitive)
+            current = voltage / impedance if impedance else 0
+            return current
+        def energy_capacitor(capacitance: float = 0, charge: float = 0, voltage: complex|float = 0):
+            voltage = voltage.real if isinstance(voltage, complex) else voltage
+            if not capacitance: return 0.0
+            return charge ** 2 / (2 * capacitance) if charge else 0.5 * capacitance * voltage ** 2
+        def energy_inductor(inductance: float = 0, current: complex|float = 0):
+            current = current.real if isinstance(current, complex) else current
+            return 0.5 * inductance * current ** 2
+        def impedance(capacitive_reactance: float = 0, inductive_reactance: float = 0, resistance: float = 0):
+            # return (resistance ** 2 + (inductive_reactance - capacitive_reactance) ** 2)**0.5
+            return complex(resistance, (abs(inductive_reactance) - abs(capacitive_reactance)))
+        def impedance_characteristic(capacitance: float = 0, inductance: float = 0):
+            return (inductance / capacitance) ** 0.5 if capacitance else 0.0
+        def peak_to_rms(peak: complex|float = 0):
+            return peak / 2.0**0.5
+        def power(current: complex|float = 0, impedance: complex|float = 0, voltage: complex|float = 0):
+            return abs(voltage * current if voltage else abs(current)**2 * impedance)
+        def power_factor(capacitance: float = 0, inductance: float = 0, resistance: float = 0, voltage: float = 0, frequency: float = 0, angular_frequency: float = 0):
+            reactance_capacitive = FaaS.electrical.reactance_capacitive(inductance, frequency, angular_frequency)
+            reactance_inductive = FaaS.electrical.reactance_inductive(inductance, frequency, angular_frequency)
+            impedance = FaaS.electrical.impedance(reactance_capacitive, reactance_inductive, resistance)
+            current = voltage / impedance
+            power_active = current ** 2.0 * resistance
+            power_apparent = current ** 2.0 * impedance
+            return power_active / power_apparent
+        def reactance(capacitive_reactance: float = 0, inductive_reactance: float = 0):
+            return inductive_reactance - capacitive_reactance
+        def reactance_capacitive(capacitance: float = 0, frequency: float = 0, angular_frequency: float = 0):
+            angular_frequency = (2.0 * math.pi * frequency if frequency else angular_frequency)
+            return (1.0 / (angular_frequency * capacitance)) if angular_frequency * capacitance else 0
+        def reactance_inductive(inductance: float = 0, frequency: float = 0, angular_frequency: float = 0):
+            angular_frequency = (2.0 * math.pi * frequency if frequency else angular_frequency)
+            return angular_frequency * inductance
+        def resistance(current: complex|float = 0, voltage: complex|float = 0):
+            return (voltage / current) if current else 0
+        def resistance_critical_damping(capacitance: float = 0, inductance: float = 0):
+            return 2.0 * (inductance / capacitance) ** 0.5
+        def resonant_frequency(capacitance: float = 0, inductance: float = 0):
+            return 1.0 / (2.0 * math.pi * (inductance * capacitance) ** 0.5) if capacitance and inductance else 0
+        def rms_to_peak(root_mean_square: complex|float = 0):
+            return root_mean_square * 2.0**0.5
+        def susceptance_capacitive(capacitance: float = 0, frequency: float = 0, angular_frequency: float = 0):
+            angular_frequency = (2.0 * math.pi * frequency if frequency else angular_frequency)
+            return angular_frequency * capacitance
+        def susceptance_inductive(inductance: float = 0, frequency: float = 0, angular_frequency: float = 0):
+            angular_frequency = (2.0 * math.pi * frequency if frequency else angular_frequency)
+            return (1.0 / (angular_frequency * inductance)) if angular_frequency * inductance else 0
+        def voltage(current: complex|float = 0, impedance: complex|float = 0, power: float = 0):
+            return (power * impedance) ** 0.5 if power else impedance * current
+        def voltage_source(current: complex|float = 0, capacitance: float = 0, inductance: float = 0, resistance: float = 0, frequency: float = 0, angular_frequency: float = 0):
+            voltage_drop_resistance = resistance * abs(current)
+            voltage_drop_capacitance = FaaS.electrical.reactance_capacitive(capacitance, frequency, angular_frequency) * abs(current)
+            voltage_drop_inductance = FaaS.electrical.reactance_inductive(inductance, frequency, angular_frequency) * abs(current)
+            return (voltage_drop_resistance ** 2.0 + (voltage_drop_inductance - voltage_drop_capacitance) ** 2.0) ** 0.5
+    class mathematics:
+        def unit_convert(measurement_property: str, unit_from: str, unit_to: str, value: float, CONVERSIONS: dict = None):
+            # dimension: fundamental physical property being measured
+            # unit of measurement: specific standard used to quantify that dimension (dimension=length, unit=meter)
+            # standard base units: length=meter, mass=kilogram, power=watt, etc.
+            # unit conversion factor relative to standard base unit (factor of 1)
+            measurement_property = measurement_property.lower()
+            CONVERSIONS: dict = util.file_read(f"{util.variables['repository']}\\measurement-unit-conversions.json", "application/json")
+            if measurement_property not in CONVERSIONS:
+                raise Exception(f"ValueError: invalid measurement property")
+            if unit_from not in CONVERSIONS[measurement_property] or unit_to not in CONVERSIONS[measurement_property]:
+                raise Exception(f"ValueError: invalid unit for {measurement_property}")
+            factor = CONVERSIONS[measurement_property]
+            if measurement_property == "weight": measurement_property == "mass"
+            if measurement_property == "temperature":
+                if unit_from == "Celsius":
+                    base_value = value
+                elif unit_from == "Fahrenheit":
+                    base_value = (value - 32) * 5 / 9
+                elif unit_from == "kelvin":
+                    base_value =  value - 273.15
+                else: raise Exception("ValueError: invalid temperature unit")
+                if unit_to == "Celsius":
+                    return base_value
+                elif unit_to == "Fahrenheit":
+                    return (base_value * 9 / 5) + 32
+                elif unit_to == "kelvin":
+                    return base_value + 273.15
+                else: raise Exception("ValueError: invalid temperature unit")
+            else:
+                # convert to base unit first, then to the target unit
+                base_value = value * CONVERSIONS[measurement_property][unit_from]
+                return base_value / CONVERSIONS[measurement_property][unit_to]
     class networking:
         def convert(address: str) -> dict:
             results = { "family": None, "types": [], "format": None, "associations": {} }
@@ -4881,9 +5374,8 @@ class Logger(threading.Thread):
 
 #______________________________________________________________________________#
 
-util.variables.update(util.file_read("...variables.json", "application/json"))
+util.variables.update(util.file_read("...", "application/json"))
 for key, val in util.variables.items():
     if isinstance(val, str):
-        util.variables[key] = util.string_interpolation_decode(val, util.variables)
-
+        util.variables[key.lower()] = util.string_interpolation_decode(val, util.variables)
 # _____________________________________________________________________________#
